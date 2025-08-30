@@ -24,6 +24,15 @@ const PORT = config.port;
 // Trust proxy for accurate IP addresses (important for rate limiting)
 app.set('trust proxy', 1);
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] RAW REQUEST: ${req.method} ${req.url}`, {
+    origin: req.get('Origin'),
+    headers: req.headers,
+    ip: req.ip
+  });
+  next();
+});
+
 // Security middleware - RELAXED FOR DEVELOPMENT
 app.use(helmet({
   contentSecurityPolicy: false,

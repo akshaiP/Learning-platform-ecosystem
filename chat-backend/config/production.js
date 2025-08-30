@@ -6,7 +6,7 @@ module.exports = {
     cors: {
       origins: [
         process.env.LMS_DOMAIN || 'https://prod.edrevel.com',
-        process.env.FRONTEND_DOMAIN || 'https://your-frontend-domain.com'
+        'http://localhost:8080'
       ],
       credentials: true
     },
