@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - Learning Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- SCORM API Integration -->
+    <script type="text/javascript">
+        var scormAPI = null;
+        var learnerData = {
+            id: null,
+            name: null,
+            progress: null
+        };
+
+        // SCORM API Discovery
+        function findAPI(win) {
+            while (win) {
+                try {
+                    if (win.API_1484_11) return win.API_1484_11;
+                } catch (err) {}
+                if (win.parent && win.parent !== win) {
+                    win = win.parent;
+                } else {
+                    win = win.opener;
+                }
+            }
+            return null;
+        }
+
+        function initSCORM() {
+            scormAPI = findAPI(window);
+            if (scormAPI == null) {
+                console.warn("SCORM 2004 API not found. Running in standalone mode.");
+                return false;
+            }
+            
+            try {
+                var result = scormAPI.Initialize("");
+                console.log("SCORM Initialize: " + result);
+                
+                // Fetch learner information
+                learnerData.id = scormAPI.GetValue("cmi.learner_id") || "anonymous";
+                learnerData.name = scormAPI.GetValue("cmi.learner_name") || "Anonymous Learner";
+                learnerData.progress = scormAPI.GetValue("cmi.completion_status") || "not attempted";
+                
+                console.log("Learner Data:", learnerData);
+                
+                // Update UI with learner info
+                updateLearnerInfo();
+                
+                return true;
+            } catch (error) {
+                console.error("SCORM initialization error:", error);
+                return false;
+            }
+        }
+
+        function updateLearnerInfo() {
+            const learnerInfoElement = document.getElementById("learnerInfo");
+            if (learnerInfoElement) {
+                learnerInfoElement.innerHTML = `
+                    <span class="learner-welcome">Welcome, <strong>${learnerData.name}</strong></span>
+                    <span class="learner-progress">Progress: ${learnerData.progress}</span>
+                `;
+            }
+        }
+
+        function markComplete() {
+            if (!scormAPI) return false;
+            try {
+                scormAPI.SetValue("cmi.completion_status", "completed");
+                scormAPI.SetValue("cmi.success_status", "passed");
+                scormAPI.SetValue("cmi.score.raw", "100");
+                scormAPI.SetValue("cmi.session_time", "PT0H" + Math.floor(sessionTime/60) + "M" + (sessionTime%60) + "S");
+                var commitResult = scormAPI.Commit("");
+                console.log("SCORM Commit (Complete): " + commitResult);
+                return commitResult === "true";
+            } catch (error) {
+                console.error("Error marking complete:", error);
+                return false;
+            }
+        }
+
+        function markProgress(status = "incomplete") {
+            if (!scormAPI) return false;
+            try {
+                scormAPI.SetValue("cmi.completion_status", status);
+                scormAPI.SetValue("cmi.progress_measure", getProgressPercentage().toString());
+                scormAPI.SetValue("cmi.session_time", "PT0H" + Math.floor(sessionTime/60) + "M" + (sessionTime%60) + "S");
+                var commitResult = scormAPI.Commit("");
+                console.log("SCORM Commit (Progress): " + commitResult);
+                return commitResult === "true";
+            } catch (error) {
+                console.error("Error marking progress:", error);
+                return false;
+            }
+        }
+
+        function exitSCORM() {
+            if (scormAPI) {
+                try {
+                    scormAPI.Terminate("");
+                    console.log("SCORM session terminated.");
+                } catch (error) {
+                    console.error("Error terminating SCORM:", error);
+                }
+            }
+        }
+
+        // Session timing
+        var sessionStartTime = Date.now();
+        var sessionTime = 0;
+
+        setInterval(() => {
+            sessionTime = Math.floor((Date.now() - sessionStartTime) / 1000);
+        }, 1000);
+
+        // Initialize on load
+        window.onload = function() {
+            initSCORM();
+            initializeLearningContent();
+        };
+        
+        window.onunload = exitSCORM;
+        window.onbeforeunload = exitSCORM;
+    </script>
+</head>
+<body>
+    <!-- Template Data Injection -->
+    <script id="templateData" type="application/json">
+    {
+        "hints": {{{hintsJson}}},
+        "quiz": {{{quizJson}}},
+        "id": "{{id}}",
+        "backendUrl": "{{backend_url}}",
+        "chatContexts": {{{chatContextsJson}}}
+    }
+    </script>
+    
+
+    <div id="pageWrapper" class="page-container">
+        <!-- Header -->
+        <header class="topic-header">
+            <div class="header-content">
+                <div class="topic-info">
+                    <h1 class="topic-title">{{title}}</h1>
+                    <p class="topic-description">{{description}}</p>
+                </div>
+                <div id="learnerInfo" class="learner-info">
+                    <span class="learner-welcome">Loading...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">
+                Step 1 of 4: Understanding the Task
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Learning Objectives -->
+            {{#learning_objectives}}
+            <section class="objectives-section">
+                <h2>🎯 Learning Objectives</h2>
+                <ul class="objectives-list">
+                    {{#learning_objectives}}
+                    <li>{{.}}</li>
+                    {{/learning_objectives}}
+                </ul>
+            </section>
+            {{/learning_objectives}}
+
+            <!-- Task Section -->
+            <section class="task-section">
+                <h2>📋 Task</h2>
+                <div class="task-content">
+                    <p class="task-statement">{{content.task_statement}}</p>
+                    
+                    {{#content.task_requirements}}
+                    <div class="task-requirements">
+                        <h3>Requirements:</h3>
+                        <ul>
+                            {{#content.task_requirements}}
+                            <li>{{.}}</li>
+                            {{/content.task_requirements}}
+                        </ul>
+                    </div>
+                    {{/content.task_requirements}}
+
+                    <div class="task-actions">
+                        <button class="btn btn-primary" onclick="startTask()">🚀 Start Task</button>
+                        <button class="btn btn-secondary" onclick="openTaskHelp()">💡 Get Help</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Concepts Section -->
+            <section class="concepts-section">
+                <h2>📚 Key Concepts</h2>
+                <div class="concepts-grid">
+                    {{#content.concepts}}
+                    <div class="concept-card">
+                        <h3 class="concept-title">{{title}}</h3>
+                        <p class="concept-summary">{{summary}}</p>
+                        <button class="btn btn-outline" onclick="openLearnMore('{{learn_more_context}}', '{{title}}')">
+                            📖 Learn More
+                        </button>
+                    </div>
+                    {{/content.concepts}}
+                </div>
+            </section>
+
+            <!-- Hints Section -->
+            {{#content.hints}}
+            <section class="hints-section" id="hintsSection" style="display: none;">
+                <h2>💡 Hints</h2>
+                <div class="hints-container">
+                    {{#content.hints}}
+                    <div class="hint-item" id="hint{{@index}}" data-hint-index="{{@index}}">
+                        <div class="hint-content">{{.}}</div>
+                    </div>
+                    {{/content.hints}}
+                </div>
+                <div class="hint-buttons" id="hintButtons">
+                    <button class="btn btn-secondary" onclick="toggleHints()">Show Hints</button>
+                    <button class="btn btn-secondary" onclick="revealNextHint()">Next Hint</button>
+                    <button class="btn btn-warning" onclick="openHintsExhaustedChat()" id="hintsExhaustedBtn" style="display: none;">
+                        🆘 I Need More Help
+                    </button>
+                </div>
+            </section>
+            {{/content.hints}}
+
+            <!-- Practice Section -->
+            {{#content.practice}}
+            <section class="practice-section">
+                <h2>🛠️ Practice</h2>
+                <div class="practice-content">
+                    <p>{{content.practice.description}}</p>
+                    <div class="practice-actions">
+                        <button class="btn btn-success" onclick="startPractice()">Start Practice</button>
+                        <button class="btn btn-info" onclick="openPracticeChat()">Get Practice Examples</button>
+                    </div>
+                </div>
+            </section>
+            {{/content.practice}}
+
+            <!-- Quiz Section -->
+            {{#quiz}}
+            <section class="quiz-section">
+                <h2>🧠 Knowledge Check</h2>
+                <div class="quiz-container">
+                    <div class="question-container">
+                        <h3 class="quiz-question">{{quiz.question}}</h3>
+                        <div class="quiz-options" id="quizOptionsContainer">
+                            {{#quiz.options}}
+                            <button class="quiz-option" data-option-index="{{@index}}">
+                                <span class="option-letter"></span>
+                                <span class="option-text">{{.}}</span>
+                            </button>
+                            {{/quiz.options}}
+                        </div>
+                        <div class="quiz-result" id="quizResult" style="display: none;"></div>
+                        <div class="quiz-actions" id="quizActions" style="display: none;">
+                            <button class="btn btn-success" id="proceedBtn" onclick="proceedToNext()" style="display: none;">
+                                ✅ Continue
+                            </button>
+                            <button class="btn btn-info" onclick="openQuizExplanation()">
+                                📝 Explain Answer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {{/quiz}}
+
+            <!-- Navigation -->
+            <nav class="navigation">
+                <button class="btn btn-secondary" onclick="goToPrevious()">← Previous Topic</button>
+                <button class="btn btn-primary" onclick="openSummaryChat()" id="summaryBtn">📋 Get Summary</button>
+                <button class="btn btn-success" onclick="proceedToNext()" id="nextBtn" style="display: none;">Next Topic →</button>
+            </nav>
+        </main>
+    </div>
+
+    <!-- Floating Chat Trigger -->
+    <button class="chat-trigger" onclick="openGeneralChat()" title="Open Learning Assistant">
+        💬
+    </button>
+
+    <!-- Enhanced Chat Widget Loading -->
+<script>
+    (function() {
+        let chatWidgetLoaded = false;
+        let loadAttempts = 0;
+        const maxAttempts = 3;
+        
+        function loadChatWidget() {
+            const script = document.createElement('script');
+            script.src = '{{backend_url}}/chat-widget.js';
+            
+            script.onload = function() {
+                chatWidgetLoaded = true;
+                console.log('✅ Chat widget loaded successfully');
+            };
+            
+            script.onerror = function() {
+                loadAttempts++;
+                console.warn(`❌ Failed to load chat widget (attempt ${loadAttempts}/${maxAttempts})`);
+                
+                if (loadAttempts < maxAttempts) {
+                    setTimeout(loadChatWidget, 1000); // Retry after 1 second
+                } else {
+                    console.warn('🔄 Using fallback chat widget');
+                    loadFallbackChatWidget();
+                }
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        function loadFallbackChatWidget() {
+            window.chatWidget = {
+                initChatWidget: function(config) {
+                    const message = config.initialMessage || 'Chat would open here';
+                    const isOnline = navigator.onLine;
+                    
+                    const fallbackMsg = `
+    🤖 Chat Widget (${isOnline ? 'Backend Offline' : 'No Internet'})
+    
+    Topic: ${config.topic}
+    Context: ${config.trigger}
+    Message: ${message}
+    
+    ${isOnline ? '⚠️ Backend server not responding' : '📡 No internet connection'}
+                    `.trim();
+                    
+                    alert(fallbackMsg);
+                }
+            };
+            chatWidgetLoaded = true;
+        }
+        
+        // Ensure chat widget is available
+        window.ensureChatWidget = function(callback) {
+            if (chatWidgetLoaded && window.chatWidget) {
+                callback();
+            } else {
+                setTimeout(() => window.ensureChatWidget(callback), 100);
+            }
+        };
+        
+        // Start loading
+        loadChatWidget();
+    })();
+    </script>       
+    
+    <!-- Topic-Specific JavaScript -->
+    <script>
+        // Parse template data safely
+        let templateData = {};
+        try {
+            templateData = JSON.parse(document.getElementById('templateData').textContent);
+        } catch (e) {
+            console.error('Failed to parse template data:', e);
+            templateData = {
+                hints: [],
+                quiz: null,
+                id: '',
+                backendUrl: '',
+                chatContexts: {}
+            };
+        }
+
+        // Global variables
+        let currentHint = 0;
+        let maxHints = templateData.hints ? templateData.hints.length : 0;
+        let quizCompleted = false;
+        let progressSteps = 0;
+        let quizCorrectAnswer = templateData.quiz ? templateData.quiz.correct_answer : 0;
+
+        // Topic configuration for chat widget
+        const topicConfig = {
+            topic: templateData.id,
+            backendUrl: templateData.backendUrl,
+            contexts: templateData.chatContexts || {}
+        };
+
+        function initializeLearningContent() {
+            updateProgress(1);
+            console.log('Topic initialized:', topicConfig);
+            
+            // Setup topic-specific behaviors
+            setupProgressTracking();
+            setupQuizOptions();
+        }
+
+        function setupProgressTracking() {
+            // Track time spent on page
+            setInterval(() => {
+                if (scormAPI) {
+                    markProgress();
+                }
+            }, 30000); // Update every 30 seconds
+        }
+
+        function setupQuizOptions() {
+            // Add letter labels and click handlers to quiz options
+            const options = document.querySelectorAll('.quiz-option');
+            const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+            
+            options.forEach((option, index) => {
+                const letterSpan = option.querySelector('.option-letter');
+                if (letterSpan && letters[index]) {
+                    letterSpan.textContent = letters[index] + '.';
+                }
+                
+                // Add click handler
+                option.addEventListener('click', function() {
+                    const optionIndex = parseInt(this.getAttribute('data-option-index'));
+                    selectQuizOption(this, optionIndex);
+                });
+            });
+        }
+
+        // Progress tracking
+        function updateProgress(step) {
+            progressSteps = step;
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            const percentage = (step / 4) * 100;
+            if (progressFill) progressFill.style.width = percentage + '%';
+            
+            const steps = [
+                'Step 1 of 4: Understanding the Task',
+                'Step 2 of 4: Learning Prerequisites',
+                'Step 3 of 4: Implementation Practice', 
+                'Step 4 of 4: Knowledge Assessment'
+            ];
+            
+            if (progressText) progressText.textContent = steps[step - 1] || steps[0];
+            
+            if (step >= 4) {
+                if (progressText) progressText.classList.add('completed');
+                const nextBtn = document.getElementById('nextBtn');
+                if (nextBtn) nextBtn.style.display = 'inline-flex';
+                markComplete();
+            }
+        }
+
+        function getProgressPercentage() {
+            return (progressSteps / 4) * 100;
+        }
+
+        // Task functions
+        function startTask() {
+            updateProgress(2);
+            openTaskHelp();
+        }
+
+        function mapContext(customContext) {
+            const contextMap = {
+                'task_help': 'help',
+                'hints_exhausted': 'help', 
+                'quiz_explanation': 'learn_more',
+                'general': 'general'
+            };
+            
+            return contextMap[customContext] || 'general';
+        }
+
+        function openTaskHelp() {
+            window.ensureChatWidget(() => {
+                const taskStatement = document.querySelector('.task-statement');
+                const taskText = taskStatement ? taskStatement.textContent : 'the current task';
+                
+                chatWidget.initChatWidget({
+                topic: topicConfig.topic,
+                trigger: 'help', // Use mapped context
+                context: mapContext('task_help'), // Map to 'help'
+                backendUrl: topicConfig.backendUrl,
+                learnerData: learnerData,
+                initialMessage: `I need help understanding the task: ${taskText}`
+                });
+            });
+        }
+
+        // Hints functionality
+        function toggleHints() {
+            const hintsSection = document.getElementById('hintsSection');
+            if (hintsSection) {
+                hintsSection.style.display = hintsSection.style.display === 'none' ? 'block' : 'none';
+                
+                if (hintsSection.style.display === 'block') {
+                    updateProgress(2);
+                }
+            }
+        }
+        
+        function revealNextHint() {
+            if (currentHint < maxHints) {
+                const hint = document.querySelector(`[data-hint-index="${currentHint}"]`);
+                if (hint) {
+                    hint.classList.add('revealed');
+                    currentHint++;
+                }
+                
+                if (currentHint >= maxHints) {
+                    const nextHintBtn = document.querySelector('#hintButtons .btn-secondary:last-child');
+                    if (nextHintBtn) nextHintBtn.style.display = 'none';
+                    const exhaustedBtn = document.getElementById('hintsExhaustedBtn');
+                    if (exhaustedBtn) exhaustedBtn.style.display = 'inline-flex';
+                }
+            }
+        }
+
+        function openHintsExhaustedChat() {
+            window.ensureChatWidget(() => {
+                chatWidget.initChatWidget({
+                topic: topicConfig.topic,
+                trigger: 'help',
+                context: mapContext('hints_exhausted'),
+                backendUrl: topicConfig.backendUrl,
+                learnerData: learnerData,
+                initialMessage: 'I have read all the hints but still need help with the implementation. Can you provide more detailed guidance?'
+                });
+            });
+        }
+
+        // Quiz functionality  
+        function selectQuizOption(element, optionIndex) {
+            // Remove previous selections
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('correct', 'incorrect');
+            });
+            
+            const result = document.getElementById('quizResult');
+            const actions = document.getElementById('quizActions');
+            
+            if (optionIndex === quizCorrectAnswer) {
+                element.classList.add('correct');
+                if (result) {
+                    result.className = 'quiz-result success';
+                    result.style.display = 'block';
+                    result.textContent = '✅ Correct! Well done!';
+                }
+                const proceedBtn = document.getElementById('proceedBtn');
+                if (proceedBtn) proceedBtn.style.display = 'inline-flex';
+                quizCompleted = true;
+                updateProgress(4);
+            } else {
+                element.classList.add('incorrect');
+                if (result) {
+                    result.className = 'quiz-result error';
+                    result.style.display = 'block';
+                    result.textContent = '❌ Incorrect. Would you like help understanding the correct answer?';
+                }
+                
+                // Auto-trigger chat for quiz failure
+                setTimeout(() => {
+                    openQuizFailureChat();
+                }, 1500);
+            }
+            
+            if (actions) actions.style.display = 'block';
+        }
+
+        function openQuizFailureChat() {
+            if (typeof chatWidget !== 'undefined') {
+                const questionElement = document.querySelector('.quiz-question');
+                const questionText = questionElement ? questionElement.textContent : 'the quiz question';
+                
+                chatWidget.initChatWidget({
+                topic: topicConfig.topic,
+                trigger: 'quiz_failed', // This is correct
+                context: 'quiz_failed', // Add explicit context
+                backendUrl: topicConfig.backendUrl,
+                learnerData: learnerData,
+                initialMessage: `I got the quiz question wrong. The question was: "${questionText}". Can you help me understand the correct answer?`
+                });
+            }
+        }
+
+        function openQuizExplanation() {
+            if (typeof chatWidget !== 'undefined') {
+                const questionElement = document.querySelector('.quiz-question');
+                const questionText = questionElement ? questionElement.textContent : 'the quiz question';
+                
+                chatWidget.initChatWidget({
+                topic: topicConfig.topic,
+                trigger: 'learn_more',
+                context: mapContext('quiz_explanation'),
+                backendUrl: topicConfig.backendUrl,
+                learnerData: learnerData,
+                initialMessage: `Can you explain the answer to this question in detail: "${questionText}"`
+                });
+            }
+        }
+
+        // Practice functionality
+        function startPractice() {
+            updateProgress(3);
+            openPracticeChat();
+        }
+
+        function openPracticeChat() {
+            if (typeof chatWidget !== 'undefined') {
+                chatWidget.initChatWidget({
+                    topic: topicConfig.topic,
+                    trigger: 'practice',
+                    backendUrl: topicConfig.backendUrl,
+                    learnerData: learnerData,
+                    initialMessage: `I want to practice the ${topicConfig.topic} concepts. Can you provide hands-on exercises and guide me step by step?`
+                });
+            }
+        }
+
+        // Learn More functionality
+        function openLearnMore(context, conceptTitle) {
+            if (typeof chatWidget !== 'undefined') {
+                chatWidget.initChatWidget({
+                    topic: topicConfig.topic,
+                    trigger: 'learn_more',
+                    context: context,
+                    backendUrl: topicConfig.backendUrl,
+                    learnerData: learnerData,
+                    initialMessage: `I want to learn more about "${conceptTitle}" in detail. Can you provide comprehensive information with examples?`
+                });
+            }
+        }
+
+        // Navigation
+        function goToPrevious() {
+            if (scormAPI) {
+                markProgress("incomplete");
+            }
+            alert('Going to previous topic...');
+        }
+        
+        function proceedToNext() {
+            if (quizCompleted) {
+                if (scormAPI) {
+                    markComplete();
+                }
+                alert('Proceeding to next topic...');
+            } else {
+                alert('Please complete the quiz first!');
+            }
+        }
+
+        // Summary and General Chat
+        function openSummaryChat() {
+            if (typeof chatWidget !== 'undefined') {
+                chatWidget.initChatWidget({
+                    topic: topicConfig.topic,
+                    trigger: 'summary',
+                    backendUrl: topicConfig.backendUrl,
+                    learnerData: learnerData,
+                    initialMessage: `Can you provide a comprehensive summary of the ${topicConfig.topic} concepts and key points I should remember?`
+                });
+            }
+        }
+
+        function openGeneralChat() {
+            if (typeof chatWidget !== 'undefined') {
+                chatWidget.initChatWidget({
+                    topic: topicConfig.topic,
+                    trigger: 'general',
+                    backendUrl: topicConfig.backendUrl,
+                    learnerData: learnerData,
+                    initialMessage: `Hello! I have questions about ${topicConfig.topic}.`
+                });
+            }
+        }
+
+        // Auto-adjust main container when chat opens
+        window.addEventListener('chatOpened', () => {
+            const pageWrapper = document.getElementById('pageWrapper');
+            if (pageWrapper) pageWrapper.classList.add('chat-open');
+        });
+        
+        window.addEventListener('chatClosed', () => {
+            const pageWrapper = document.getElementById('pageWrapper');
+            if (pageWrapper) pageWrapper.classList.remove('chat-open');
+        });
+    </script>
+</body>
+</html>
