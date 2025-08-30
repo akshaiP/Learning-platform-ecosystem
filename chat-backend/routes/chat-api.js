@@ -11,11 +11,11 @@ const chatRequestSchema = Joi.object({
   message: Joi.string().required().min(1).max(2000),
   topic: Joi.string().required().min(1).max(100),
   context: Joi.string().valid('help', 'learn_more', 'practice', 'quiz_failed', 'summary', 'general').default('general'),
-  sessionId: Joi.string().uuid().optional(),
+  sessionId: Joi.string().uuid().optional().allow(null), // Allow null for first messages
   learnerData: Joi.object({
-    id: Joi.string().optional(),
-    name: Joi.string().optional(),
-    progress: Joi.string().optional(),
+    id: Joi.string().optional().allow(null),
+    name: Joi.string().optional().allow(null),
+    progress: Joi.string().optional().allow(null),
     attempts: Joi.number().integer().min(0).optional()
   }).optional(),
   isFirstMessage: Joi.boolean().default(false)

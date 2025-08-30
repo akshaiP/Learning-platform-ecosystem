@@ -8,7 +8,9 @@ module.exports = {
         'http://localhost:8080',
         'http://localhost:3000',
         'http://127.0.0.1:8080',
-        'file://' // For local SCORM testing
+        'https://prod.edrevel.com',
+        'file://',
+        'null'
       ],
       credentials: true
     },

@@ -24,41 +24,31 @@ const PORT = config.port;
 // Trust proxy for accurate IP addresses (important for rate limiting)
 app.set('trust proxy', 1);
 
-// Security middleware
+// Security middleware - RELAXED FOR DEVELOPMENT
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // For dynamic widget loading
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'", "https://generativelanguage.googleapis.com"]
-    }
-  },
-  crossOriginEmbedderPolicy: false // Allow embedding in LMS iframes
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false  // Disables CORP entirely for local dev
+  // Alternatively: crossOriginResourcePolicy: { policy: 'cross-origin' } to explicitly allow
 }));
 
 // Compression middleware
 app.use(compression());
 
-// CORS configuration
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (config.cors.origins.indexOf(origin) !== -1) {
+// CORS configuration - SIMPLIFIED FOR DEVELOPMENT
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowedOrigins = config.cors.origins;
+    if (!origin || allowedOrigins.includes(origin) || origin === 'null' || origin === 'file://') {
       callback(null, true);
     } else {
-      logger.warn('CORS blocked request', { origin, allowedOrigins: config.cors.origins });
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: config.cors.credentials,
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-ID', 'X-Learner-ID']
-};
-
-app.use(cors(corsOptions));
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -218,9 +208,10 @@ function gracefulShutdown(signal) {
 }
 
 // Start server
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT,'0.0.0.0', () => {
   logger.info('🚀 Learning Platform Chat Backend started', {
     port: PORT,
+    host:'0.0.0.0',
     environment: env,
     nodeVersion: process.version,
     corsOrigins: config.cors.origins,

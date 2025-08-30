@@ -5,7 +5,7 @@ module.exports = {
     // CORS settings for production
     cors: {
       origins: [
-        process.env.LMS_DOMAIN || 'https://your-lms-domain.com',
+        process.env.LMS_DOMAIN || 'https://prod.edrevel.com',
         process.env.FRONTEND_DOMAIN || 'https://your-frontend-domain.com'
       ],
       credentials: true
