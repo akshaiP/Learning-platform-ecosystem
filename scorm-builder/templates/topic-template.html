@@ -47,10 +47,7 @@
                 learnerData.progress = scormAPI.GetValue("cmi.completion_status") || "not attempted";
                 
                 console.log("Learner Data:", learnerData);
-                
-                // Update UI with learner info
                 updateLearnerInfo();
-                
                 return true;
             } catch (error) {
                 console.error("SCORM initialization error:", error);
@@ -139,7 +136,6 @@
         "chatContexts": {{{chatContextsJson}}}
     }
     </script>
-    
 
     <div id="pageWrapper" class="page-container">
         <!-- Header -->
@@ -154,6 +150,18 @@
                 </div>
             </div>
         </header>
+
+        <!-- Hero Section with Visual Task Introduction -->
+        {{#content.hero_image}}
+        <section class="hero-visual">
+            <div class="hero-image-container">
+                <img src="{{src}}" alt="{{alt}}" class="hero-image">
+                {{#caption}}
+                <div class="hero-caption">{{caption}}</div>
+                {{/caption}}
+            </div>
+        </section>
+        {{/content.hero_image}}
 
         <!-- Progress Bar -->
         <div class="progress-container">
@@ -180,11 +188,31 @@
             </section>
             {{/learning_objectives}}
 
-            <!-- Task Section -->
+            <!-- Enhanced Task Section with Images -->
             <section class="task-section">
-                <h2>📋 Task</h2>
+                <h2>📋 Your Task</h2>
                 <div class="task-content">
-                    <p class="task-statement">{{content.task_statement}}</p>
+                    <div class="task-statement-container">
+                        <p class="task-statement">{{content.task_statement}}</p>
+                        
+                        <!-- Task Images Gallery -->
+                        <!-- Task Images Gallery -->
+                        {{#content.task_images}}
+                        <div class="task-images-gallery">
+                            <h3>📸 Visual Context</h3>
+                            <div class="images-grid">
+                                {{#.}}
+                                <div class="task-image-item">
+                                    <img src="{{src}}" alt="{{alt}}" class="task-image" loading="lazy">
+                                    {{#caption}}
+                                    <div class="image-caption">{{caption}}</div>
+                                    {{/caption}}
+                                </div>
+                                {{/.}}
+                            </div>
+                        </div>
+                        {{/content.task_images}}
+                    </div>
                     
                     {{#content.task_requirements}}
                     <div class="task-requirements">
@@ -204,23 +232,30 @@
                 </div>
             </section>
 
-            <!-- Concepts Section -->
+            <!-- Enhanced Concepts Section with Images -->
             <section class="concepts-section">
                 <h2>📚 Key Concepts</h2>
                 <div class="concepts-grid">
                     {{#content.concepts}}
                     <div class="concept-card">
-                        <h3 class="concept-title">{{title}}</h3>
-                        <p class="concept-summary">{{summary}}</p>
-                        <button class="btn btn-outline" onclick="openLearnMore('{{learn_more_context}}', '{{title}}')">
-                            📖 Learn More
-                        </button>
+                        {{#image}}
+                        <div class="concept-image-container">
+                            <img src="{{src}}" alt="{{alt}}" class="concept-image" loading="lazy">
+                        </div>
+                        {{/image}}
+                        <div class="concept-content">
+                            <h3 class="concept-title">{{title}}</h3>
+                            <p class="concept-summary">{{summary}}</p>
+                            <button class="btn btn-outline" onclick="openLearnMore('{{learn_more_context}}', '{{title}}')">
+                                📖 Learn More
+                            </button>
+                        </div>
                     </div>
                     {{/content.concepts}}
                 </div>
             </section>
 
-            <!-- Hints Section -->
+            <!-- Hints Section (unchanged functionality) -->
             {{#content.hints}}
             <section class="hints-section" id="hintsSection" style="display: none;">
                 <h2>💡 Hints</h2>
@@ -255,7 +290,7 @@
             </section>
             {{/content.practice}}
 
-            <!-- Quiz Section -->
+            <!-- Enhanced Quiz Section with Explanation Images -->
             {{#quiz}}
             <section class="quiz-section">
                 <h2>🧠 Knowledge Check</h2>
@@ -271,6 +306,15 @@
                             {{/quiz.options}}
                         </div>
                         <div class="quiz-result" id="quizResult" style="display: none;"></div>
+                        
+                        <!-- Quiz Explanation Image -->
+                        {{#quiz.explanation_image}}
+                        <div class="quiz-explanation-image" id="quizExplanationImage" style="display: none;">
+                            <img src="{{quiz.explanation_image.src}}" alt="{{quiz.explanation_image.alt}}" class="explanation-image">
+                            <div class="explanation-caption">Visual explanation of the correct answer</div>
+                        </div>
+                        {{/quiz.explanation_image}}
+                        
                         <div class="quiz-actions" id="quizActions" style="display: none;">
                             <button class="btn btn-success" id="proceedBtn" onclick="proceedToNext()" style="display: none;">
                                 ✅ Continue
@@ -299,43 +343,43 @@
     </button>
 
     <!-- Enhanced Chat Widget Loading -->
-<script>
-    (function() {
-        let chatWidgetLoaded = false;
-        let loadAttempts = 0;
-        const maxAttempts = 3;
-        
-        function loadChatWidget() {
-            const script = document.createElement('script');
-            script.src = '{{backend_url}}/chat-widget.js';
+    <script>
+        (function() {
+            let chatWidgetLoaded = false;
+            let loadAttempts = 0;
+            const maxAttempts = 3;
             
-            script.onload = function() {
-                chatWidgetLoaded = true;
-                console.log('✅ Chat widget loaded successfully');
-            };
-            
-            script.onerror = function() {
-                loadAttempts++;
-                console.warn(`❌ Failed to load chat widget (attempt ${loadAttempts}/${maxAttempts})`);
+            function loadChatWidget() {
+                const script = document.createElement('script');
+                script.src = '{{backend_url}}/chat-widget.js';
                 
-                if (loadAttempts < maxAttempts) {
-                    setTimeout(loadChatWidget, 1000); // Retry after 1 second
-                } else {
-                    console.warn('🔄 Using fallback chat widget');
-                    loadFallbackChatWidget();
-                }
-            };
-            
-            document.head.appendChild(script);
-        }
-        
-        function loadFallbackChatWidget() {
-            window.chatWidget = {
-                initChatWidget: function(config) {
-                    const message = config.initialMessage || 'Chat would open here';
-                    const isOnline = navigator.onLine;
+                script.onload = function() {
+                    chatWidgetLoaded = true;
+                    console.log('✅ Chat widget loaded successfully');
+                };
+                
+                script.onerror = function() {
+                    loadAttempts++;
+                    console.warn(`❌ Failed to load chat widget (attempt ${loadAttempts}/${maxAttempts})`);
                     
-                    const fallbackMsg = `
+                    if (loadAttempts < maxAttempts) {
+                        setTimeout(loadChatWidget, 1000);
+                    } else {
+                        console.warn('🔄 Using fallback chat widget');
+                        loadFallbackChatWidget();
+                    }
+                };
+                
+                document.head.appendChild(script);
+            }
+            
+            function loadFallbackChatWidget() {
+                window.chatWidget = {
+                    initChatWidget: function(config) {
+                        const message = config.initialMessage || 'Chat would open here';
+                        const isOnline = navigator.onLine;
+                        
+                        const fallbackMsg = `
     🤖 Chat Widget (${isOnline ? 'Backend Offline' : 'No Internet'})
     
     Topic: ${config.topic}
@@ -343,29 +387,27 @@
     Message: ${message}
     
     ${isOnline ? '⚠️ Backend server not responding' : '📡 No internet connection'}
-                    `.trim();
-                    
-                    alert(fallbackMsg);
+                        `.trim();
+                        
+                        alert(fallbackMsg);
+                    }
+                };
+                chatWidgetLoaded = true;
+            }
+            
+            window.ensureChatWidget = function(callback) {
+                if (chatWidgetLoaded && window.chatWidget) {
+                    callback();
+                } else {
+                    setTimeout(() => window.ensureChatWidget(callback), 100);
                 }
             };
-            chatWidgetLoaded = true;
-        }
-        
-        // Ensure chat widget is available
-        window.ensureChatWidget = function(callback) {
-            if (chatWidgetLoaded && window.chatWidget) {
-                callback();
-            } else {
-                setTimeout(() => window.ensureChatWidget(callback), 100);
-            }
-        };
-        
-        // Start loading
-        loadChatWidget();
-    })();
+            
+            loadChatWidget();
+        })();
     </script>       
     
-    <!-- Topic-Specific JavaScript -->
+    <!-- Topic-Specific JavaScript (Enhanced with Image Handling) -->
     <script>
         // Parse template data safely
         let templateData = {};
@@ -389,7 +431,6 @@
         let progressSteps = 0;
         let quizCorrectAnswer = templateData.quiz ? templateData.quiz.correct_answer : 0;
 
-        // Topic configuration for chat widget
         const topicConfig = {
             topic: templateData.id,
             backendUrl: templateData.backendUrl,
@@ -400,22 +441,36 @@
             updateProgress(1);
             console.log('Topic initialized:', topicConfig);
             
-            // Setup topic-specific behaviors
             setupProgressTracking();
             setupQuizOptions();
+            setupImageLazyLoading();
+        }
+
+        function setupImageLazyLoading() {
+            // Add loading states for images
+            const images = document.querySelectorAll('img[loading="lazy"]');
+            images.forEach(img => {
+                img.addEventListener('load', function() {
+                    this.classList.add('loaded');
+                });
+                
+                img.addEventListener('error', function() {
+                    this.classList.add('error');
+                    this.alt = 'Image not available';
+                    console.warn('Failed to load image:', this.src);
+                });
+            });
         }
 
         function setupProgressTracking() {
-            // Track time spent on page
             setInterval(() => {
                 if (scormAPI) {
                     markProgress();
                 }
-            }, 30000); // Update every 30 seconds
+            }, 30000);
         }
 
         function setupQuizOptions() {
-            // Add letter labels and click handlers to quiz options
             const options = document.querySelectorAll('.quiz-option');
             const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
             
@@ -425,12 +480,59 @@
                     letterSpan.textContent = letters[index] + '.';
                 }
                 
-                // Add click handler
                 option.addEventListener('click', function() {
                     const optionIndex = parseInt(this.getAttribute('data-option-index'));
                     selectQuizOption(this, optionIndex);
                 });
             });
+        }
+
+        // Enhanced Quiz functionality with image support
+        function selectQuizOption(element, optionIndex) {
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('correct', 'incorrect');
+            });
+            
+            const result = document.getElementById('quizResult');
+            const actions = document.getElementById('quizActions');
+            const explanationImage = document.getElementById('quizExplanationImage');
+            
+            if (optionIndex === quizCorrectAnswer) {
+                element.classList.add('correct');
+                if (result) {
+                    result.className = 'quiz-result success';
+                    result.style.display = 'block';
+                    result.textContent = '✅ Correct! Well done!';
+                }
+                
+                // Show explanation image for correct answers too
+                if (explanationImage) {
+                    explanationImage.style.display = 'block';
+                }
+                
+                const proceedBtn = document.getElementById('proceedBtn');
+                if (proceedBtn) proceedBtn.style.display = 'inline-flex';
+                quizCompleted = true;
+                updateProgress(4);
+            } else {
+                element.classList.add('incorrect');
+                if (result) {
+                    result.className = 'quiz-result error';
+                    result.style.display = 'block';
+                    result.textContent = '❌ Incorrect. Would you like help understanding the correct answer?';
+                }
+                
+                // Always show explanation image for incorrect answers
+                if (explanationImage) {
+                    explanationImage.style.display = 'block';
+                }
+                
+                setTimeout(() => {
+                    openQuizFailureChat();
+                }, 1500);
+            }
+            
+            if (actions) actions.style.display = 'block';
         }
 
         // Progress tracking
@@ -487,8 +589,8 @@
                 
                 chatWidget.initChatWidget({
                 topic: topicConfig.topic,
-                trigger: 'help', // Use mapped context
-                context: mapContext('task_help'), // Map to 'help'
+                trigger: 'help',
+                context: mapContext('task_help'),
                 backendUrl: topicConfig.backendUrl,
                 learnerData: learnerData,
                 initialMessage: `I need help understanding the task: ${taskText}`
@@ -496,7 +598,7 @@
             });
         }
 
-        // Hints functionality
+        // Hints functionality (unchanged)
         function toggleHints() {
             const hintsSection = document.getElementById('hintsSection');
             if (hintsSection) {
@@ -538,44 +640,6 @@
             });
         }
 
-        // Quiz functionality  
-        function selectQuizOption(element, optionIndex) {
-            // Remove previous selections
-            document.querySelectorAll('.quiz-option').forEach(opt => {
-                opt.classList.remove('correct', 'incorrect');
-            });
-            
-            const result = document.getElementById('quizResult');
-            const actions = document.getElementById('quizActions');
-            
-            if (optionIndex === quizCorrectAnswer) {
-                element.classList.add('correct');
-                if (result) {
-                    result.className = 'quiz-result success';
-                    result.style.display = 'block';
-                    result.textContent = '✅ Correct! Well done!';
-                }
-                const proceedBtn = document.getElementById('proceedBtn');
-                if (proceedBtn) proceedBtn.style.display = 'inline-flex';
-                quizCompleted = true;
-                updateProgress(4);
-            } else {
-                element.classList.add('incorrect');
-                if (result) {
-                    result.className = 'quiz-result error';
-                    result.style.display = 'block';
-                    result.textContent = '❌ Incorrect. Would you like help understanding the correct answer?';
-                }
-                
-                // Auto-trigger chat for quiz failure
-                setTimeout(() => {
-                    openQuizFailureChat();
-                }, 1500);
-            }
-            
-            if (actions) actions.style.display = 'block';
-        }
-
         function openQuizFailureChat() {
             if (typeof chatWidget !== 'undefined') {
                 const questionElement = document.querySelector('.quiz-question');
@@ -583,8 +647,8 @@
                 
                 chatWidget.initChatWidget({
                 topic: topicConfig.topic,
-                trigger: 'quiz_failed', // This is correct
-                context: 'quiz_failed', // Add explicit context
+                trigger: 'quiz_failed',
+                context: 'quiz_failed',
                 backendUrl: topicConfig.backendUrl,
                 learnerData: learnerData,
                 initialMessage: `I got the quiz question wrong. The question was: "${questionText}". Can you help me understand the correct answer?`
@@ -595,7 +659,7 @@
         function openQuizExplanation() {
             if (typeof chatWidget !== 'undefined') {
                 const questionElement = document.querySelector('.quiz-question');
-                const questionText = questionElement ? questionElement.textContent : 'the quiz question';
+                const questionText = questionElement ? questionText.textContent : 'the quiz question';
                 
                 chatWidget.initChatWidget({
                 topic: topicConfig.topic,
@@ -626,7 +690,6 @@
             }
         }
 
-        // Learn More functionality
         function openLearnMore(context, conceptTitle) {
             if (typeof chatWidget !== 'undefined') {
                 chatWidget.initChatWidget({
@@ -659,7 +722,6 @@
             }
         }
 
-        // Summary and General Chat
         function openSummaryChat() {
             if (typeof chatWidget !== 'undefined') {
                 chatWidget.initChatWidget({

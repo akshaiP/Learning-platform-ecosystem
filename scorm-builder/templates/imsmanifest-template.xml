@@ -40,6 +40,9 @@
               href="index.html">
       <file href="index.html"/>
       <file href="styles.css"/>
+      {{#hasAssets}}
+      <file href="assets/"/>
+      {{/hasAssets}}
     </resource>
   </resources>
 </manifest>

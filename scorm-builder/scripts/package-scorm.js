@@ -1,141 +1,72 @@
-const archiver = require('archiver');
 const fs = require('fs-extra');
 const path = require('path');
+const archiver = require('archiver');
 
-class SCORMPackager {
+class ScormPackager {
   constructor() {
     this.tempDir = path.join(__dirname, '../temp');
   }
 
-  async packageSCORM(topicId, packageData) {
-    const { html, manifest, topicConfig, config } = packageData;
+  async packageScorm(topicId, buildData) {
+    const { html, manifest, topicConfig, config, tempDir } = buildData;
     
     try {
-      // Fixed: Use config.outputDir instead of config.config.outputDir
-      await fs.ensureDir(config.outputDir);
-      
-      // Create temporary working directory
-      const workDir = path.join(this.tempDir, topicId);
-      await fs.ensureDir(workDir);
-      
-      // Write all files to temp directory
-      await this.writePackageFiles(workDir, {
-        html: html.html,
-        css: html.css,
-        manifest,
-        topicConfig,
-        config: config  // Fixed: Pass config directly
-      });
-      
-      // Create zip package
+      // Create package temp directory
+      const packageTempDir = path.join(this.tempDir, `package-${topicId}-${Date.now()}`);
+      await fs.ensureDir(packageTempDir);
+
+      // Write main files
+      await fs.writeFile(path.join(packageTempDir, 'index.html'), html.html);
+      await fs.writeFile(path.join(packageTempDir, 'styles.css'), html.css);
+      await fs.writeFile(path.join(packageTempDir, 'imsmanifest.xml'), manifest);
+
+      // Copy assets if they exist
+      const assetsDir = path.join(tempDir, 'assets');
+      if (await fs.pathExists(assetsDir)) {
+        console.log('📁 Copying assets to package...');
+        await fs.copy(assetsDir, path.join(packageTempDir, 'assets'));
+      }
+
+      // Create zip file
       const outputPath = path.join(config.outputDir, `${topicId}.zip`);
-      const packageStats = await this.createZipPackage(workDir, outputPath, config.isDev);
+      await this.createZipFile(packageTempDir, outputPath);
+
+      // Get file size
+      const stats = await fs.stat(outputPath);
       
-      // Cleanup temp directory
-      await fs.remove(workDir);
-      
+      // Clean up package temp directory
+      await fs.remove(packageTempDir);
+
       return {
         filename: `${topicId}.zip`,
-        path: outputPath,
-        size: packageStats.size,
-        files: packageStats.files
+        fullPath: outputPath,
+        size: stats.size
       };
-      
+
     } catch (error) {
-      // Cleanup on error
-      const workDir = path.join(this.tempDir, topicId);
-      if (await fs.pathExists(workDir)) {
-        await fs.remove(workDir);
-      }
       throw new Error(`Failed to package SCORM: ${error.message}`);
     }
   }
 
-  async writePackageFiles(workDir, { html, css, manifest, topicConfig, config }) {
-    // Write main HTML file
-    await fs.writeFile(path.join(workDir, 'index.html'), html, 'utf8');
-    
-    // Write CSS file
-    await fs.writeFile(path.join(workDir, 'styles.css'), css, 'utf8');
-    
-    // Write manifest
-    await fs.writeFile(path.join(workDir, 'imsmanifest.xml'), manifest, 'utf8');
-    
-    // Copy any additional assets
-    if (topicConfig.assets) {
-      const assetsDir = path.join(__dirname, '../assets');
-      const targetAssetsDir = path.join(workDir, 'assets');
-      
-      for (const asset of topicConfig.assets) {
-        const assetPath = path.join(assetsDir, asset);
-        if (await fs.pathExists(assetPath)) {
-          await fs.ensureDir(targetAssetsDir);
-          await fs.copy(assetPath, path.join(targetAssetsDir, asset));
-        }
-      }
-    }
-
-    // Write package metadata (for debugging)
-    if (config.isDev) {
-      const metadata = {
-        buildTime: new Date().toISOString(),
-        topicId: topicConfig.id,
-        backendUrl: topicConfig.backendUrl,
-        version: '1.0.0'
-      };
-      await fs.writeFile(
-        path.join(workDir, 'package-info.json'), 
-        JSON.stringify(metadata, null, 2), 
-        'utf8'
-      );
-    }
-  }
-
-  async createZipPackage(sourceDir, outputPath, isDev = false) {
+  async createZipFile(sourceDir, outputPath) {
     return new Promise((resolve, reject) => {
       const output = fs.createWriteStream(outputPath);
-      const archive = archiver('zip', {
-        zlib: { level: isDev ? 1 : 9 } // Fast compression in dev, max in production
-      });
-
-      let stats = {
-        size: 0,
-        files: 0
-      };
+      const archive = archiver('zip', { zlib: { level: 9 } });
 
       output.on('close', () => {
-        stats.size = archive.pointer();
-        resolve(stats);
+        console.log(`📦 Package created: ${(archive.pointer() / 1024).toFixed(1)} KB`);
+        resolve();
       });
 
-      archive.on('error', (err) => {
-        reject(err);
-      });
-
-      archive.on('entry', (entry) => {
-        if (entry.type === 'file') {
-          stats.files++;
-        }
-      });
-
+      archive.on('error', reject);
       archive.pipe(output);
-
-      // Add all files from source directory
       archive.directory(sourceDir, false);
-
       archive.finalize();
     });
   }
-
-  async cleanup() {
-    // Clean up temp directory
-    if (await fs.pathExists(this.tempDir)) {
-      await fs.remove(this.tempDir);
-    }
-  }
 }
 
-module.exports = async function packageScorm(topicId, packageData) {
-  const packager = new SCORMPackager();
-  return await packager.packageSCORM(topicId, packageData);
+module.exports = async function packageScorm(topicId, buildData) {
+  const packager = new ScormPackager();
+  return await packager.packageScorm(topicId, buildData);
 };

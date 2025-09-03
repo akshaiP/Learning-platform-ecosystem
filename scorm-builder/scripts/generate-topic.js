@@ -1,17 +1,25 @@
 const Mustache = require('mustache');
 const fs = require('fs-extra');
 const path = require('path');
+const AssetProcessor = require('./process-assets');
 
 class TopicGenerator {
   constructor() {
     this.templatePath = path.join(__dirname, '../templates/topic-template.html');
     this.stylesPath = path.join(__dirname, '../templates/styles/topic-styles.css');
+    this.assetProcessor = new AssetProcessor();
   }
 
-  async generateHTML(topicConfig, config) {
+  async generateHTML(topicConfig, config, tempDir) {
     try {
       // Load HTML template
       const template = await fs.readFile(this.templatePath, 'utf8');
+      
+      // Process assets first
+      const topicDir = path.join(__dirname, '../topics', topicConfig.id);
+      if (await fs.pathExists(topicDir)) {
+        await this.assetProcessor.processTopicAssets(topicConfig, topicDir, tempDir);
+      }
       
       // Prepare template data with proper JSON serialization
       const templateData = this.prepareTemplateData(topicConfig, config);
@@ -51,7 +59,7 @@ class TopicGenerator {
     data.chatContextsJson = JSON.stringify(data.chat_contexts || {});
   
     return data;
-  }  
+  }
 
   registerMustacheHelpers() {
     // Custom escape function for JSON data
@@ -113,18 +121,33 @@ class TopicGenerator {
       }
     }
 
+    // Validate image assets
+    const topicDir = path.join(__dirname, '../topics', topicConfig.id);
+    if (fs.pathExistsSync(topicDir)) {
+      const validation = this.assetProcessor.validateImageAssets(topicConfig, topicDir);
+      if (!validation.valid) {
+        console.warn(`⚠️ Image validation warnings for ${topicConfig.id}:`);
+        if (validation.missing.length > 0) {
+          console.warn(`Missing images: ${validation.missing.join(', ')}`);
+        }
+        if (validation.invalid.length > 0) {
+          console.warn(`Invalid image types: ${validation.invalid.join(', ')}`);
+        }
+      }
+    }
+
     return true;
   }
 }
 
-module.exports = async function generateTopic(topicConfig, config) {
+module.exports = async function generateTopic(topicConfig, config, tempDir) {
   const generator = new TopicGenerator();
   
   // Validate configuration
   generator.validateTopicConfig(topicConfig);
   
   // Generate HTML and CSS
-  const html = await generator.generateHTML(topicConfig, config);
+  const html = await generator.generateHTML(topicConfig, config, tempDir);
   const css = await generator.generateStyles(topicConfig, config);
   
   return {

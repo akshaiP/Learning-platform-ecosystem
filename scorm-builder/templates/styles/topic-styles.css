@@ -1,4 +1,4 @@
-/* Learning Platform Topic Styles */
+/* Learning Platform Topic Styles - Enhanced with Image Support */
 :root {
     --primary-color: #007bff;
     --success-color: #28a745;
@@ -37,7 +37,7 @@ body {
 }
 
 .page-container.chat-open {
-    margin-right: 40vw; /* Adjust main content when chat is open */
+    margin-right: 40vw;
     transition: margin-right 0.3s ease;
 }
 
@@ -85,6 +85,42 @@ body {
     font-size: 0.9rem;
     opacity: 0.8;
     text-transform: capitalize;
+}
+
+/* NEW: Hero Visual Section */
+.hero-visual {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.hero-image-container {
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.hero-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    display: block;
+    transition: var(--transition);
+}
+
+.hero-image:hover {
+    transform: scale(1.02);
+}
+
+.hero-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+    padding: 2rem 2rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
 }
 
 /* Progress Bar */
@@ -162,7 +198,7 @@ section h2 {
     margin-right: 0.5rem;
 }
 
-/* Task Section */
+/* Enhanced Task Section with Images */
 .task-content {
     background: white;
     border: 2px solid var(--primary-color);
@@ -170,11 +206,76 @@ section h2 {
     padding: 1.5rem;
 }
 
+.task-statement-container {
+    margin-bottom: 1.5rem;
+}
+
 .task-statement {
     font-size: 1.1rem;
     font-weight: 500;
     color: var(--primary-color);
     margin-bottom: 1rem;
+}
+
+/* NEW: Task Images Gallery */
+.task-images-gallery {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+}
+
+.task-images-gallery h3 {
+    margin-top: 0;
+    color: var(--dark-text);
+    font-size: 1.1rem;
+}
+
+.images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.task-image-item {
+    background: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.task-image-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.task-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    transition: var(--transition);
+}
+
+.task-image.loaded {
+    opacity: 1;
+}
+
+.task-image.error {
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+}
+
+.image-caption {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+    background: white;
 }
 
 .task-requirements {
@@ -198,10 +299,10 @@ section h2 {
     flex-wrap: wrap;
 }
 
-/* Concepts Grid */
+/* Enhanced Concepts Grid with Images */
 .concepts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 1rem;
 }
 
@@ -209,14 +310,42 @@ section h2 {
     background: white;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    padding: 1.5rem;
+    overflow: hidden;
     box-shadow: var(--shadow);
     transition: var(--transition);
+    display: flex;
+    flex-direction: column;
 }
 
 .concept-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* NEW: Concept Image Container */
+.concept-image-container {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background: var(--light-bg);
+}
+
+.concept-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transition);
+}
+
+.concept-image:hover {
+    transform: scale(1.05);
+}
+
+.concept-content {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .concept-title {
@@ -230,6 +359,7 @@ section h2 {
     color: #6c757d;
     margin-bottom: 1rem;
     line-height: 1.5;
+    flex: 1;
 }
 
 /* Hints Section */
@@ -261,7 +391,7 @@ section h2 {
     flex-wrap: wrap;
 }
 
-/* Quiz Section */
+/* Enhanced Quiz Section with Image Support */
 .quiz-container {
     background: white;
     border: 1px solid var(--border-color);
@@ -341,6 +471,29 @@ section h2 {
     background: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
+}
+
+/* NEW: Quiz Explanation Image */
+.quiz-explanation-image {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.explanation-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.explanation-caption {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-style: italic;
 }
 
 .quiz-actions {
@@ -459,6 +612,22 @@ section h2 {
     transform: scale(1.1);
 }
 
+/* Image Loading States */
+img {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+img.loaded,
+img[src] {
+    opacity: 1;
+}
+
+img.error {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .page-container.chat-open {
@@ -475,6 +644,10 @@ section h2 {
         min-width: auto;
     }
     
+    .hero-image {
+        height: 200px;
+    }
+    
     .main-content {
         padding: 1rem;
     }
@@ -485,6 +658,15 @@ section h2 {
     
     .concepts-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .images-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .task-image-item,
+    .concept-card {
+        margin-bottom: 1rem;
     }
     
     .navigation {
@@ -528,6 +710,15 @@ section h2 {
     .topic-header {
         padding: 1.5rem;
     }
+    
+    .hero-image {
+        height: 150px;
+    }
+    
+    .task-image,
+    .concept-image {
+        height: 150px;
+    }
 }
 
 /* Print Styles */
@@ -546,6 +737,11 @@ section h2 {
     .topic-header {
         background: white !important;
         color: black !important;
+    }
+    
+    img {
+        max-width: 100% !important;
+        page-break-inside: avoid;
     }
 }
 
@@ -586,5 +782,28 @@ section h2 {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+    }
+    
+    .hero-image:hover,
+    .concept-image:hover {
+        transform: none;
+    }
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --light-bg: #2c3e50;
+        --dark-text: #ecf0f1;
+        --border-color: #34495e;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    }
+    
+    .page-container {
+        background: #34495e;
+        color: var(--dark-text);
     }
 }

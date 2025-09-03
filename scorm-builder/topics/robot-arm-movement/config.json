@@ -1,0 +1,91 @@
+{
+  "title": "Robot Arm Movement Control",
+  "description": "Learn to classify and control robot arms by degrees of freedom",
+  
+  "learning_objectives": [
+    "Understand robot arm degrees of freedom (DOF)",
+    "Classify robots based on their movement capabilities", 
+    "Implement basic control algorithms"
+  ],
+  
+  "content": {
+    "hero_image": {
+      "src": "assets/images/robot-arm-hero.jpg",
+      "alt": "Industrial robot arm in action",
+      "caption": "Modern 6-DOF industrial robot arm"
+    },
+    
+    "task_statement": "Write code to classify robots by their degrees of freedom and implement basic movement control",
+    
+    "task_requirements": [
+      "Identify DOF for different robot configurations",
+      "Create classification function",
+      "Test with sample robot data"
+    ],
+    
+    "task_images": [
+      {
+        "src": "assets/images/robot-types.jpg",
+        "alt": "Various robot arm types",
+        "caption": "3-DOF, 5-DOF, and 6-DOF robot configurations"
+      },
+      {
+        "src": "assets/images/robot-classification.jpg",
+        "alt": "Robot classification methods",
+        "caption": "Different ways to classify robot arms"
+      }
+    ],
+    
+    "concepts": [
+      {
+        "title": "Degrees of Freedom (DOF)",
+        "summary": "The number of independent movements a robot can make",
+        "image": {
+          "src": "assets/images/robot-types.jpg",
+          "alt": "DOF concept illustration"
+        },
+        "learn_more_context": "dof_explanation"
+      },
+      {
+        "title": "Robot Classification", 
+        "summary": "Categorizing robots based on their movement capabilities",
+        "image": {
+          "src": "assets/images/robot-classification.jpg",
+          "alt": "Robot classification chart"
+        },
+        "learn_more_context": "classification_methods"
+      }
+    ],
+    
+    "hints": [
+      "Start by counting the joints that can move independently",
+      "Consider both rotational and translational movements",
+      "Look at the robot's workspace and reachability"
+    ],
+    
+    "practice": {
+      "description": "Practice implementing DOF calculations with real robot specifications"
+    }
+  },
+  
+  "quiz": {
+    "question": "How many degrees of freedom does a typical industrial robot arm have?",
+    "options": ["3 DOF", "5 DOF", "6 DOF", "7 DOF"],
+    "correct_answer": 2,
+    "explanation_image": {
+      "src": "assets/images/robot-arm-hero.jpg",
+      "alt": "6-DOF robot arm explanation"
+    }
+  },
+  
+  "chat_contexts": {
+    "help": "The learner needs help with robot arm DOF classification task",
+    "dof_explanation": "Explain degrees of freedom in robotics with visual examples",
+    "classification_methods": "Describe different ways to classify robot arms", 
+    "quiz_failed": "Student got the DOF quiz wrong, needs explanation with visuals"
+  },
+  
+  "styling": {
+    "primaryColor": "#007bff"
+  }
+}

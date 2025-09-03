@@ -1,161 +1,255 @@
-const Joi = require('joi');
 const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 
-// Topic configuration schema
-const topicSchema = Joi.object({
-  id: Joi.string().required().pattern(/^[a-z0-9-]+$/),
-  title: Joi.string().required().min(5).max(100),
-  description: Joi.string().required().min(10).max(500),
-  keywords: Joi.array().items(Joi.string()).optional(),
-  
-  learning_objectives: Joi.array().items(Joi.string()).min(1).required(),
-  difficulty_level: Joi.string().valid('beginner', 'intermediate', 'advanced').default('beginner'),
-  estimated_duration: Joi.string().pattern(/^PT\d+[HM]$/).default('PT30M'),
-  
-  content: Joi.object({
-    task_statement: Joi.string().required(),
-    task_requirements: Joi.array().items(Joi.string()).optional(),
-    concepts: Joi.array().items(
-      Joi.object({
-        title: Joi.string().required(),
-        summary: Joi.string().required(),
-        learn_more_context: Joi.string().required()
-      })
-    ).min(1).required(),
-    hints: Joi.array().items(Joi.string()).min(1).required(),
-    practice: Joi.object({
-      description: Joi.string().required()
-    }).optional()
-  }).required(),
-  
-  quiz: Joi.object({
-    question: Joi.string().required(),
-    options: Joi.array().items(Joi.string()).min(2).max(6).required(),
-    correct_answer: Joi.number().integer().min(0).required(),
-    explanation: Joi.string().optional()
-  }).optional(),
-  
-  chat_contexts: Joi.object().pattern(Joi.string(), Joi.string()).required(),
-  styling: Joi.object().optional()
-});
+class TopicValidator {
+  constructor() {
+    this.topicsDir = path.join(__dirname, '../topics');
+  }
 
-async function validateTopics(topicsDir = path.join(__dirname, '../topics')) {
-  console.log(chalk.blue('🔍 Validating topic configurations...\n'));
-  
-  try {
-    const topicFiles = await fs.readdir(topicsDir);
-    const jsonFiles = topicFiles.filter(file => file.endsWith('.json'));
+  async validateAllTopics() {
+    console.log(chalk.blue('🔍 Validating topic configurations...'));
     
-    if (jsonFiles.length === 0) {
-      console.log(chalk.yellow('⚠️  No topic files found in topics directory'));
-      return;
-    }
-    
-    let validCount = 0;
-    let errorCount = 0;
-    
-    for (const file of jsonFiles) {
-      const topicId = path.basename(file, '.json');
-      console.log(chalk.gray(`Validating ${file}...`));
+    try {
+      // Check if topics directory exists
+      if (!await fs.pathExists(this.topicsDir)) {
+        throw new Error('Topics directory not found');
+      }
+
+      // Find all topics (both folder and file structure)
+      const topics = await this.findAllTopics();
       
-      try {
-        // Read and parse JSON
-        const filePath = path.join(topicsDir, file);
-        const topicData = await fs.readJson(filePath);
-        
-        // Validate against schema
-        const { error, value } = topicSchema.validate(topicData, { 
-          abortEarly: false,
-          allowUnknown: false
-        });
-        
-        if (error) {
-          console.log(chalk.red(`  ✗ ${file}: Validation failed`));
-          error.details.forEach(detail => {
-            console.log(chalk.red(`    - ${detail.message}`));
-          });
-          errorCount++;
-        } else {
-          // Additional custom validations
-          const customErrors = validateCustomRules(value);
+      if (topics.length === 0) {
+        console.log(chalk.yellow('⚠️  No topic configurations found'));
+        return { valid: true, topics: [], warnings: ['No topics to validate'] };
+      }
+
+      console.log(chalk.blue(`📚 Found ${topics.length} topics to validate`));
+
+      // Validate each topic
+      const results = [];
+      for (const topic of topics) {
+        try {
+          const result = await this.validateTopic(topic);
+          results.push(result);
           
-          if (customErrors.length > 0) {
-            console.log(chalk.red(`  ✗ ${file}: Custom validation failed`));
-            customErrors.forEach(error => {
-              console.log(chalk.red(`    - ${error}`));
-            });
-            errorCount++;
+          if (result.valid) {
+            console.log(chalk.green('✅'), `${topic.id} - Valid`);
           } else {
-            console.log(chalk.green(`  ✓ ${file}: Valid`));
-            validCount++;
+            console.log(chalk.red('❌'), `${topic.id} - Invalid`);
+            result.errors.forEach(error => 
+              console.log(chalk.red('   →'), error)
+            );
           }
+          
+          if (result.warnings.length > 0) {
+            result.warnings.forEach(warning =>
+              console.log(chalk.yellow('   ⚠️'), warning)
+            );
+          }
+          
+        } catch (error) {
+          console.log(chalk.red('❌'), `${topic.id} - Validation failed: ${error.message}`);
+          results.push({
+            id: topic.id,
+            valid: false,
+            errors: [error.message],
+            warnings: []
+          });
         }
-        
-      } catch (error) {
-        console.log(chalk.red(`  ✗ ${file}: ${error.message}`));
-        errorCount++;
       }
-      
-      console.log('');
+
+      const validTopics = results.filter(r => r.valid);
+      const invalidTopics = results.filter(r => !r.valid);
+
+      console.log(chalk.blue('\n📊 Validation Summary:'));
+      console.log(chalk.green(`✅ Valid topics: ${validTopics.length}`));
+      if (invalidTopics.length > 0) {
+        console.log(chalk.red(`❌ Invalid topics: ${invalidTopics.length}`));
+      }
+
+      return {
+        valid: invalidTopics.length === 0,
+        topics: results,
+        warnings: []
+      };
+
+    } catch (error) {
+      console.log(chalk.red('❌ Validation failed:'), error.message);
+      return {
+        valid: false,
+        topics: [],
+        errors: [error.message]
+      };
     }
-    
-    // Summary
-    console.log(chalk.blue('📊 Validation Summary:'));
-    console.log(chalk.green(`  ✓ Valid topics: ${validCount}`));
-    if (errorCount > 0) {
-      console.log(chalk.red(`  ✗ Invalid topics: ${errorCount}`));
-      process.exit(1);
+  }
+
+  async findAllTopics() {
+    const items = await fs.readdir(this.topicsDir);
+    const topics = [];
+
+    for (const item of items) {
+      const itemPath = path.join(this.topicsDir, item);
+      const stat = await fs.stat(itemPath);
+
+      if (stat.isDirectory()) {
+        // Check for config.json in folder
+        const configPath = path.join(itemPath, 'config.json');
+        if (await fs.pathExists(configPath)) {
+          const config = await fs.readJson(configPath);
+          topics.push({
+            id: item,
+            type: 'folder',
+            configPath: configPath,
+            config: config
+          });
+        }
+      } else if (item.endsWith('.json')) {
+        // Old structure - direct JSON files
+        const config = await fs.readJson(itemPath);
+        topics.push({
+          id: path.basename(item, '.json'),
+          type: 'file',
+          configPath: itemPath,
+          config: config
+        });
+      }
+    }
+
+    return topics;
+  }
+
+  async validateTopic(topic) {
+    const errors = [];
+    const warnings = [];
+    const { config } = topic;
+
+    // Required fields validation
+    const requiredFields = ['title', 'description'];
+    for (const field of requiredFields) {
+      if (!config[field] || config[field].trim() === '') {
+        errors.push(`Missing required field: ${field}`);
+      }
+    }
+
+    // Content validation
+    if (!config.content) {
+      warnings.push('No content section defined');
     } else {
-      console.log(chalk.green('  🎉 All topics are valid!'));
-    }
-    
-  } catch (error) {
-    console.error(chalk.red(`Validation failed: ${error.message}`));
-    process.exit(1);
-  }
-}
+      // Validate task statement
+      if (!config.content.task_statement) {
+        warnings.push('No task statement defined');
+      }
 
-function validateCustomRules(topic) {
-  const errors = [];
-  
-  // Check ID matches filename convention
-  if (topic.id !== topic.id.toLowerCase()) {
-    errors.push('ID must be lowercase');
-  }
-  
-  // Validate quiz correct_answer is within options range
-  if (topic.quiz) {
-    if (topic.quiz.correct_answer >= topic.quiz.options.length) {
-      errors.push('Quiz correct_answer index is out of range');
-    }
-  }
-  
-  // Validate chat contexts reference existing concepts
-  if (topic.content.concepts) {
-    const conceptContexts = topic.content.concepts.map(c => c.learn_more_context);
-    const chatContextKeys = Object.keys(topic.chat_contexts);
-    
-    for (const context of conceptContexts) {
-      if (!chatContextKeys.includes(context)) {
-        errors.push(`Concept references undefined chat context: ${context}`);
+      // Validate concepts
+      if (config.content.concepts && Array.isArray(config.content.concepts)) {
+        config.content.concepts.forEach((concept, index) => {
+          if (!concept.title) {
+            errors.push(`Concept ${index + 1}: Missing title`);
+          }
+          if (!concept.summary) {
+            warnings.push(`Concept ${index + 1}: Missing summary`);
+          }
+        });
+      }
+
+      // Validate images (if folder structure)
+      if (topic.type === 'folder') {
+        const imagesDir = path.join(path.dirname(topic.configPath), 'images');
+        if (await fs.pathExists(imagesDir)) {
+          const imageValidation = await this.validateImages(config, imagesDir);
+          errors.push(...imageValidation.errors);
+          warnings.push(...imageValidation.warnings);
+        }
       }
     }
+
+    // Quiz validation
+    if (config.quiz) {
+      if (!config.quiz.question) {
+        errors.push('Quiz: Missing question');
+      }
+      if (!Array.isArray(config.quiz.options) || config.quiz.options.length < 2) {
+        errors.push('Quiz: Must have at least 2 options');
+      }
+      if (typeof config.quiz.correct_answer !== 'number' || 
+          config.quiz.correct_answer < 0 || 
+          (config.quiz.options && config.quiz.correct_answer >= config.quiz.options.length)) {
+        errors.push('Quiz: Invalid correct_answer index');
+      }
+    }
+
+    return {
+      id: topic.id,
+      valid: errors.length === 0,
+      errors,
+      warnings
+    };
   }
-  
-  // Validate learning objectives count
-  if (topic.learning_objectives.length > 8) {
-    errors.push('Too many learning objectives (max 8 recommended)');
+
+  async validateImages(config, imagesDir) {
+    const errors = [];
+    const warnings = [];
+    const imageRefs = this.extractImageReferences(config);
+
+    for (const imageRef of imageRefs) {
+      const imagePath = imageRef.src.replace('assets/images/', '');
+      const fullImagePath = path.join(imagesDir, imagePath);
+      
+      if (!await fs.pathExists(fullImagePath)) {
+        warnings.push(`Image not found: ${imagePath}`);
+      }
+    }
+
+    return { errors, warnings };
   }
-  
-  return errors;
+
+  extractImageReferences(config) {
+    const images = [];
+    
+    const addImage = (imageObj) => {
+      if (imageObj && imageObj.src) {
+        images.push(imageObj);
+      }
+    };
+
+    // Extract all image references
+    if (config.content) {
+      if (config.content.hero_image) addImage(config.content.hero_image);
+      if (config.content.task_images) config.content.task_images.forEach(addImage);
+      if (config.content.concepts) {
+        config.content.concepts.forEach(concept => {
+          if (concept.image) addImage(concept.image);
+        });
+      }
+    }
+    
+    if (config.quiz && config.quiz.explanation_image) {
+      addImage(config.quiz.explanation_image);
+    }
+
+    return images;
+  }
 }
 
-// Run validation if called directly
+// ✅ PROPERLY DEFINE AND EXPORT THE FUNCTION
+async function validateTopics() {
+  const validator = new TopicValidator();
+  return await validator.validateAllTopics();
+}
+
+module.exports = validateTopics;
+
+// ✅ CORRECTED FUNCTION CALL
 if (require.main === module) {
-  const topicsDir = process.argv[2] || path.join(__dirname, '../topics');
-  validateTopics(topicsDir).catch(console.error);
+  validateTopics()
+    .then(result => {
+      if (!result.valid) {
+        process.exit(1);
+      }
+    })
+    .catch(error => {
+      console.error('❌ Validation failed:', error.message);
+      process.exit(1);
+    });
 }
-
-module.exports = { validateTopics, topicSchema };

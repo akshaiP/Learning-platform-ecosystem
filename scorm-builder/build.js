@@ -67,20 +67,35 @@ async function main() {
     let topicsToBuild = [];
     
     if (options.all) {
-      // Build all topics
-      const topicFiles = await fs.readdir(config.topicsDir);
-      topicsToBuild = topicFiles
-        .filter(file => file.endsWith('.json'))
-        .map(file => path.basename(file, '.json'));
+      // Build all topics - check both folder and file structures
+      const items = await fs.readdir(config.topicsDir);
+      const folderTopics = [];
+      const fileTopics = [];
       
-      log.info(`Found ${topicsToBuild.length} topics to build`);
+      for (const item of items) {
+        const itemPath = path.join(config.topicsDir, item);
+        const stat = await fs.stat(itemPath);
+        
+        if (stat.isDirectory()) {
+          // Check for config.json in folder
+          const configPath = path.join(itemPath, 'config.json');
+          if (await fs.pathExists(configPath)) {
+            folderTopics.push(item);
+          }
+        } else if (item.endsWith('.json')) {
+          // Old structure - direct JSON files
+          fileTopics.push(path.basename(item, '.json'));
+        }
+      }
+      
+      topicsToBuild = [...folderTopics, ...fileTopics];
+      log.info(`Found ${topicsToBuild.length} topics to build (${folderTopics.length} folders, ${fileTopics.length} files)`);
     } else if (options.topic) {
-      // Build specific topic
       topicsToBuild = [options.topic];
     } else {
       log.error('Please specify --topic <name> or --all');
       process.exit(1);
-    }
+    }    
 
     // Build each topic
     const results = [];
@@ -137,56 +152,86 @@ async function main() {
 async function buildTopic(topicId, config) {
   const startTime = Date.now();
   
-  // 1. Load topic configuration
-  log.verbose(`Loading topic configuration: ${topicId}`);
-  const topicConfig = await loadTopicConfig(topicId, config);
+  // Create temporary directory for this build
+  const tempDir = path.join(__dirname, 'temp', `${topicId}-${Date.now()}`);
+  await fs.ensureDir(tempDir);
   
-  // 2. Generate HTML from template
-  log.verbose('Generating HTML content');
-  const htmlContent = await generateTopic(topicConfig, config);
-  
-  // 3. Create manifest
-  log.verbose('Creating SCORM manifest');
-  const manifestContent = await createManifest(topicConfig, config);
-  
-  // 4. Package everything
-  log.verbose('Packaging SCORM content');
-  const packageResult = await packageScorm(topicId, {
-    html: htmlContent,
-    manifest: manifestContent,
-    topicConfig,
-    config
-  });
-  
-  const buildTime = Date.now() - startTime;
-  log.verbose(`Build completed in ${buildTime}ms`);
-  
-  return {
-    topicId,
-    success: true,
-    outputFile: packageResult.filename,
-    size: packageResult.size,
-    buildTime
-  };
+  try {
+    // 1. Load topic configuration
+    log.verbose(`Loading topic configuration: ${topicId}`);
+    const topicConfig = await loadTopicConfig(topicId, config);
+    
+    // 2. Generate HTML from template (pass tempDir!)
+    log.verbose('Generating HTML content');
+    const htmlContent = await generateTopic(topicConfig, config, tempDir);
+    
+    // 3. Create manifest
+    log.verbose('Creating SCORM manifest');
+    const manifestContent = await createManifest(topicConfig, config);
+    
+    // 4. Package everything (pass tempDir!)
+    log.verbose('Packaging SCORM content');
+    const packageResult = await packageScorm(topicId, {
+      html: htmlContent,
+      manifest: manifestContent,
+      topicConfig,
+      config,
+      tempDir  // Add this!
+    });
+    
+    const buildTime = Date.now() - startTime;
+    log.verbose(`Build completed in ${buildTime}ms`);
+    
+    // Clean up temp directory
+    await fs.remove(tempDir);
+    
+    return {
+      topicId,
+      success: true,
+      outputFile: packageResult.filename,
+      size: packageResult.size,
+      buildTime
+    };
+    
+  } catch (error) {
+    // Clean up temp directory on error
+    await fs.remove(tempDir);
+    throw error;
+  }
 }
 
 async function loadTopicConfig(topicId, config) {
-  const configPath = path.join(config.topicsDir, `${topicId}.json`);
+  const folderConfigPath = path.join(config.topicsDir, topicId, 'config.json');
   
-  if (!await fs.pathExists(configPath)) {
-    throw new Error(`Topic configuration not found: ${configPath}`);
+  if (await fs.pathExists(folderConfigPath)) {
+    log.verbose(`Loading topic from folder: ${topicId}`);
+    const configData = await fs.readJson(folderConfigPath);
+    
+    return {
+      id: topicId,
+      backendUrl: config.backendUrl,
+      buildTime: new Date().toISOString(),
+      isDev: config.isDev,
+      ...configData
+    };
   }
   
-  const configData = await fs.readJson(configPath);
+  const fileConfigPath = path.join(config.topicsDir, `${topicId}.json`);
   
-  // Validate and enhance configuration
-  return {
-    id: topicId,
-    backendUrl: config.backendUrl,
-    buildTime: new Date().toISOString(),
-    isDev: config.isDev,
-    ...configData
-  };
+  if (await fs.pathExists(fileConfigPath)) {
+    log.verbose(`Loading topic from file: ${topicId}.json`);
+    const configData = await fs.readJson(fileConfigPath);
+    
+    return {
+      id: topicId,
+      backendUrl: config.backendUrl,
+      buildTime: new Date().toISOString(),
+      isDev: config.isDev,
+      ...configData
+    };
+  }
+  
+  throw new Error(`Topic configuration not found: ${topicId}`);
 }
 
 // Run if called directly
