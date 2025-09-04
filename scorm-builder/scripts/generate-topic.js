@@ -14,6 +14,9 @@ class TopicGenerator {
     try {
       // Load HTML template
       const template = await fs.readFile(this.templatePath, 'utf8');
+
+      // Copy core JS files to temp directory
+      await this.copyJSFiles(tempDir);
     
       // Process assets first
       const topicDir = path.join(__dirname, '../topics', topicConfig.id);
@@ -37,6 +40,24 @@ class TopicGenerator {
       
     } catch (error) {
       throw new Error(`Failed to generate HTML: ${error.message}`);
+    }
+  }
+
+  async copyJSFiles(tempDir) {
+    const jsFiles = [
+        'scorm-api.js',
+        'chat-integration.js', 
+        'core-functions.js'
+    ];
+    
+    for (const jsFile of jsFiles) {
+        const sourcePath = path.join(__dirname, '../templates', jsFile);
+        const destPath = path.join(tempDir, jsFile);
+        
+        if (await fs.pathExists(sourcePath)) {
+            await fs.copy(sourcePath, destPath);
+            console.log(`✅ Copied ${jsFile}`);
+        }
     }
   }
 

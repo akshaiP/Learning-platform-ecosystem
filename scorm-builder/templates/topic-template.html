@@ -20,72 +20,17 @@
         }
     </script>
     
-    <!-- SCORM API Integration -->
-    <script type="text/javascript">
-        var scormAPI = null;
-        var learnerData = {
-            id: null,
-            name: null,
-            progress: null
-        };
-
-        function findAPI(win) {
-            while (win) {
-                try {
-                    if (win.API_1484_11) return win.API_1484_11;
-                } catch (err) {}
-                if (win.parent && win.parent !== win) {
-                    win = win.parent;
-                } else {
-                    win = win.opener;
-                }
-            }
-            return null;
-        }
-
-        function initSCORM() {
-            scormAPI = findAPI(window);
-            if (scormAPI == null) {
-                console.warn("SCORM 2004 API not found. Running in standalone mode.");
-                return false;
-            }
-            
-            try {
-                var result = scormAPI.Initialize("");
-                learnerData.id = scormAPI.GetValue("cmi.learner_id") || "anonymous";
-                learnerData.name = scormAPI.GetValue("cmi.learner_name") || "Anonymous Learner";
-                learnerData.progress = scormAPI.GetValue("cmi.completion_status") || "not attempted";
-                
-                updateLearnerInfo();
-                return true;
-            } catch (error) {
-                console.error("SCORM initialization error:", error);
-                return false;
-            }
-        }
-
-        function updateLearnerInfo() {
-            const learnerInfoElement = document.getElementById("learnerInfo");
-            if (learnerInfoElement) {
-                learnerInfoElement.innerHTML = `
-                    <span class="text-white font-medium">Welcome, <strong>${learnerData.name}</strong></span>
-                    <span class="text-white/80 text-sm">Progress: ${learnerData.progress}</span>
-                `;
-            }
-        }
-
-        var sessionStartTime = Date.now();
-        var sessionTime = 0;
-
-        setInterval(() => {
-            sessionTime = Math.floor((Date.now() - sessionStartTime) / 1000);
-        }, 1000);
-
-        window.onload = function() {
-            initSCORM();
-            initializeLearningContent();
+    <!-- Template Configuration -->
+    <script>
+        window.templateConfig = {
+            backendUrl: "{{backend_url}}"
         };
     </script>
+    
+    <!-- Core JS Files -->
+    <script src="scorm-api.js"></script>
+    <script src="chat-integration.js"></script>
+    <script src="core-functions.js"></script>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
     <!-- Template Data Injection -->
@@ -390,107 +335,9 @@
         💬
     </button>
 
-    <!-- Enhanced Chat Widget Loading -->
+    <!-- Template-specific JavaScript -->
     <script>
-        (function() {
-            let chatWidgetLoaded = false;
-            let loadAttempts = 0;
-            const maxAttempts = 3;
-            
-            function loadChatWidget() {
-                const script = document.createElement('script');
-                script.src = '{{backend_url}}/chat-widget.js';
-                
-                script.onload = function() {
-                    chatWidgetLoaded = true;
-                    console.log('✅ Chat widget loaded successfully');
-                };
-                
-                script.onerror = function() {
-                    loadAttempts++;
-                    console.warn(`❌ Failed to load chat widget (attempt ${loadAttempts}/${maxAttempts})`);
-                    
-                    if (loadAttempts < maxAttempts) {
-                        setTimeout(loadChatWidget, 1000);
-                    } else {
-                        console.warn('🔄 Using fallback chat widget');
-                        loadFallbackChatWidget();
-                    }
-                };
-                
-                document.head.appendChild(script);
-            }
-            
-            function loadFallbackChatWidget() {
-                window.chatWidget = {
-                    initChatWidget: function(config) {
-                        const message = config.initialMessage || 'Chat would open here';
-                        const isOnline = navigator.onLine;
-                        
-                        const fallbackMsg = `🤖 Chat Widget (${isOnline ? 'Backend Offline' : 'No Internet'})\n\nTopic: ${config.topic}\nContext: ${config.trigger}\nMessage: ${message}\n\n${isOnline ? '⚠️ Backend server not responding' : '📡 No internet connection'}`;
-                        
-                        alert(fallbackMsg);
-                    }
-                };
-                chatWidgetLoaded = true;
-            }
-            
-            window.ensureChatWidget = function(callback) {
-                if (chatWidgetLoaded && window.chatWidget) {
-                    callback();
-                } else {
-                    setTimeout(() => window.ensureChatWidget(callback), 100);
-                }
-            };
-            
-            loadChatWidget();
-        })();
-    </script>       
-    
-    <!-- Enhanced JavaScript Functionality -->
-    <script>
-        let templateData = {};
-        try {
-            templateData = JSON.parse(document.getElementById('templateData').textContent);
-        } catch (e) {
-            console.error('Failed to parse template data:', e);
-            templateData = { hints: [], quiz: null, id: '', backendUrl: '', chatContexts: {} };
-        }
-
-        let currentHint = 0;
-        let maxHints = templateData.hints ? templateData.hints.length : 0;
-        let quizCompleted = false;
-        let progressSteps = 0;
-        let quizCorrectAnswer = templateData.quiz ? templateData.quiz.correct_answer : 0;
-
-        const topicConfig = {
-            topic: templateData.id,
-            backendUrl: templateData.backendUrl,
-            contexts: templateData.chatContexts || {}
-        };
-
-        function initializeLearningContent() {
-            updateProgress(1);
-            setupQuizOptions();
-        }
-
-        function setupQuizOptions() {
-            const options = document.querySelectorAll('.quiz-option');
-            const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-            
-            options.forEach((option, index) => {
-                const letterSpan = option.querySelector('.option-letter');
-                if (letterSpan && letters[index]) {
-                    letterSpan.textContent = letters[index] + '.';
-                }
-                
-                option.addEventListener('click', function() {
-                    const optionIndex = parseInt(this.getAttribute('data-option-index'));
-                    selectQuizOption(this, optionIndex);
-                });
-            });
-        }
-
+        // Template-specific functions that might change per template
         function selectQuizOption(element, optionIndex) {
             document.querySelectorAll('.quiz-option').forEach(opt => {
                 opt.classList.remove('bg-green-100', 'border-green-500', 'text-green-800', 'bg-red-100', 'border-red-500', 'text-red-800');
@@ -528,112 +375,44 @@
             if (actions) actions.classList.remove('hidden');
         }
 
-        function updateProgress(step) {
-            progressSteps = step;
-            const progressFill = document.getElementById('progressFill');
-            const progressText = document.getElementById('progressText');
-            
-            const percentage = (step / 4) * 100;
-            if (progressFill) progressFill.style.width = percentage + '%';
-            
-            const steps = [
-                'Step 1 of 4: Understanding the Task',
-                'Step 2 of 4: Learning Prerequisites',
-                'Step 3 of 4: Implementation Practice', 
-                'Step 4 of 4: Knowledge Assessment'
-            ];
-            
-            if (progressText) progressText.textContent = steps[step - 1] || steps[0];
-            
-            if (step >= 4) {
-                const nextBtn = document.getElementById('nextBtn');
-                if (nextBtn) nextBtn.classList.remove('hidden');
-            }
-        }
-
-        function startTask() {
-            updateProgress(2);
-            openTaskHelp();
-        }
-
-        function toggleHints() {
-            const hintsSection = document.getElementById('hintsSection');
-            if (hintsSection) {
-                hintsSection.classList.toggle('hidden');
-                if (!hintsSection.classList.contains('hidden')) {
-                    updateProgress(2);
-                }
-            }
-        }
-
-        function revealNextHint() {
-            if (currentHint < maxHints) {
-                const hint = document.querySelector(`[data-hint-index="${currentHint}"]`);
-                if (hint) {
-                    hint.classList.remove('opacity-30');
-                    hint.classList.add('opacity-100', 'border-yellow-400', 'bg-yellow-100');
-                    currentHint++;
-                }
-                
-                if (currentHint >= maxHints) {
-                    const exhaustedBtn = document.getElementById('hintsExhaustedBtn');
-                    if (exhaustedBtn) exhaustedBtn.classList.remove('hidden');
-                }
-            }
-        }
-
-        // Chat functions
+        // Chat functions - these might be customized per template
         function openTaskHelp() {
             window.ensureChatWidget(() => {
-                const taskStatement = document.querySelector('.task-statement');
-                const taskText = taskStatement ? taskStatement.textContent : 'the current task';
-                
                 chatWidget.initChatWidget({
                     topic: topicConfig.topic,
                     trigger: 'help',
                     context: 'help',
                     backendUrl: topicConfig.backendUrl,
                     learnerData: learnerData,
-                    initialMessage: 'I have read all the hints but still need help with the implementation. Can you provide more detailed guidance?'
+                    initialMessage: 'I need help with the implementation. Can you provide guidance?'
                 });
             });
         }
 
         function openQuizFailureChat() {
             if (typeof chatWidget !== 'undefined') {
-                const questionElement = document.querySelector('.quiz-question');
-                const questionText = questionElement ? questionElement.textContent : 'the quiz question';
-                
                 chatWidget.initChatWidget({
                     topic: topicConfig.topic,
                     trigger: 'quiz_failed',
                     context: 'quiz_failed',
                     backendUrl: topicConfig.backendUrl,
                     learnerData: learnerData,
-                    initialMessage: `I got the quiz question wrong. The question was: "${questionText}". Can you help me understand the correct answer?`
+                    initialMessage: `I got the quiz question wrong. Can you help me understand the correct answer?`
                 });
             }
         }
 
         function openQuizExplanation() {
             if (typeof chatWidget !== 'undefined') {
-                const questionElement = document.querySelector('.quiz-question');
-                const questionText = questionElement ? questionElement.textContent : 'the quiz question';
-                
                 chatWidget.initChatWidget({
                     topic: topicConfig.topic,
                     trigger: 'learn_more',
                     context: 'quiz_explanation',
                     backendUrl: topicConfig.backendUrl,
                     learnerData: learnerData,
-                    initialMessage: `Can you explain the answer to this question in detail: "${questionText}"`
+                    initialMessage: `Can you explain the answer to this question in detail?`
                 });
             }
-        }
-
-        function startPractice() {
-            updateProgress(3);
-            openPracticeChat();
         }
 
         function openPracticeChat() {
@@ -643,7 +422,7 @@
                     trigger: 'practice',
                     backendUrl: topicConfig.backendUrl,
                     learnerData: learnerData,
-                    initialMessage: `I want to practice the ${topicConfig.topic} concepts. Can you provide hands-on exercises and guide me step by step?`
+                    initialMessage: `I want to practice the concepts. Can you provide exercises?`
                 });
             }
         }
@@ -656,20 +435,8 @@
                     context: context,
                     backendUrl: topicConfig.backendUrl,
                     learnerData: learnerData,
-                    initialMessage: `I want to learn more about "${conceptTitle}" in detail. Can you provide comprehensive information with examples?`
+                    initialMessage: `I want to learn more about "${conceptTitle}" in detail.`
                 });
-            }
-        }
-
-        function goToPrevious() {
-            alert('Going to previous topic...');
-        }
-        
-        function proceedToNext() {
-            if (quizCompleted) {
-                alert('Proceeding to next topic...');
-            } else {
-                alert('Please complete the quiz first!');
             }
         }
 
@@ -680,7 +447,7 @@
                     trigger: 'summary',
                     backendUrl: topicConfig.backendUrl,
                     learnerData: learnerData,
-                    initialMessage: `Can you provide a comprehensive summary of the ${topicConfig.topic} concepts and key points I should remember?`
+                    initialMessage: `Can you provide a comprehensive summary of the key concepts?`
                 });
             }
         }
@@ -692,21 +459,41 @@
                     trigger: 'general',
                     backendUrl: topicConfig.backendUrl,
                     learnerData: learnerData,
-                    initialMessage: `Hello! I have questions about ${topicConfig.topic}.`
+                    initialMessage: `Hello! I have questions about this topic.`
                 });
             }
         }
 
-        // Auto-adjust main container when chat opens
-        window.addEventListener('chatOpened', () => {
-            const pageWrapper = document.getElementById('pageWrapper');
-            if (pageWrapper) pageWrapper.style.marginRight = '400px';
-        });
-        
-        window.addEventListener('chatClosed', () => {
-            const pageWrapper = document.getElementById('pageWrapper');
-            if (pageWrapper) pageWrapper.style.marginRight = '0';
-        });
+        function openHintsExhaustedChat() {
+            if (typeof chatWidget !== 'undefined') {
+                chatWidget.initChatWidget({
+                    topic: topicConfig.topic,
+                    trigger: 'help',
+                    context: 'hints_exhausted',
+                    backendUrl: topicConfig.backendUrl,
+                    learnerData: learnerData,
+                    initialMessage: 'I have read all the hints but still need more help with the task.'
+                });
+            }
+        }
+
+        // Simple navigation functions
+        function startTask() { updateProgress(2); openTaskHelp(); }
+        function startPractice() { updateProgress(3); openPracticeChat(); }
+        function goToPrevious() { alert('Going to previous topic...'); }
+        function proceedToNext() { 
+            if (quizCompleted) {
+                alert('Proceeding to next topic...'); 
+            } else {
+                alert('Please complete the quiz first!');
+            }
+        }
+
+        // Initialize when SCORM and core functions are ready
+        window.onload = function() {
+            initSCORM();
+            initializeTemplate();
+        };
     </script>
 </body>
 </html>
