@@ -1,26 +1,74 @@
 {
   "title": "Robot Arm Movement Control",
-  "description": "Learn to classify and control robot arms by degrees of freedom",
-  
-  "learning_objectives": [
-    "Understand robot arm degrees of freedom (DOF)",
-    "Classify robots based on their movement capabilities", 
-    "Implement basic control algorithms"
-  ],
+  "description": "Master robot arm classification and control through hands-on problem solving",
   
   "content": {
-    "hero_image": {
-      "src": "robot-arm-hero.jpg",
-      "alt": "Industrial robot arm in action", 
-      "caption": "Modern 6-DOF industrial robot arm"
+    "company_logo": {
+      "src": "nebula-logo.png",
+      "alt": "Nebula KnowLab Logo"
     },
     
-    "task_statement": "Write code to classify robots by their degrees of freedom and implement basic movement control",
+    "task_statement": "Build a Robot Classification System",
     
     "task_requirements": [
       "Identify DOF for different robot configurations",
-      "Create classification function",
-      "Test with sample robot data"
+      "Create classification algorithm",
+      "Test with real robot data",
+      "Validate movement patterns"
+    ],
+    
+    "hero_image": {
+      "src": "robot-arm-hero.jpg",
+      "alt": "Industrial robot arm in action", 
+      "caption": "Modern 6-DOF industrial robot arm - your challenge awaits"
+    },
+    
+    "concepts": [
+      {
+        "title": "Degrees of Freedom",
+        "summary": "Independent movement capabilities",
+        "image": {
+          "src": "robot-types.jpg",
+          "alt": "DOF concept illustration"
+        },
+        "learn_more_context": "dof_explanation"
+      },
+      {
+        "title": "Robot Classification",
+        "summary": "Systematic categorization methods", 
+        "image": {
+          "src": "robot-classification.jpg",
+          "alt": "Robot classification chart"
+        },
+        "learn_more_context": "classification_methods"
+      }
+    ],
+    
+    "hints": [
+      {
+        "text": "Start by counting the joints that can move independently",
+        "step_image": {
+          "src": "step-1-joints.jpg",
+          "alt": "Robot joints identification",
+          "caption": "Step 1: Identify moveable joints"
+        }
+      },
+      {
+        "text": "Consider both rotational and translational movements",
+        "step_image": {
+          "src": "step-2-movements.jpg",
+          "alt": "Movement types diagram",
+          "caption": "Step 2: Classify movement types"
+        }
+      },
+      {
+        "text": "Look at the robot's workspace and reachability",
+        "step_image": {
+          "src": "step-3-workspace.jpg",
+          "alt": "Robot workspace visualization",
+          "caption": "Step 3: Analyze workspace limits"
+        }
+      }
     ],
     
     "task_images": [
@@ -32,40 +80,9 @@
       {
         "src": "robot-classification.jpg", 
         "alt": "Robot classification methods",
-        "caption": "Different ways to classify robot arms"
+        "caption": "Different approaches to robot classification"
       }
-    ],
-    
-    "concepts": [
-      {
-        "title": "Degrees of Freedom (DOF)",
-        "summary": "The number of independent movements a robot can make",
-        "image": {
-          "src": "robot-types.jpg",
-          "alt": "DOF concept illustration"
-        },
-        "learn_more_context": "dof_explanation"
-      },
-      {
-        "title": "Robot Classification",
-        "summary": "Categorizing robots based on their movement capabilities", 
-        "image": {
-          "src": "robot-classification.jpg",
-          "alt": "Robot classification chart"
-        },
-        "learn_more_context": "classification_methods"
-      }
-    ],
-    
-    "hints": [
-      "Start by counting the joints that can move independently",
-      "Consider both rotational and translational movements",
-      "Look at the robot's workspace and reachability"
-    ],
-    
-    "practice": {
-      "description": "Practice implementing DOF calculations with real robot specifications"
-    }
+    ]
   },
   
   "quiz": {
@@ -79,13 +96,10 @@
   },
   
   "chat_contexts": {
-    "help": "The learner needs help with robot arm DOF classification task",
+    "task_help": "Guide the learner through the robot classification task step-by-step",
     "dof_explanation": "Explain degrees of freedom in robotics with visual examples",
-    "classification_methods": "Describe different ways to classify robot arms", 
-    "quiz_failed": "Student got the DOF quiz wrong, needs explanation with visuals"
-  },
-  
-  "styling": {
-    "primaryColor": "#007bff"
+    "classification_methods": "Describe different approaches to classify robot arms",
+    "quiz_failed": "Provide remedial explanation for DOF concepts with visuals",
+    "hints_exhausted": "Offer detailed problem-solving guidance beyond basic hints"
   }
 }

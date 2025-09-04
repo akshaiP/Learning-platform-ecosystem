@@ -10,19 +10,21 @@ class AssetProcessor {
       hero: { width: 1200, height: 675 }, // 16:9 aspect ratio
       task: { width: 600, height: 400 },
       concept: { width: 400, height: 300 },
-      quiz: { width: 800, height: 600 }
+      quiz: { width: 800, height: 600 },
+      company_logo: { width: 200, height: 100 }, // Logo specific size
+      step_image: { width: 800, height: 600 } // For hint step images
     };
   }
 
   async processTopicAssets(topicConfig, topicDir, tempDir) {
-    console.log('🖼️ Processing topic assets for modern template...');
+    console.log('🖼️ Processing topic assets for task-based learning template...');
     
     try {
       // Create assets directory in temp
       const assetsDir = path.join(tempDir, 'assets', 'images');
       await fs.ensureDir(assetsDir);
       
-      // Extract all image references from topic config
+      // Extract all image references from topic config (including company logo)
       const imageRefs = this.extractImageReferences(topicConfig);
       
       if (imageRefs.length === 0) {
@@ -68,6 +70,11 @@ class AssetProcessor {
       }
     };
     
+    // NEW: Extract company logo (high priority for branding)
+    if (config.content?.company_logo) {
+      addImage(config.content.company_logo, 'company_logo', true);
+    }
+    
     // Extract hero image (important for modern template)
     if (config.content?.hero_image) {
       addImage(config.content.hero_image, 'hero', true);
@@ -96,15 +103,29 @@ class AssetProcessor {
       });
     }
     
+    // NEW: Extract hint step images (for task-based learning)
+    if (config.content?.hints && Array.isArray(config.content.hints)) {
+      config.content.hints.forEach((hint, index) => {
+        if (hint.step_image) {
+          addImage({
+            ...hint.step_image,
+            hintIndex: index
+          }, 'step_image', false);
+        }
+      });
+    }
+    
     // Extract quiz explanation image (enhanced display in modern template)
     if (config.quiz?.explanation_image) {
       addImage(config.quiz.explanation_image, 'quiz', false);
     }
     
     console.log(`📊 Found ${images.length} image references:`, {
+      company_logo: images.filter(img => img.context === 'company_logo').length,
       hero: images.filter(img => img.context === 'hero').length,
       task: images.filter(img => img.context === 'task').length,
       concept: images.filter(img => img.context === 'concept').length,
+      step_image: images.filter(img => img.context === 'step_image').length,
       quiz: images.filter(img => img.context === 'quiz').length
     });
     
@@ -134,6 +155,7 @@ class AssetProcessor {
           if (imageRef.required) {
             throw new Error(`Required image not found: ${imageRef.src}`);
           }
+          console.warn(`⚠️ Skipping missing ${imageRef.context} image: ${imageRef.src}`);
           return null;
         }
       }
@@ -183,20 +205,21 @@ class AssetProcessor {
   resolveImagePath(srcPath, topicDir) {
     let filename = path.basename(srcPath);
     
+    // Handle different path formats
     if (srcPath.includes('assets/images/')) {
       filename = srcPath.replace(/^.*assets\/images\//, '');
     }
     
     return path.join(topicDir, 'images', filename);
   }
-  
 
   getAlternativePaths(srcPath, topicDir) {
     const basename = path.basename(srcPath);
     return [
       path.join(topicDir, basename),
       path.join(topicDir, 'assets', basename),
-      path.join(topicDir, 'images', basename)
+      path.join(topicDir, 'images', basename),
+      path.join(topicDir, 'logos', basename) // Additional path for logos
     ];
   }
 
@@ -302,9 +325,9 @@ class AssetProcessor {
     });
     
     return {
-      version: '1.0',
+      version: '2.0',
       timestamp: new Date().toISOString(),
-      template: 'tailwind-modern',
+      template: 'task-based-learning',
       images: processedImages.map(img => ({
         filename: img.filename,
         context: img.context,
@@ -335,15 +358,22 @@ class AssetProcessor {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  // New method to check template compatibility
+  // Enhanced template compatibility check
   checkTemplateCompatibility(topicConfig) {
     const issues = [];
     
-    // Check for modern template features
+    // Check for task-based learning template features
+    if (!topicConfig.content?.company_logo) {
+      issues.push({
+        type: 'recommendation',
+        message: 'Consider adding a company logo for better branding in the task-based learning template'
+      });
+    }
+    
     if (!topicConfig.content?.hero_image) {
       issues.push({
         type: 'recommendation',
-        message: 'Consider adding a hero image for better visual impact in the modern template'
+        message: 'Consider adding a hero image for better visual impact in the task-based learning template'
       });
     }
     
@@ -352,6 +382,19 @@ class AssetProcessor {
         type: 'recommendation',
         message: 'Consider adding task images to enhance visual learning experience'
       });
+    }
+    
+    // Check for enhanced hint structure with step images
+    if (topicConfig.content?.hints) {
+      const hintsWithoutImages = topicConfig.content.hints.filter(h => 
+        typeof h === 'object' && !h.step_image
+      );
+      if (hintsWithoutImages.length > 0) {
+        issues.push({
+          type: 'recommendation',
+          message: `${hintsWithoutImages.length} hints missing step images for enhanced task-based learning`
+        });
+      }
     }
     
     if (topicConfig.content?.concepts) {
@@ -365,7 +408,7 @@ class AssetProcessor {
     }
     
     return {
-      compatible: true, // Modern template is backward compatible
+      compatible: true, // Task-based learning template is backward compatible
       issues: issues,
       recommendations: issues.filter(i => i.type === 'recommendation').length
     };

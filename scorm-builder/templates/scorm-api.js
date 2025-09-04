@@ -1,6 +1,6 @@
 // SCORM API Integration
 var scormAPI = null;
-var learnerData = {
+var scormLearnerData = {
     id: null,
     name: null,
     progress: null
@@ -29,9 +29,16 @@ function initSCORM() {
     
     try {
         var result = scormAPI.Initialize("");
-        learnerData.id = scormAPI.GetValue("cmi.learner_id") || "anonymous";
-        learnerData.name = scormAPI.GetValue("cmi.learner_name") || "Anonymous Learner";
-        learnerData.progress = scormAPI.GetValue("cmi.completion_status") || "not attempted";
+        scormLearnerData.id = scormAPI.GetValue("cmi.learner_id") || "anonymous";
+        scormLearnerData.name = scormAPI.GetValue("cmi.learner_name") || "Anonymous Learner";
+        scormLearnerData.progress = scormAPI.GetValue("cmi.completion_status") || "not attempted";
+        
+        // Update the global learnerData for other scripts
+        if (typeof learnerData !== 'undefined') {
+            learnerData.id = scormLearnerData.id;
+            learnerData.name = scormLearnerData.name;
+            learnerData.progress = scormLearnerData.progress;
+        }
         
         updateLearnerInfo();
         return true;
@@ -45,8 +52,8 @@ function updateLearnerInfo() {
     const learnerInfoElement = document.getElementById("learnerInfo");
     if (learnerInfoElement) {
         learnerInfoElement.innerHTML = `
-            <span class="text-white font-medium">Welcome, <strong>${learnerData.name}</strong></span>
-            <span class="text-white/80 text-sm">Progress: ${learnerData.progress}</span>
+            <span class="text-white font-medium">Welcome, <strong>${scormLearnerData.name}</strong></span>
+            <span class="text-white/80 text-sm">Progress: ${scormLearnerData.progress}</span>
         `;
     }
 }

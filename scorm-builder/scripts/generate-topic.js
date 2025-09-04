@@ -69,6 +69,14 @@ class TopicGenerator {
       imageMap[originalSrc] = `assets/images/${img.filename}`;
     });
     
+    // Update company logo
+    if (topicConfig.content?.company_logo?.src) {
+      const newPath = imageMap[topicConfig.content.company_logo.src];
+      if (newPath) {
+        topicConfig.content.company_logo.src = newPath;
+      }
+    }
+    
     // Update hero image
     if (topicConfig.content?.hero_image?.src) {
       const newPath = imageMap[topicConfig.content.hero_image.src];
@@ -94,6 +102,18 @@ class TopicGenerator {
           const newPath = imageMap[concept.image.src];
           if (newPath) {
             concept.image.src = newPath;
+          }
+        }
+      });
+    }
+    
+    // Update hint step images (NEW)
+    if (topicConfig.content?.hints) {
+      topicConfig.content.hints.forEach(hint => {
+        if (hint.step_image?.src) {
+          const newPath = imageMap[hint.step_image.src];
+          if (newPath) {
+            hint.step_image.src = newPath;
           }
         }
       });
@@ -126,6 +146,37 @@ class TopicGenerator {
     if (!data.learning_objectives) data.learning_objectives = [];
     if (!data.chat_contexts) data.chat_contexts = {};
     
+    // Handle legacy hints structure - convert string hints to objects
+    if (Array.isArray(data.content.hints)) {
+      data.content.hints = data.content.hints.map((hint, index) => {
+        if (typeof hint === 'string') {
+          return {
+            text: hint,
+            step_image: null
+          };
+        }
+        return hint;
+      });
+    }
+    
+    // Handle legacy hints at root level (for backward compatibility)
+    if (data.hints && Array.isArray(data.hints)) {
+      data.content.hints = data.hints.map((hint, index) => {
+        if (typeof hint === 'string') {
+          return {
+            text: hint,
+            step_image: null
+          };
+        }
+        return hint;
+      });
+    }
+    
+    // Ensure task_statement is accessible at content level
+    if (!data.content.task_statement && data.task_statement) {
+      data.content.task_statement = data.task_statement;
+    }
+    
     // Add array length properties for Mustache conditional rendering
     data.learning_objectives.length = data.learning_objectives.length;
     data.content.concepts.length = data.content.concepts.length;
@@ -138,16 +189,25 @@ class TopicGenerator {
     data.quizJson = data.quiz ? JSON.stringify(data.quiz) : 'null';
     data.chatContextsJson = JSON.stringify(data.chat_contexts || {});
     
+    // Handle company logo - check multiple possible locations
+    if (!data.content.company_logo) {
+      if (data.company?.logo) {
+        data.content.company_logo = data.company.logo;
+      } else if (data.branding?.logo) {
+        data.content.company_logo = data.branding.logo;
+      }
+    }
+    
     // Add company branding data
     data.company = {
       name: 'Nebula KnowLab',
-      logo: data.company?.logo || null,
+      logo: data.content.company_logo || null,
       colors: {
         primary: data.styling?.primaryColor || '#4A9B8E',
         secondary: data.styling?.secondaryColor || '#6B4C93'
       }
     };
-  
+
     return data;
   }
 
@@ -186,8 +246,18 @@ class TopicGenerator {
         }
       }
       
-      // Add any custom CSS overrides if needed
+      // Add task-based learning specific styles
       customStyles += `
+/* Task-based learning template styles */
+.hint-card {
+  transition: all 0.3s ease-in-out;
+}
+
+.hint-card.revealed {
+  transform: scale(1.02);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
 /* Print styles */
 @media print {
   .fixed, .sticky { position: static !important; }
@@ -198,6 +268,22 @@ class TopicGenerator {
 .focus\\:ring-2:focus {
   outline: 2px solid #4A9B8E;
   outline-offset: 2px;
+}
+
+/* Chat integration styles */
+.chat-trigger {
+  z-index: 1000;
+}
+
+/* Responsive adjustments for task-based layout */
+@media (max-width: 768px) {
+  .task-hero {
+    padding: 1rem;
+  }
+  
+  .hint-card {
+    margin-bottom: 0.5rem;
+  }
 }
       `;
       
@@ -253,8 +339,21 @@ class TopicGenerator {
   }
 
   validateContentStructure(topicConfig) {
-    // Validate content structure for new template
+    // Validate content structure for task-based learning template
     if (topicConfig.content) {
+      
+      // Validate task statement
+      if (!topicConfig.content.task_statement && !topicConfig.task_statement) {
+        console.warn('No task_statement found - task-based learning requires a clear task statement');
+      }
+      
+      // Validate company logo structure
+      if (topicConfig.content.company_logo) {
+        if (typeof topicConfig.content.company_logo === 'object' && !topicConfig.content.company_logo.src) {
+          console.warn('company_logo object missing src property');
+        }
+      }
+      
       // Validate task images structure
       if (topicConfig.content.task_images) {
         if (!Array.isArray(topicConfig.content.task_images)) {
@@ -267,6 +366,36 @@ class TopicGenerator {
           }
           if (!img.alt) {
             console.warn(`task_images[${index}] missing alt text for accessibility`);
+          }
+        });
+      }
+
+      // Validate enhanced hints structure with step images
+      if (topicConfig.content.hints) {
+        if (!Array.isArray(topicConfig.content.hints)) {
+          throw new Error('hints must be an array');
+        }
+        
+        topicConfig.content.hints.forEach((hint, index) => {
+          if (typeof hint === 'string') {
+            // Legacy string format is acceptable
+            return;
+          }
+          
+          if (typeof hint === 'object') {
+            if (!hint.text) {
+              throw new Error(`hints[${index}] missing text property`);
+            }
+            
+            // Validate step image if present
+            if (hint.step_image) {
+              if (!hint.step_image.src) {
+                throw new Error(`hints[${index}].step_image missing src`);
+              }
+              if (!hint.step_image.alt) {
+                console.warn(`hints[${index}].step_image missing alt text for accessibility`);
+              }
+            }
           }
         });
       }
@@ -299,6 +428,27 @@ class TopicGenerator {
           console.warn('hero_image missing alt text for accessibility');
         }
       }
+      
+      // Validate task requirements
+      if (topicConfig.content.task_requirements) {
+        if (!Array.isArray(topicConfig.content.task_requirements)) {
+          throw new Error('task_requirements must be an array');
+        }
+        
+        if (topicConfig.content.task_requirements.length === 0) {
+          console.warn('task_requirements is empty - consider adding specific requirements for better learning outcomes');
+        }
+      }
+    }
+    
+    // Validate chat contexts for task-based learning
+    if (topicConfig.chat_contexts) {
+      const recommendedContexts = ['task_help', 'hints_exhausted', 'quiz_failed', 'learn_more'];
+      const missingContexts = recommendedContexts.filter(context => !topicConfig.chat_contexts[context]);
+      
+      if (missingContexts.length > 0) {
+        console.warn(`Missing recommended chat contexts for task-based learning: ${missingContexts.join(', ')}`);
+      }
     }
   }
 }
@@ -306,18 +456,18 @@ class TopicGenerator {
 module.exports = async function generateTopic(topicConfig, config, tempDir) {
   const generator = new TopicGenerator();
   
-  console.log(`🚀 Generating topic: ${topicConfig.title}`);
+  console.log(`🚀 Generating task-based learning topic: ${topicConfig.title}`);
   
   // Validate configuration
   generator.validateTopicConfig(topicConfig);
-  console.log('✅ Topic configuration validated');
+  console.log('✅ Topic configuration validated for task-based learning');
   
-  // Generate HTML and minimal CSS
+  // Generate HTML and enhanced CSS
   const html = await generator.generateHTML(topicConfig, config, tempDir);
-  console.log('✅ HTML generated with Tailwind CSS');
+  console.log('✅ Task-based learning HTML generated with Tailwind CSS');
   
   const css = await generator.generateStyles(topicConfig, config);
-  console.log('✅ Custom styles generated');
+  console.log('✅ Custom styles generated for task-based learning');
   
   return {
     html,
@@ -327,8 +477,9 @@ module.exports = async function generateTopic(topicConfig, config, tempDir) {
       title: topicConfig.title,
       buildTime: topicConfig.buildTime || new Date().toISOString(),
       backendUrl: topicConfig.backendUrl || config.backendUrl,
-      template: 'tailwind-modern',
-      company: 'Nebula KnowLab'
+      template: 'task-based-learning',
+      company: 'Nebula KnowLab',
+      templateVersion: '2.0'
     }
   };
 };

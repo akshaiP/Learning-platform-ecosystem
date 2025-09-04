@@ -44,456 +44,523 @@
     }
     </script>
 
-    <div id="pageWrapper" class="max-w-6xl mx-auto bg-white shadow-2xl min-h-screen transition-all duration-300">
-        <!-- Header with Company Branding -->
-        <header class="bg-gradient-to-r from-nebula-teal to-nebula-purple text-white relative overflow-hidden">
-            <div class="absolute inset-0 bg-black/10"></div>
-            <div class="relative z-10 px-6 py-8">
-                <div class="flex justify-between items-start flex-wrap gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <svg class="w-8 h-8 text-white" viewBox="0 0 200 200" fill="currentColor">
+    <!-- Main Content Container -->
+    <div id="pageWrapper" class="min-h-screen transition-all duration-300 ease-in-out">
+        
+        <!-- 1. BRANDED HEADER -->
+        <header class="bg-gradient-to-r from-nebula-teal to-nebula-purple text-white sticky top-0 z-40 shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Logo & Brand -->
+                    <div class="flex items-center space-x-4">
+                        {{#content.company_logo}}
+                        <div class="flex-shrink-0">
+                            <img src="{{src}}" alt="{{alt}}" class="h-10 w-auto">
+                        </div>
+                        {{/content.company_logo}}
+                        {{^content.company_logo}}
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <svg class="w-6 h-6 text-white" viewBox="0 0 200 200" fill="currentColor">
                                 <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" stroke-width="8"/>
                                 <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" stroke-width="6" opacity="0.7"/>
                                 <circle cx="100" cy="100" r="40" fill="none" stroke="currentColor" stroke-width="4" opacity="0.5"/>
                                 <circle cx="100" cy="100" r="20" fill="currentColor" opacity="0.3"/>
                             </svg>
                         </div>
+                        {{/content.company_logo}}
                         <div>
-                            <div class="text-sm font-medium text-white/80 mb-1">Nebula KnowLab</div>
-                            <h1 class="text-2xl lg:text-3xl font-bold">{{title}}</h1>
-                            <p class="text-white/90 mt-2 max-w-2xl">{{description}}</p>
+                            <h1 class="text-lg font-bold text-white">Nebula KnowLab</h1>
+                            <p class="text-xs text-white/80">{{title}}</p>
                         </div>
                     </div>
-                    <div id="learnerInfo" class="text-right">
-                        <span class="text-white/80">Loading...</span>
+
+                    <!-- Progress Indicator -->
+                    <div class="flex items-center space-x-4">
+                        <div class="hidden sm:block">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-white/80" id="progressText">Task Understanding</span>
+                                <div class="w-24 bg-white/20 rounded-full h-2">
+                                    <div class="h-2 bg-white rounded-full transition-all duration-700" id="progressFill" style="width: 25%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="learnerInfo" class="text-right">
+                            <span class="text-white/80 text-sm">Loading...</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Hero Visual Section -->
-        {{#content.hero_image}}
-        <section class="relative">
-            <div class="aspect-video lg:aspect-[21/9] overflow-hidden">
-                <img src="{{src}}" alt="{{alt}}" 
-                     class="w-full h-full object-cover transition-transform duration-700 hover:scale-105">
-            </div>
-            {{#caption}}
-            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent">
-                <p class="text-white p-6 font-medium">{{caption}}</p>
-            </div>
-            {{/caption}}
-        </section>
-        {{/content.hero_image}}
-
-        <!-- Progress Bar -->
-        <div class="px-6 py-4 border-b bg-gradient-to-r from-gray-50 to-white">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-gray-700" id="progressText">Step 1 of 4: Understanding the Task</span>
-                <span class="text-sm text-gray-500">Progress</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-nebula-teal to-nebula-purple rounded-full transition-all duration-700 ease-out" 
-                     id="progressFill" style="width: 25%"></div>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <main class="p-6 lg:p-8 space-y-8">
-            
-            <!-- Learning Objectives - Single Instance -->
-            {{#learning_objectives.length}}
-            <section class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <span class="w-8 h-8 bg-gradient-to-r from-nebula-teal to-nebula-purple rounded-lg flex items-center justify-center text-white text-lg mr-3">🎯</span>
-                    Learning Objectives
-                </h2>
-                <ul class="space-y-3">
-                    {{#learning_objectives}}
-                    <li class="flex items-start space-x-3">
-                        <div class="w-2 h-2 bg-nebula-teal rounded-full mt-2 flex-shrink-0"></div>
-                        <span class="text-gray-700 leading-relaxed">{{.}}</span>
-                    </li>
-                    {{/learning_objectives}}
-                </ul>
-            </section>
-            {{/learning_objectives.length}}
-
-            <!-- Task Section -->
-            <section class="bg-white rounded-2xl shadow-lg border-2 border-nebula-teal/20 overflow-hidden">
-                <div class="bg-gradient-to-r from-nebula-teal/10 to-nebula-purple/10 px-6 py-4 border-b">
-                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                        <span class="w-8 h-8 bg-gradient-to-r from-nebula-teal to-nebula-purple rounded-lg flex items-center justify-center text-white text-lg mr-3">📋</span>
-                        Your Task
+        <!-- 2. TASK HERO SECTION -->
+        <section class="bg-white border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Task Statement -->
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-nebula-teal/10 text-nebula-teal mb-4">
+                        🎯 Your Challenge
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                        {{content.task_statement}}
                     </h2>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
+                        {{description}}
+                    </p>
                 </div>
-                <div class="p-6">
-                    <p class="text-lg font-medium text-nebula-purple mb-6">{{content.task_statement}}</p>
-                    
-                    <!-- Task Images Gallery -->
-                    {{#content.task_images.length}}
-                    <div class="mb-6">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-                            <span class="text-xl mr-2">📸</span>
-                            Visual Context
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {{#content.task_images}}
-                            <div class="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                                <div class="aspect-video overflow-hidden">
-                                    <img src="{{src}}" alt="{{alt}}" 
-                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                                </div>
-                                {{#caption}}
-                                <div class="p-4">
-                                    <p class="text-sm text-gray-600">{{caption}}</p>
-                                </div>
-                                {{/caption}}
-                            </div>
-                            {{/content.task_images}}
+
+                <!-- Hero Visual -->
+                {{#content.hero_image}}
+                <div class="relative mb-8">
+                    <div class="aspect-video lg:aspect-[21/9] overflow-hidden rounded-2xl shadow-2xl">
+                        <img src="{{src}}" alt="{{alt}}" 
+                             class="w-full h-full object-cover transition-transform duration-700 hover:scale-105">
+                    </div>
+                    {{#caption}}
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent rounded-b-2xl">
+                        <p class="text-white p-6 font-medium">{{caption}}</p>
+                    </div>
+                    {{/caption}}
+                </div>
+                {{/content.hero_image}}
+
+                <!-- Task Requirements -->
+                {{#content.task_requirements.length}}
+                <div class="bg-gray-50 rounded-2xl p-6 mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">📋 Requirements</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {{#content.task_requirements}}
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-nebula-teal rounded-full mt-2 flex-shrink-0"></div>
+                            <span class="text-gray-700">{{.}}</span>
                         </div>
-                    </div>
-                    {{/content.task_images.length}}
-                    
-                    {{#content.task_requirements.length}}
-                    <div class="mb-6">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-3">Requirements:</h3>
-                        <ul class="space-y-2">
-                            {{#content.task_requirements}}
-                            <li class="flex items-start space-x-3">
-                                <div class="w-2 h-2 bg-nebula-purple rounded-full mt-2 flex-shrink-0"></div>
-                                <span class="text-gray-600">{{.}}</span>
-                            </li>
-                            {{/content.task_requirements}}
-                        </ul>
-                    </div>
-                    {{/content.task_requirements.length}}
-
-                    <div class="flex flex-wrap gap-3">
-                        <button onclick="startTask()" 
-                                class="bg-gradient-to-r from-nebula-teal to-nebula-purple text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center space-x-2">
-                            <span>🚀</span><span>Start Task</span>
-                        </button>
-                        <button onclick="openTaskHelp()" 
-                                class="border-2 border-nebula-teal text-nebula-teal px-6 py-3 rounded-xl font-medium hover:bg-nebula-teal hover:text-white transition-all duration-200 flex items-center space-x-2">
-                            <span>💡</span><span>Get Help</span>
-                        </button>
+                        {{/content.task_requirements}}
                     </div>
                 </div>
-            </section>
+                {{/content.task_requirements.length}}
 
-            <!-- Key Concepts Section -->
+                <!-- Primary Actions -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="startTask()" 
+                            class="bg-gradient-to-r from-nebula-teal to-nebula-purple text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-2">
+                        <span>🚀</span><span>Start Working</span>
+                    </button>
+                    <button onclick="openTaskHelp()" 
+                            class="border-2 border-nebula-teal text-nebula-teal px-8 py-4 rounded-xl font-semibold text-lg hover:bg-nebula-teal hover:text-white transition-all duration-200 flex items-center justify-center space-x-2">
+                        <span>💡</span><span>Get Guidance</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. WORK AREA -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Quick Concepts (Minimal) -->
             {{#content.concepts.length}}
-            <section>
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                    <span class="w-8 h-8 bg-gradient-to-r from-nebula-teal to-nebula-purple rounded-lg flex items-center justify-center text-white text-lg mr-3">📚</span>
-                    Key Concepts
-                </h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="mb-12">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                    <span class="w-6 h-6 bg-nebula-teal rounded-lg flex items-center justify-center text-white text-sm mr-3">📚</span>
+                    Quick Reference
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {{#content.concepts}}
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-100">
                         {{#image}}
-                        <div class="aspect-video overflow-hidden">
-                            <img src="{{src}}" alt="{{alt}}" 
-                                 class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                        <div class="aspect-video overflow-hidden rounded-lg mb-4">
+                            <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-cover">
                         </div>
                         {{/image}}
-                        <div class="p-6">
-                            <h3 class="text-xl font-semibold text-nebula-purple mb-3">{{title}}</h3>
-                            <p class="text-gray-600 mb-4 leading-relaxed">{{summary}}</p>
-                            <button onclick="openLearnMore('{{learn_more_context}}', '{{title}}')" 
-                                    class="text-nebula-teal font-medium hover:text-nebula-purple transition-colors duration-200 flex items-center space-x-2">
-                                <span>📖</span><span>Learn More</span>
-                            </button>
-                        </div>
+                        <h4 class="font-semibold text-gray-900 mb-2">{{title}}</h4>
+                        <p class="text-sm text-gray-600 mb-4">{{summary}}</p>
+                        <button onclick="openLearnMore('{{learn_more_context}}', '{{title}}')" 
+                                class="text-nebula-teal font-medium hover:text-nebula-purple transition-colors text-sm flex items-center space-x-1">
+                            <span>📖</span><span>Learn More</span>
+                        </button>
                     </div>
                     {{/content.concepts}}
                 </div>
-            </section>
+            </div>
             {{/content.concepts.length}}
 
-            <!-- Hints Section -->
+            <!-- Progressive Hints System -->
             {{#content.hints.length}}
-            <section id="hintsSection" class="hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                    <span class="w-8 h-8 bg-gradient-to-r from-nebula-teal to-nebula-purple rounded-lg flex items-center justify-center text-white text-lg mr-3">💡</span>
-                    Hints
-                </h2>
-                <div class="space-y-4" id="hintsContainer">
+            <div class="mb-12">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 flex items-center">
+                        <span class="w-6 h-6 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-sm mr-3">💡</span>
+                        Need Help? Here are Progressive Hints
+                    </h3>
+                    <button onclick="toggleHintsSection()" 
+                            class="text-nebula-teal hover:text-nebula-purple font-medium text-sm">
+                        <span id="hintsToggleText">Show Hints</span>
+                    </button>
+                </div>
+                
+                <div id="hintsContainer" class="hidden space-y-4">
                     {{#content.hints}}
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-xl opacity-30 transition-all duration-300" 
-                         id="hint{{@index}}" data-hint-index="{{@index}}">
-                        <p class="text-gray-700">{{.}}</p>
+                    <div class="hint-card bg-yellow-50 border border-yellow-200 rounded-xl p-6 opacity-50 transition-all duration-300" 
+                         data-hint-index="{{@index}}">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                {{@index}}
+                            </div>
+                            <div class="flex-1">
+                                {{#step_image}}
+                                <div class="mb-4 rounded-lg overflow-hidden">
+                                    <img src="{{src}}" alt="{{alt}}" class="w-full h-auto">
+                                    {{#caption}}
+                                    <p class="text-xs text-gray-600 mt-2 px-2">{{caption}}</p>
+                                    {{/caption}}
+                                </div>
+                                {{/step_image}}
+                                <p class="text-gray-800">{{text}}</p>
+                            </div>
+                        </div>
                     </div>
                     {{/content.hints}}
                 </div>
-                <div class="flex flex-wrap gap-3 mt-6" id="hintButtons">
-                    <button onclick="toggleHints()" 
-                            class="bg-gray-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-700 transition-colors duration-200">
-                        Show Hints
-                    </button>
+
+                <div class="mt-6 flex flex-wrap gap-3">
                     <button onclick="revealNextHint()" 
-                            class="bg-yellow-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-yellow-600 transition-colors duration-200">
-                        Next Hint
+                            class="bg-yellow-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-yellow-600 transition-colors">
+                        Reveal Next Hint
                     </button>
                     <button onclick="openHintsExhaustedChat()" id="hintsExhaustedBtn" 
-                            class="bg-red-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-red-600 transition-colors duration-200 hidden">
-                        🆘 I Need More Help
+                            class="bg-red-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-red-600 transition-colors hidden">
+                        🆘 I Still Need Help
                     </button>
                 </div>
-            </section>
+            </div>
             {{/content.hints.length}}
 
-            <!-- Practice Section -->
-            {{#content.practice}}
-            <section class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <span class="w-8 h-8 bg-gradient-to-r from-nebula-teal to-nebula-purple rounded-lg flex items-center justify-center text-white text-lg mr-3">🛠️</span>
-                    Practice
-                </h2>
-                <p class="text-gray-700 mb-4">{{content.practice.description}}</p>
-                <div class="flex flex-wrap gap-3">
-                    <button onclick="startPractice()" 
-                            class="bg-green-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-700 transition-colors duration-200">
-                        Start Practice
-                    </button>
-                    <button onclick="openPracticeChat()" 
-                            class="border-2 border-green-600 text-green-600 px-6 py-3 rounded-xl font-medium hover:bg-green-600 hover:text-white transition-all duration-200">
-                        Get Practice Examples
-                    </button>
+            <!-- Visual Context Gallery -->
+            {{#content.task_images.length}}
+            <div class="mb-12">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                    <span class="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm mr-3">📸</span>
+                    Visual References
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{#content.task_images}}
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                        <div class="aspect-video overflow-hidden">
+                            <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                        </div>
+                        {{#caption}}
+                        <div class="p-4">
+                            <p class="text-sm text-gray-600">{{caption}}</p>
+                        </div>
+                        {{/caption}}
+                    </div>
+                    {{/content.task_images}}
                 </div>
-            </section>
-            {{/content.practice}}
+            </div>
+            {{/content.task_images.length}}
+        </section>
 
-            <!-- Quiz Section -->
-            {{#quiz}}
-            <section class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4">
-                    <h2 class="text-2xl font-bold flex items-center">
-                        <span class="text-2xl mr-3">🧠</span>
-                        Knowledge Check
-                    </h2>
+        <!-- 4. KNOWLEDGE CHECK -->
+        {{#quiz}}
+        <section class="bg-gray-50 border-t border-gray-200">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-6">
+                        <h3 class="text-2xl font-bold flex items-center">
+                            <span class="text-2xl mr-3">🧠</span>
+                            Knowledge Check
+                        </h3>
+                        <p class="text-purple-100 mt-2">Test your understanding before moving forward</p>
+                    </div>
+                    <div class="p-8">
+                        <h4 class="text-xl font-semibold text-gray-900 mb-6">{{quiz.question}}</h4>
+                        <div class="space-y-3 mb-6" id="quizOptionsContainer">
+                            {{#quiz.options}}
+                            <button class="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-nebula-teal hover:bg-gray-50 transition-all duration-200 quiz-option" 
+                                    data-option-index="{{@index}}">
+                                <span class="font-bold text-nebula-teal mr-3 option-letter"></span>
+                                <span class="option-text">{{.}}</span>
+                            </button>
+                            {{/quiz.options}}
+                        </div>
+                        
+                        <div id="quizResult" class="hidden mb-4 p-4 rounded-xl"></div>
+                        
+                        {{#quiz.explanation_image}}
+                        <div id="quizExplanationImage" class="hidden mb-6 text-center">
+                            <img src="{{quiz.explanation_image.src}}" alt="{{quiz.explanation_image.alt}}" 
+                                 class="max-w-full h-auto rounded-xl shadow-md mx-auto">
+                            <p class="text-sm text-gray-600 mt-2 italic">Visual explanation</p>
+                        </div>
+                        {{/quiz.explanation_image}}
+                        
+                        <div id="quizActions" class="hidden flex flex-wrap gap-3">
+                            <button id="proceedBtn" onclick="proceedToNext()" 
+                                    class="bg-green-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-700 transition-colors hidden">
+                                ✅ Continue to Next Topic
+                            </button>
+                            <button onclick="openQuizExplanation()" 
+                                    class="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-xl font-medium hover:bg-blue-600 hover:text-white transition-all">
+                                📝 Explain Answer
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-6">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-6">{{quiz.question}}</h3>
-                    <div class="space-y-3 mb-6" id="quizOptionsContainer">
-                        {{#quiz.options}}
-                        <button class="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-nebula-teal hover:bg-gray-50 transition-all duration-200 quiz-option" 
-                                data-option-index="{{@index}}">
-                            <span class="font-bold text-nebula-teal mr-3 option-letter"></span>
-                            <span class="option-text">{{.}}</span>
-                        </button>
-                        {{/quiz.options}}
-                    </div>
-                    
-                    <div id="quizResult" class="hidden mb-4 p-4 rounded-xl"></div>
-                    
-                    {{#quiz.explanation_image}}
-                    <div id="quizExplanationImage" class="hidden mb-6 text-center">
-                        <img src="{{quiz.explanation_image.src}}" alt="{{quiz.explanation_image.alt}}" 
-                             class="max-w-full h-auto rounded-xl shadow-md mx-auto">
-                        <p class="text-sm text-gray-600 mt-2 italic">Visual explanation of the correct answer</p>
-                    </div>
-                    {{/quiz.explanation_image}}
-                    
-                    <div id="quizActions" class="hidden flex flex-wrap gap-3">
-                        <button id="proceedBtn" onclick="proceedToNext()" 
-                                class="bg-green-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-700 transition-colors duration-200 hidden">
-                            ✅ Continue
-                        </button>
-                        <button onclick="openQuizExplanation()" 
-                                class="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-xl font-medium hover:bg-blue-600 hover:text-white transition-all duration-200">
-                            📝 Explain Answer
-                        </button>
-                    </div>
-                </div>
-            </section>
-            {{/quiz}}
+            </div>
+        </section>
+        {{/quiz}}
 
-            <!-- Navigation -->
-            <nav class="bg-gradient-to-r from-gray-100 to-gray-50 rounded-2xl p-6 flex flex-wrap justify-between items-center gap-4">
-                <button onclick="goToPrevious()" 
-                        class="bg-gray-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-700 transition-colors duration-200">
-                    ← Previous Topic
-                </button>
-                <button onclick="openSummaryChat()" 
-                        class="border-2 border-nebula-teal text-nebula-teal px-6 py-3 rounded-xl font-medium hover:bg-nebula-teal hover:text-white transition-all duration-200">
-                    📋 Get Summary
-                </button>
-                <button id="nextBtn" onclick="proceedToNext()" 
-                        class="bg-gradient-to-r from-nebula-teal to-nebula-purple text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-200 hidden">
-                    Next Topic →
-                </button>
-            </nav>
-        </main>
+        <!-- Navigation Footer -->
+        <footer class="bg-white border-t border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <button onclick="goToPrevious()" 
+                            class="bg-gray-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-700 transition-colors">
+                        ← Previous Topic
+                    </button>
+                    <div class="flex gap-3">
+                        <button onclick="openSummaryChat()" 
+                                class="border-2 border-nebula-teal text-nebula-teal px-6 py-3 rounded-xl font-medium hover:bg-nebula-teal hover:text-white transition-all">
+                            📋 Get Summary
+                        </button>
+                        <button id="nextBtn" onclick="proceedToNext()" 
+                                class="bg-gradient-to-r from-nebula-teal to-nebula-purple text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all hidden">
+                            Next Topic →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
 
-    <!-- Floating Chat Trigger -->
-    <button onclick="openGeneralChat()" 
-            class="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-nebula-teal to-nebula-purple text-white rounded-full shadow-2xl hover:scale-110 transition-all duration-300 flex items-center justify-center text-2xl z-50">
+    <!-- Enhanced Floating Chat Trigger -->
+    <button id="templateChatTrigger" onclick="openGeneralChat()" 
+            class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-nebula-teal to-nebula-purple text-white rounded-full shadow-2xl hover:scale-110 transition-all duration-300 flex items-center justify-center text-xl z-50">
         💬
     </button>
 
     <!-- Template-specific JavaScript -->
-    <script>
-        // Template-specific functions that might change per template
-        function selectQuizOption(element, optionIndex) {
-            document.querySelectorAll('.quiz-option').forEach(opt => {
-                opt.classList.remove('bg-green-100', 'border-green-500', 'text-green-800', 'bg-red-100', 'border-red-500', 'text-red-800');
-            });
-            
-            const result = document.getElementById('quizResult');
-            const actions = document.getElementById('quizActions');
-            const explanationImage = document.getElementById('quizExplanationImage');
-            
-            if (optionIndex === quizCorrectAnswer) {
-                element.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-                if (result) {
-                    result.className = 'block mb-4 p-4 rounded-xl bg-green-100 text-green-800 border border-green-300';
-                    result.textContent = '✅ Correct! Well done!';
-                }
-                
-                if (explanationImage) explanationImage.classList.remove('hidden');
-                
-                const proceedBtn = document.getElementById('proceedBtn');
-                if (proceedBtn) proceedBtn.classList.remove('hidden');
-                quizCompleted = true;
-                updateProgress(4);
-            } else {
-                element.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
-                if (result) {
-                    result.className = 'block mb-4 p-4 rounded-xl bg-red-100 text-red-800 border border-red-300';
-                    result.textContent = '❌ Incorrect. Would you like help understanding the correct answer?';
-                }
-                
-                if (explanationImage) explanationImage.classList.remove('hidden');
-                
-                setTimeout(() => openQuizFailureChat(), 1500);
-            }
-            
-            if (actions) actions.classList.remove('hidden');
-        }
+<script>
+    // Make sure variables are available globally before other scripts need them
+    window.templateData = {};
+    window.currentHint = 0;
+    window.maxHints = 0;
+    window.quizCompleted = false;
+    window.progressStep = 0;
+    window.quizCorrectAnswer = 0;
+    window.topicConfig = {};
+    window.learnerData = {};
 
-        // Chat functions - these might be customized per template
-        function openTaskHelp() {
-            window.ensureChatWidget(() => {
+    // Enhanced Functions for New Template
+    function openTaskHelp() {
+        window.ensureChatWidget(() => {
+            if (window.chatWidget && window.topicConfig) {
                 chatWidget.initChatWidget({
-                    topic: topicConfig.topic,
+                    topic: window.topicConfig.topic,
                     trigger: 'help',
-                    context: 'help',
-                    backendUrl: topicConfig.backendUrl,
-                    learnerData: learnerData,
-                    initialMessage: 'I need help with the implementation. Can you provide guidance?'
+                    context: 'help',               
+                    backendUrl: window.topicConfig.backendUrl,
+                    learnerData: window.learnerData,
+                    initialMessage: 'I need guidance on how to approach this task. Can you break it down for me?'
                 });
-            });
-        }
-
-        function openQuizFailureChat() {
-            if (typeof chatWidget !== 'undefined') {
-                chatWidget.initChatWidget({
-                    topic: topicConfig.topic,
-                    trigger: 'quiz_failed',
-                    context: 'quiz_failed',
-                    backendUrl: topicConfig.backendUrl,
-                    learnerData: learnerData,
-                    initialMessage: `I got the quiz question wrong. Can you help me understand the correct answer?`
-                });
+            } else {
+                console.warn('Chat widget or topic config not ready');
             }
-        }
+        });
+    }
 
-        function openQuizExplanation() {
-            if (typeof chatWidget !== 'undefined') {
+    function openGeneralChat() {
+        window.ensureChatWidget(() => {
+            if (window.chatWidget && window.topicConfig) {
                 chatWidget.initChatWidget({
-                    topic: topicConfig.topic,
-                    trigger: 'learn_more',
-                    context: 'quiz_explanation',
-                    backendUrl: topicConfig.backendUrl,
-                    learnerData: learnerData,
-                    initialMessage: `Can you explain the answer to this question in detail?`
-                });
-            }
-        }
-
-        function openPracticeChat() {
-            if (typeof chatWidget !== 'undefined') {
-                chatWidget.initChatWidget({
-                    topic: topicConfig.topic,
-                    trigger: 'practice',
-                    backendUrl: topicConfig.backendUrl,
-                    learnerData: learnerData,
-                    initialMessage: `I want to practice the concepts. Can you provide exercises?`
-                });
-            }
-        }
-
-        function openLearnMore(context, conceptTitle) {
-            if (typeof chatWidget !== 'undefined') {
-                chatWidget.initChatWidget({
-                    topic: topicConfig.topic,
-                    trigger: 'learn_more',
-                    context: context,
-                    backendUrl: topicConfig.backendUrl,
-                    learnerData: learnerData,
-                    initialMessage: `I want to learn more about "${conceptTitle}" in detail.`
-                });
-            }
-        }
-
-        function openSummaryChat() {
-            if (typeof chatWidget !== 'undefined') {
-                chatWidget.initChatWidget({
-                    topic: topicConfig.topic,
-                    trigger: 'summary',
-                    backendUrl: topicConfig.backendUrl,
-                    learnerData: learnerData,
-                    initialMessage: `Can you provide a comprehensive summary of the key concepts?`
-                });
-            }
-        }
-
-        function openGeneralChat() {
-            if (typeof chatWidget !== 'undefined') {
-                chatWidget.initChatWidget({
-                    topic: topicConfig.topic,
+                    topic: window.topicConfig.topic,
                     trigger: 'general',
-                    backendUrl: topicConfig.backendUrl,
-                    learnerData: learnerData,
-                    initialMessage: `Hello! I have questions about this topic.`
+                    context: 'general',
+                    backendUrl: window.topicConfig.backendUrl,
+                    learnerData: window.learnerData,
+                    initialMessage: 'Hello! I have questions about this topic.'
                 });
-            }
-        }
-
-        function openHintsExhaustedChat() {
-            if (typeof chatWidget !== 'undefined') {
-                chatWidget.initChatWidget({
-                    topic: topicConfig.topic,
-                    trigger: 'help',
-                    context: 'hints_exhausted',
-                    backendUrl: topicConfig.backendUrl,
-                    learnerData: learnerData,
-                    initialMessage: 'I have read all the hints but still need more help with the task.'
-                });
-            }
-        }
-
-        // Simple navigation functions
-        function startTask() { updateProgress(2); openTaskHelp(); }
-        function startPractice() { updateProgress(3); openPracticeChat(); }
-        function goToPrevious() { alert('Going to previous topic...'); }
-        function proceedToNext() { 
-            if (quizCompleted) {
-                alert('Proceeding to next topic...'); 
             } else {
-                alert('Please complete the quiz first!');
+                console.warn('Chat widget or topic config not ready');
+            }
+        });
+    }
+
+    function openLearnMore(learnMoreContext, conceptTitle) {
+        window.ensureChatWidget(() => {
+            if (window.chatWidget && window.topicConfig) {
+                chatWidget.initChatWidget({
+                    topic: window.topicConfig.topic,
+                    trigger: 'learn_more',
+                    context: 'learn_more',
+                    backendUrl: window.topicConfig.backendUrl,
+                    learnerData: window.learnerData,
+                    initialMessage: `I want to understand "${conceptTitle}" in detail with examples.`
+                });
+            } else {
+                console.warn('Chat widget or topic config not ready');
+            }
+        });
+    }
+
+    function openQuizFailureChat() {
+        window.ensureChatWidget(() => {
+            if (window.chatWidget && window.topicConfig) {
+                chatWidget.initChatWidget({
+                    topic: window.topicConfig.topic,
+                    trigger: 'quiz_failed',
+                    context: 'quiz_failed',        
+                    backendUrl: window.topicConfig.backendUrl,
+                    learnerData: window.learnerData,
+                    initialMessage: 'I got the quiz wrong. Can you help me understand the correct answer with a clear explanation?'
+                });
+            } else {
+                console.warn('Chat widget or topic config not ready');
+            }
+        });
+    }
+
+    function openHintsExhaustedChat() {
+        window.ensureChatWidget(() => {
+            if (window.chatWidget && window.topicConfig) {
+                chatWidget.initChatWidget({
+                    topic: window.topicConfig.topic,
+                    trigger: 'help',              
+                    context: 'help',                
+                    backendUrl: window.topicConfig.backendUrl,
+                    learnerData: window.learnerData,
+                    initialMessage: 'I have read all the hints but still need more detailed help with solving this task.'
+                });
+            } else {
+                console.warn('Chat widget or topic config not ready');
+            }
+        });
+    }
+
+    // Quiz function (keeping existing logic)
+    function selectQuizOption(element, optionIndex) {
+        document.querySelectorAll('.quiz-option').forEach(opt => {
+            opt.classList.remove('bg-green-100', 'border-green-500', 'text-green-800', 'bg-red-100', 'border-red-500', 'text-red-800');
+        });
+        
+        const result = document.getElementById('quizResult');
+        const actions = document.getElementById('quizActions');
+        const explanationImage = document.getElementById('quizExplanationImage');
+        
+        if (optionIndex === window.quizCorrectAnswer) {
+            element.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+            if (result) {
+                result.className = 'block mb-4 p-4 rounded-xl bg-green-100 text-green-800 border border-green-300';
+                result.textContent = '✅ Correct! Well done!';
+            }
+            
+            if (explanationImage) explanationImage.classList.remove('hidden');
+            
+            const proceedBtn = document.getElementById('proceedBtn');
+            if (proceedBtn) proceedBtn.classList.remove('hidden');
+            window.quizCompleted = true;
+            if (typeof updateProgress === 'function') updateProgress(4);
+        } else {
+            element.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+            if (result) {
+                result.className = 'block mb-4 p-4 rounded-xl bg-red-100 text-red-800 border border-red-300';
+                result.textContent = '❌ Incorrect. Let me help you understand the right answer.';
+            }
+            
+            if (explanationImage) explanationImage.classList.remove('hidden');
+            
+            setTimeout(() => openQuizFailureChat(), 1500);
+        }
+        
+        if (actions) actions.classList.remove('hidden');
+    }
+
+    // Other functions
+    function startTask() { 
+        if (typeof updateProgress === 'function') updateProgress(2); 
+    }
+    function goToPrevious() { alert('Going to previous topic...'); }
+    function proceedToNext() { 
+        if (window.quizCompleted) {
+            alert('Proceeding to next topic...'); 
+        } else {
+            alert('Please complete the knowledge check first!');
+        }
+    }
+    function openSummaryChat() {
+        window.ensureChatWidget(() => {
+            if (window.chatWidget && window.topicConfig) {
+                chatWidget.initChatWidget({
+                    topic: window.topicConfig.topic,
+                    trigger: 'summary',
+                    context: 'summary',
+                    backendUrl: window.topicConfig.backendUrl,
+                    learnerData: window.learnerData,
+                    initialMessage: 'Can you provide a comprehensive summary of the key concepts?'
+                });
+            } else {
+                console.warn('Chat widget or topic config not ready');
+            }
+        });
+    }
+
+    function openPracticeChat() {
+        window.ensureChatWidget(() => {
+            if (window.chatWidget && window.topicConfig) {
+                chatWidget.initChatWidget({
+                    topic: window.topicConfig.topic,
+                    trigger: 'practice',
+                    context: 'practice',
+                    backendUrl: window.topicConfig.backendUrl,
+                    learnerData: window.learnerData,
+                    initialMessage: 'I want to practice the concepts. Can you provide exercises?'
+                });
+            } else {
+                console.warn('Chat widget or topic config not ready');
+            }
+        });
+    }
+
+    function openQuizExplanation() { 
+        openLearnMore('learn_more', 'Quiz Answer'); 
+    }
+
+    // Initialize when ready - with proper timing
+    window.onload = function() {
+        console.log('🚀 Initializing template...');
+        
+        // Initialize SCORM first
+        if (typeof initSCORM === 'function') {
+            initSCORM();
+        }
+        
+        // Then initialize template functions
+        if (typeof initializeTemplate === 'function') {
+            initializeTemplate();
+        } else {
+            console.warn('initializeTemplate function not found, using fallback initialization');
+            // Fallback initialization
+            try {
+                window.templateData = JSON.parse(document.getElementById('templateData').textContent);
+                window.maxHints = window.templateData.hints ? window.templateData.hints.length : 0;
+                window.quizCorrectAnswer = window.templateData.quiz ? window.templateData.quiz.correct_answer : 0;
+                
+                window.topicConfig = {
+                    topic: window.templateData.id,
+                    backendUrl: window.templateData.backendUrl,
+                    contexts: window.templateData.chatContexts || {}
+                };
+                
+                window.learnerData = {
+                    id: 'anonymous',
+                    name: 'Learner',
+                    progress: 'not_attempted'
+                };
+                
+                console.log('✅ Fallback initialization completed');
+            } catch (e) {
+                console.error('❌ Template initialization failed:', e);
             }
         }
-
-        // Initialize when SCORM and core functions are ready
-        window.onload = function() {
-            initSCORM();
-            initializeTemplate();
-        };
-    </script>
+    };
+</script>
 </body>
 </html>
