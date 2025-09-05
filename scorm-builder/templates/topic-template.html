@@ -35,15 +35,20 @@
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
     <!-- Template Data Injection -->
     <script id="templateData" type="application/json">
-    {
-        "hints": {{{hintsJson}}},
-        "quiz": {{{quizJson}}},
-        "id": "{{id}}",
-        "backendUrl": "{{backend_url}}",
-        "chatContexts": {{{chatContextsJson}}}
-    }
-    </script>
-
+        {
+            "hints": {{{hintsJson}}},
+            "quiz": {{{quizJson}}},
+            "id": "{{id}}",
+            "title": {{{titleJson}}},
+            "description": {{{descriptionJson}}},
+            "taskStatement": {{{taskStatementJson}}},
+            "taskRequirements": {{{taskRequirementsJson}}},
+            "learningObjectives": {{{learningObjectivesJson}}},
+            "backendUrl": "{{backend_url}}",
+            "chatContexts": {{{chatContextsJson}}}
+        }
+        </script>
+        
     <!-- Main Content Container -->
     <div id="pageWrapper" class="min-h-screen transition-all duration-300 ease-in-out">
         
@@ -199,7 +204,7 @@
                 <div id="hintsContainer" class="hidden space-y-4">
                     {{#content.hints}}
                     <div class="hint-card bg-yellow-50 border border-yellow-200 rounded-xl p-6 opacity-50 transition-all duration-300" 
-                         data-hint-index="{{@index}}">
+                        data-hint-index="{{@index}}">
                         <div class="flex items-start space-x-4">
                             <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                                 {{@index}}
@@ -337,106 +342,353 @@
         💬
     </button>
 
-    <!-- Template-specific JavaScript -->
+   <!-- COMPLETELY REVISED JavaScript Section -->
 <script>
-    // Make sure variables are available globally before other scripts need them
-    window.templateData = {};
+    // ✅ IMMEDIATE DATA LOADING - Load templateData right away, not in window.onload
+    (function() {
+        try {
+            // Load template data immediately when script runs
+            window.templateData = JSON.parse(document.getElementById('templateData').textContent);
+            console.log('✅ Template data loaded immediately:', window.templateData);
+            
+            // Set global variables immediately
+            window.maxHints = window.templateData.hints ? window.templateData.hints.length : 0;
+            window.quizCorrectAnswer = window.templateData.quiz ? window.templateData.quiz.correct_answer : 0;
+            
+            window.topicConfig = {
+                topic: window.templateData.id,
+                backendUrl: window.templateData.backendUrl,
+                contexts: window.templateData.chatContexts || {}
+            };
+            
+            window.learnerData = {
+                id: 'anonymous',
+                name: 'Learner',
+                progress: 'not_attempted'
+            };
+            
+            // Extract concepts data for context
+            if (window.templateData.concepts) {
+                window.conceptsData = window.templateData.concepts;
+            }
+            
+            console.log('✅ Global variables set:', {
+                topic: window.templateData.title,
+                quiz: window.templateData.quiz,
+                hints: window.templateData.hints
+            });
+            
+        } catch (e) {
+            console.error('❌ Failed to load template data:', e);
+            // Fallback empty data
+            window.templateData = {
+                title: 'Unknown Topic',
+                taskStatement: 'Unknown Task',
+                quiz: null,
+                hints: []
+            };
+            window.maxHints = 0;
+            window.quizCorrectAnswer = 0;
+            window.topicConfig = { topic: 'unknown', backendUrl: '', contexts: {} };
+            window.learnerData = { id: 'anonymous', name: 'Learner', progress: 'not_attempted' };
+        }
+    })();
+
+    // Initialize other global variables
     window.currentHint = 0;
-    window.maxHints = 0;
     window.quizCompleted = false;
     window.progressStep = 0;
-    window.quizCorrectAnswer = 0;
-    window.topicConfig = {};
-    window.learnerData = {};
+    window.revealedHints = [];
+    window.quizAttempt = null;
 
-    // Enhanced Functions for New Template
-    function openTaskHelp() {
-        window.ensureChatWidget(() => {
-            if (window.chatWidget && window.topicConfig) {
-                chatWidget.initChatWidget({
-                    topic: window.topicConfig.topic,
-                    trigger: 'help',
-                    context: 'help',               
-                    backendUrl: window.topicConfig.backendUrl,
-                    learnerData: window.learnerData,
-                    initialMessage: 'I need guidance on how to approach this task. Can you break it down for me?'
-                });
-            } else {
-                console.warn('Chat widget or topic config not ready');
-            }
+    // ✅ ENHANCED DEBUGGING - Add detailed logging to buildChatContext
+    function buildChatContext(contextType, additionalData) {
+        const template = window.templateData;
+        
+        // Debug logging
+        console.log('🔍 Building chat context:', {
+            contextType: contextType,
+            templateData: template,
+            quiz: template ? template.quiz : 'no template',
+            additionalData: additionalData
         });
+        
+        switch(contextType) {
+            case 'task_help':
+                return {
+                    context: 'help',
+                    message: `I need help with this task: "${template.taskStatement || 'the assigned task'}". Can you guide me through the approach?`,
+                    contextData: {
+                        taskStatement: template.taskStatement || 'Unknown task',
+                        taskRequirements: template.taskRequirements || [],
+                        topicTitle: template.title || 'This topic',
+                        learnerProgress: window.progressStep || 1
+                    }
+                };
+
+            case 'learn_more':
+                const conceptTitle = additionalData.conceptTitle || 'this concept';
+                const learnMoreContext = additionalData.learnMoreContext || 'general';
+                const conceptSummary = additionalData.conceptSummary || '';
+                
+                return {
+                    context: 'learn_more', 
+                    message: `I want to understand "${conceptTitle}" in detail. ${conceptSummary ? 'I know it is: ' + conceptSummary + '. ' : ''}Please explain it with examples and how it relates to ${template.title || 'this topic'}.`,
+                    contextData: {
+                        conceptTitle: conceptTitle,
+                        conceptSummary: conceptSummary,
+                        learnMoreContext: learnMoreContext,
+                        topicTitle: template.title || 'This topic',
+                        taskStatement: template.taskStatement || 'The assigned task'
+                    }
+                };
+
+            case 'quiz_failed':
+                const quiz = template.quiz || {};
+                const userAnswer = additionalData.userAnswer;
+                const correctAnswer = quiz.correct_answer;
+                
+                // ✅ Enhanced debugging for quiz data
+                console.log('🎯 Quiz context debug:', {
+                    quiz: quiz,
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer,
+                    options: quiz.options,
+                    question: quiz.question
+                });
+                
+                const userAnswerText = (quiz.options && Array.isArray(quiz.options) && typeof userAnswer === 'number' && userAnswer >= 0) 
+                    ? quiz.options[userAnswer] || 'unknown selection'
+                    : 'unknown selection';
+                    
+                const correctAnswerText = (quiz.options && Array.isArray(quiz.options) && typeof correctAnswer === 'number' && correctAnswer >= 0) 
+                    ? quiz.options[correctAnswer] || 'unknown answer'
+                    : 'unknown answer';
+                
+                const finalMessage = `I got the quiz wrong. The question was: "${quiz.question || 'the quiz question'}". I selected "${userAnswerText}" but the correct answer is "${correctAnswerText}". Please explain why my answer was wrong and help me understand the correct concept.`;
+                
+                console.log('📝 Final quiz message:', finalMessage);
+                
+                return {
+                    context: 'quiz_failed',
+                    message: finalMessage,
+                    contextData: {
+                        quizQuestion: quiz.question || 'Unknown question',
+                        userAnswer: userAnswer,
+                        userAnswerText: userAnswerText,
+                        correctAnswer: correctAnswer,
+                        correctAnswerText: correctAnswerText,
+                        allOptions: quiz.options || [],
+                        topicTitle: template.title || 'This topic',
+                        taskStatement: template.taskStatement || 'The assigned task'
+                    }
+                };
+
+            case 'quiz_explanation':
+                const quizData = template.quiz || {};
+                
+                console.log('📖 Quiz explanation debug:', {
+                    quizData: quizData,
+                    question: quizData.question,
+                    correctAnswer: quizData.correct_answer,
+                    options: quizData.options
+                });
+                
+                const correctAnswerForExplanation = (quizData.options && Array.isArray(quizData.options) && typeof quizData.correct_answer === 'number' && quizData.correct_answer >= 0)
+                    ? quizData.options[quizData.correct_answer] 
+                    : 'the correct answer';
+                    
+                const explanationMessage = `Please explain the answer to this quiz question in detail: "${quizData.question || 'the quiz question'}". The correct answer is "${correctAnswerForExplanation}". Help me understand why this is correct and provide examples.`;
+                
+                console.log('📝 Final explanation message:', explanationMessage);
+                    
+                return {
+                    context: 'learn_more',
+                    message: explanationMessage,
+                    contextData: {
+                        quizQuestion: quizData.question || 'Unknown question',
+                        correctAnswer: quizData.correct_answer,
+                        correctAnswerText: correctAnswerForExplanation,
+                        allOptions: quizData.options || [],
+                        topicTitle: template.title || 'This topic'
+                    }
+                };
+
+            case 'hints_exhausted':
+                const hintsCount = window.revealedHints ? window.revealedHints.length : 0;
+                const hintsText = window.revealedHints && window.revealedHints.length > 0 
+                    ? window.revealedHints.map((h, i) => `${i+1}. ${h}`).join(' ')
+                    : 'the available hints';
+                    
+                return {
+                    context: 'help',
+                    message: `I've read all ${hintsCount} hints but I still need more help with the task: "${template.taskStatement || 'the assigned task'}". The hints I've seen were: ${hintsText}. Can you provide additional guidance?`,
+                    contextData: {
+                        taskStatement: template.taskStatement || 'Unknown task',
+                        revealedHints: window.revealedHints || [],
+                        hintsCount: hintsCount,
+                        topicTitle: template.title || 'This topic',
+                        learnerProgress: window.progressStep || 1
+                    }
+                };
+
+            case 'summary':
+                return {
+                    context: 'summary',
+                    message: `Please provide a comprehensive summary of "${template.title || 'this topic'}". Focus on the key concepts and how they relate to the task: "${template.taskStatement || 'the assigned task'}".`,
+                    contextData: {
+                        topicTitle: template.title || 'This topic',
+                        topicDescription: template.description || 'No description available',
+                        taskStatement: template.taskStatement || 'The assigned task',
+                        learningObjectives: template.learningObjectives || [],
+                        userProgress: {
+                            step: window.progressStep || 1,
+                            hintsUsed: window.revealedHints ? window.revealedHints.length : 0,
+                            quizCompleted: window.quizCompleted || false
+                        }
+                    }
+                };
+
+            case 'practice':
+                return {
+                    context: 'practice',
+                    message: `I want to practice the concepts from "${template.title || 'this topic'}". Can you provide exercises related to: "${template.taskStatement || 'the assigned task'}"?`,
+                    contextData: {
+                        topicTitle: template.title || 'This topic',
+                        taskStatement: template.taskStatement || 'The assigned task',
+                        learningObjectives: template.learningObjectives || []
+                    }
+                };
+
+            default: // 'general'
+                return {
+                    context: 'general',
+                    message: `Hello! I have questions about "${template.title || 'this topic'}". I'm working on: "${template.taskStatement || 'the assigned task'}".`,
+                    contextData: {
+                        topicTitle: template.title || 'This topic',
+                        taskStatement: template.taskStatement || 'The assigned task'
+                    }
+                };
+        }
+    }
+
+    // ✅ ENHANCED DYNAMIC CHAT SYSTEM with better debugging
+    function openDynamicChat(contextType, additionalData = {}) {
+        console.log('🚀 Opening dynamic chat:', contextType, additionalData);
+        console.log('📊 Current templateData:', window.templateData);
+        
+        window.ensureChatWidget(() => {
+            if (!window.chatWidget || !window.topicConfig) {
+                console.warn('Chat widget or topic config not ready');
+                return;
+            }
+
+            // Build context-specific prompt and data
+            const chatConfig = buildChatContext(contextType, additionalData);
+            
+            console.log('💬 Final chat config:', chatConfig);
+            
+            chatWidget.initChatWidget({
+                topic: window.topicConfig.topic,
+                context: chatConfig.context,
+                backendUrl: window.topicConfig.backendUrl,
+                learnerData: window.learnerData,
+                initialMessage: chatConfig.message,
+                contextData: chatConfig.contextData
+            });
+            
+            console.log('🎯 Dynamic chat opened successfully');
+        });
+    }
+
+    // **UPDATED SPECIFIC CHAT FUNCTIONS**
+    function openTaskHelp() {
+        openDynamicChat('task_help');
     }
 
     function openGeneralChat() {
-        window.ensureChatWidget(() => {
-            if (window.chatWidget && window.topicConfig) {
-                chatWidget.initChatWidget({
-                    topic: window.topicConfig.topic,
-                    trigger: 'general',
-                    context: 'general',
-                    backendUrl: window.topicConfig.backendUrl,
-                    learnerData: window.learnerData,
-                    initialMessage: 'Hello! I have questions about this topic.'
-                });
-            } else {
-                console.warn('Chat widget or topic config not ready');
-            }
-        });
+        openDynamicChat('general');
     }
 
     function openLearnMore(learnMoreContext, conceptTitle) {
-        window.ensureChatWidget(() => {
-            if (window.chatWidget && window.topicConfig) {
-                chatWidget.initChatWidget({
-                    topic: window.topicConfig.topic,
-                    trigger: 'learn_more',
-                    context: 'learn_more',
-                    backendUrl: window.topicConfig.backendUrl,
-                    learnerData: window.learnerData,
-                    initialMessage: `I want to understand "${conceptTitle}" in detail with examples.`
-                });
-            } else {
-                console.warn('Chat widget or topic config not ready');
-            }
+        // Extract concept summary from template data if available
+        let conceptSummary = '';
+        if (window.templateData && window.templateData.concepts) {
+            const concept = window.templateData.concepts.find(c => c.title === conceptTitle);
+            conceptSummary = concept ? concept.summary : '';
+        }
+
+        openDynamicChat('learn_more', {
+            conceptTitle: conceptTitle,
+            learnMoreContext: learnMoreContext,
+            conceptSummary: conceptSummary
         });
     }
 
     function openQuizFailureChat() {
-        window.ensureChatWidget(() => {
-            if (window.chatWidget && window.topicConfig) {
-                chatWidget.initChatWidget({
-                    topic: window.topicConfig.topic,
-                    trigger: 'quiz_failed',
-                    context: 'quiz_failed',        
-                    backendUrl: window.topicConfig.backendUrl,
-                    learnerData: window.learnerData,
-                    initialMessage: 'I got the quiz wrong. Can you help me understand the correct answer with a clear explanation?'
-                });
-            } else {
-                console.warn('Chat widget or topic config not ready');
-            }
-        });
+        if (window.quizAttempt) {
+            openDynamicChat('quiz_failed', {
+                userAnswer: window.quizAttempt.selectedOption
+            });
+        } else {
+            openDynamicChat('quiz_failed', {});
+        }
     }
 
     function openHintsExhaustedChat() {
-        window.ensureChatWidget(() => {
-            if (window.chatWidget && window.topicConfig) {
-                chatWidget.initChatWidget({
-                    topic: window.topicConfig.topic,
-                    trigger: 'help',              
-                    context: 'help',                
-                    backendUrl: window.topicConfig.backendUrl,
-                    learnerData: window.learnerData,
-                    initialMessage: 'I have read all the hints but still need more detailed help with solving this task.'
-                });
-            } else {
-                console.warn('Chat widget or topic config not ready');
-            }
-        });
+        openDynamicChat('hints_exhausted');
     }
 
-    // Quiz function (keeping existing logic)
+    function openSummaryChat() {
+        openDynamicChat('summary');
+    }
+
+    function openQuizExplanation() {
+        openDynamicChat('quiz_explanation');
+    }
+
+    function openPracticeChat() {
+        openDynamicChat('practice');
+    }
+
+    // **ENHANCED HINT SYSTEM WITH TRACKING**
+    function revealNextHint() {
+        const hints = document.querySelectorAll('.hint-card');
+        
+        if (window.currentHint < window.maxHints) {
+            const hint = hints[window.currentHint];
+            if (hint) {
+                hint.classList.remove('opacity-50');
+                hint.classList.add('opacity-100', 'border-yellow-400', 'bg-yellow-100');
+                
+                // Track revealed hint text for context
+                const hintText = hint.querySelector('p').textContent;
+                window.revealedHints.push(hintText);
+                
+                window.currentHint++;
+            }
+            
+            if (window.currentHint >= window.maxHints) {
+                const exhaustedBtn = document.getElementById('hintsExhaustedBtn');
+                if (exhaustedBtn) exhaustedBtn.classList.remove('hidden');
+            }
+            
+            if (window.currentHint === 1) {
+                if (typeof updateProgress === 'function') updateProgress(2);
+            }
+        }
+    }
+
+    // **ENHANCED QUIZ WITH CONTEXT TRACKING**
     function selectQuizOption(element, optionIndex) {
+        if (window.quizAttempt) return; // Prevent multiple attempts
+        
+        // Store quiz attempt details
+        window.quizAttempt = {
+            selectedOption: optionIndex,
+            timestamp: new Date().toISOString()
+        };
+        
         document.querySelectorAll('.quiz-option').forEach(opt => {
             opt.classList.remove('bg-green-100', 'border-green-500', 'text-green-800', 'bg-red-100', 'border-red-500', 'text-red-800');
         });
@@ -449,31 +701,47 @@
             element.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
             if (result) {
                 result.className = 'block mb-4 p-4 rounded-xl bg-green-100 text-green-800 border border-green-300';
-                result.textContent = '✅ Correct! Well done!';
+                result.textContent = '✅ Excellent! You understand the concept correctly.';
             }
             
             if (explanationImage) explanationImage.classList.remove('hidden');
             
             const proceedBtn = document.getElementById('proceedBtn');
             if (proceedBtn) proceedBtn.classList.remove('hidden');
+            
             window.quizCompleted = true;
             if (typeof updateProgress === 'function') updateProgress(4);
         } else {
             element.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
             if (result) {
                 result.className = 'block mb-4 p-4 rounded-xl bg-red-100 text-red-800 border border-red-300';
-                result.textContent = '❌ Incorrect. Let me help you understand the right answer.';
+                result.textContent = '❌ Not quite right. Let me help you understand the correct answer.';
             }
             
             if (explanationImage) explanationImage.classList.remove('hidden');
             
+            // Trigger contextual remedial chat after delay
             setTimeout(() => openQuizFailureChat(), 1500);
         }
         
         if (actions) actions.classList.remove('hidden');
     }
 
-    // Other functions
+    // **OTHER TEMPLATE FUNCTIONS REMAIN THE SAME**
+    function toggleHintsSection() {
+        const container = document.getElementById('hintsContainer');
+        const toggleText = document.getElementById('hintsToggleText');
+        
+        if (container.classList.contains('hidden')) {
+            container.classList.remove('hidden');
+            toggleText.textContent = 'Hide Hints';
+            if (typeof updateProgress === 'function') updateProgress(2);
+        } else {
+            container.classList.add('hidden');
+            toggleText.textContent = 'Show Hints';
+        }
+    }
+
     function startTask() { 
         if (typeof updateProgress === 'function') updateProgress(2); 
     }
@@ -485,81 +753,26 @@
             alert('Please complete the knowledge check first!');
         }
     }
-    function openSummaryChat() {
-        window.ensureChatWidget(() => {
-            if (window.chatWidget && window.topicConfig) {
-                chatWidget.initChatWidget({
-                    topic: window.topicConfig.topic,
-                    trigger: 'summary',
-                    context: 'summary',
-                    backendUrl: window.topicConfig.backendUrl,
-                    learnerData: window.learnerData,
-                    initialMessage: 'Can you provide a comprehensive summary of the key concepts?'
-                });
-            } else {
-                console.warn('Chat widget or topic config not ready');
-            }
-        });
-    }
 
-    function openPracticeChat() {
-        window.ensureChatWidget(() => {
-            if (window.chatWidget && window.topicConfig) {
-                chatWidget.initChatWidget({
-                    topic: window.topicConfig.topic,
-                    trigger: 'practice',
-                    context: 'practice',
-                    backendUrl: window.topicConfig.backendUrl,
-                    learnerData: window.learnerData,
-                    initialMessage: 'I want to practice the concepts. Can you provide exercises?'
-                });
-            } else {
-                console.warn('Chat widget or topic config not ready');
-            }
-        });
-    }
-
-    function openQuizExplanation() { 
-        openLearnMore('learn_more', 'Quiz Answer'); 
-    }
-
-    // Initialize when ready - with proper timing
+    // ✅ SIMPLIFIED INITIALIZATION - Only do remaining setup in window.onload
     window.onload = function() {
-        console.log('🚀 Initializing template...');
+        console.log('🚀 Final initialization...');
         
-        // Initialize SCORM first
         if (typeof initSCORM === 'function') {
             initSCORM();
         }
         
-        // Then initialize template functions
         if (typeof initializeTemplate === 'function') {
             initializeTemplate();
-        } else {
-            console.warn('initializeTemplate function not found, using fallback initialization');
-            // Fallback initialization
-            try {
-                window.templateData = JSON.parse(document.getElementById('templateData').textContent);
-                window.maxHints = window.templateData.hints ? window.templateData.hints.length : 0;
-                window.quizCorrectAnswer = window.templateData.quiz ? window.templateData.quiz.correct_answer : 0;
-                
-                window.topicConfig = {
-                    topic: window.templateData.id,
-                    backendUrl: window.templateData.backendUrl,
-                    contexts: window.templateData.chatContexts || {}
-                };
-                
-                window.learnerData = {
-                    id: 'anonymous',
-                    name: 'Learner',
-                    progress: 'not_attempted'
-                };
-                
-                console.log('✅ Fallback initialization completed');
-            } catch (e) {
-                console.error('❌ Template initialization failed:', e);
-            }
         }
+        
+        console.log('✅ Template fully initialized');
+        console.log('📊 Context data available:', {
+            topic: window.templateData.title,
+            task: window.templateData.taskStatement,
+            hintsCount: window.maxHints,
+            hasQuiz: !!window.templateData.quiz
+        });
     };
 </script>
 </body>

@@ -2,6 +2,13 @@
   "title": "Robot Arm Movement Control",
   "description": "Master robot arm classification and control through hands-on problem solving",
   
+  "learning_objectives": [
+    "Understand robot arm degrees of freedom (DOF)",
+    "Classify robots based on their movement capabilities", 
+    "Implement basic control algorithms",
+    "Test classification systems with real robot data"
+  ],
+  
   "content": {
     "company_logo": {
       "src": "nebula-logo.png",

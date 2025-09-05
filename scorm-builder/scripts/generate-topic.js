@@ -137,7 +137,6 @@ class TopicGenerator {
     data.backend_url = topicConfig.backendUrl || config.backendUrl;
     data.is_dev = config.isDev;
     
-    // Ensure required nested objects exist with proper defaults
     if (!data.content) data.content = {};
     if (!data.content.concepts) data.content.concepts = [];
     if (!data.content.hints) data.content.hints = [];
@@ -146,7 +145,6 @@ class TopicGenerator {
     if (!data.learning_objectives) data.learning_objectives = [];
     if (!data.chat_contexts) data.chat_contexts = {};
     
-    // Handle legacy hints structure - convert string hints to objects
     if (Array.isArray(data.content.hints)) {
       data.content.hints = data.content.hints.map((hint, index) => {
         if (typeof hint === 'string') {
@@ -159,44 +157,25 @@ class TopicGenerator {
       });
     }
     
-    // Handle legacy hints at root level (for backward compatibility)
-    if (data.hints && Array.isArray(data.hints)) {
-      data.content.hints = data.hints.map((hint, index) => {
-        if (typeof hint === 'string') {
-          return {
-            text: hint,
-            step_image: null
-          };
-        }
-        return hint;
-      });
-    }
-    
-    // Ensure task_statement is accessible at content level
     if (!data.content.task_statement && data.task_statement) {
       data.content.task_statement = data.task_statement;
     }
     
-    // Add array length properties for Mustache conditional rendering
     data.learning_objectives.length = data.learning_objectives.length;
     data.content.concepts.length = data.content.concepts.length;
     data.content.hints.length = data.content.hints.length;
     data.content.task_images.length = data.content.task_images.length;
     data.content.task_requirements.length = data.content.task_requirements.length;
     
-    // Create properly escaped JSON strings for template injection
     data.hintsJson = JSON.stringify(data.content.hints || []);
     data.quizJson = data.quiz ? JSON.stringify(data.quiz) : 'null';
     data.chatContextsJson = JSON.stringify(data.chat_contexts || {});
     
-    // Handle company logo - check multiple possible locations
-    if (!data.content.company_logo) {
-      if (data.company?.logo) {
-        data.content.company_logo = data.company.logo;
-      } else if (data.branding?.logo) {
-        data.content.company_logo = data.branding.logo;
-      }
-    }
+    data.titleJson = JSON.stringify(data.title || '');
+    data.descriptionJson = JSON.stringify(data.description || '');
+    data.taskStatementJson = JSON.stringify(data.content.task_statement || '');
+    data.taskRequirementsJson = JSON.stringify(data.content.task_requirements || []);
+    data.learningObjectivesJson = JSON.stringify(data.learning_objectives || []);
     
     // Add company branding data
     data.company = {
@@ -209,7 +188,7 @@ class TopicGenerator {
     };
 
     return data;
-  }
+}
 
   registerMustacheHelpers() {
     // Custom escape function for JSON data
