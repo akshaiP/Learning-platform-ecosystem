@@ -7,17 +7,7 @@
           xmlns:adlnav="http://www.adlnet.org/xsd/adlnav_v1p3"
           xmlns:imsss="http://www.imsglobal.org/xsd/imsss"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="
-            http://www.imsglobal.org/xsd/imscp_v1p1 
-            imscp_v1p1.xsd
-            http://www.adlnet.org/xsd/adlcp_v1p3 
-            adlcp_v1p3.xsd
-            http://www.imsglobal.org/xsd/imsss 
-            imsss_v1p0.xsd
-            http://www.adlnet.org/xsd/adlseq_v1p3 
-            adlseq_v1p3.xsd
-            http://www.adlnet.org/xsd/adlnav_v1p3 
-            adlnav_v1p3.xsd">
+          xsi:schemaLocation="http://www.imsglobal.org/xsd/imscp_v1p1 imscp_rootv1p1.xsd http://www.adlnet.org/xsd/adlcp_v1p3 adlcp_v1p3.xsd http://www.adlnet.org/xsd/adlseq_v1p3 adlseq_v1p3.xsd http://www.adlnet.org/xsd/adlnav_v1p3 adlnav_v1p3.xsd http://www.imsglobal.org/xsd/imsss imsss_v1p0.xsd">
 
   <metadata>
     <schema>ADL SCORM</schema>
@@ -34,15 +24,15 @@
   </organizations>
 
   <resources>
-    <resource identifier="RES1"
-              type="webcontent"
-              adlcp:scormType="sco"
-              href="index.html">
+    <resource identifier="RES1" type="webcontent" adlcp:scormType="sco" href="index.html">
       <file href="index.html"/>
       <file href="styles.css"/>
-      {{#hasAssets}}
-      <file href="assets/"/>
-      {{/hasAssets}}
+      <file href="scorm-api.js"/>
+      <file href="core-functions.js"/>
+      <file href="chat-integration.js"/>
+      {{#assets}}
+      <file href="{{.}}"/>
+      {{/assets}}
     </resource>
   </resources>
 </manifest>

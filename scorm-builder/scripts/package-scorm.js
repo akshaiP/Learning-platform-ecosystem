@@ -14,13 +14,15 @@ class ScormPackager {
       // Create package temp directory
       const packageTempDir = path.join(this.tempDir, `package-${topicId}-${Date.now()}`);
       await fs.ensureDir(packageTempDir);
-  
-      // Write main files
+      console.log(`📁 Package temp directory: ${packageTempDir}`);
+
+      // ✅ STEP 1: Write core files
       await fs.writeFile(path.join(packageTempDir, 'index.html'), html.html);
       await fs.writeFile(path.join(packageTempDir, 'styles.css'), html.css);
       await fs.writeFile(path.join(packageTempDir, 'imsmanifest.xml'), manifest);
-  
-      // Copy JavaScript files from tempDir to package
+      console.log('📄 Core files written (HTML, CSS, manifest)');
+
+      // ✅ STEP 2: Copy JavaScript files
       const jsFiles = ['scorm-api.js', 'chat-integration.js', 'core-functions.js'];
       for (const jsFile of jsFiles) {
         const sourcePath = path.join(tempDir, jsFile);
@@ -33,48 +35,111 @@ class ScormPackager {
           console.warn(`⚠️ JavaScript file not found: ${jsFile}`);
         }
       }
-  
-      // Copy assets if they exist
-      const assetsDir = path.join(tempDir, 'assets');
-      if (await fs.pathExists(assetsDir)) {
-        console.log('📁 Copying assets to package...');
-        await fs.copy(assetsDir, path.join(packageTempDir, 'assets'));
+
+      // ✅ STEP 3: Copy assets directory with full structure
+      const assetsSourceDir = path.join(tempDir, 'assets');
+      const assetsDestDir = path.join(packageTempDir, 'assets');
+      
+      if (await fs.pathExists(assetsSourceDir)) {
+        console.log('📁 Copying assets directory...');
+        await fs.copy(assetsSourceDir, assetsDestDir);
+        
+        // Log copied assets
+        const copiedAssets = await this.getAllFilesRecursive(assetsDestDir);
+        console.log(`✅ Copied ${copiedAssets.length} asset files`);
+        
+        // Show first few assets
+        const relativePaths = copiedAssets.slice(0, 5).map(file => 
+          path.relative(packageTempDir, file)
+        );
+        relativePaths.forEach(assetPath => 
+          console.log(`  📄 ${assetPath}`)
+        );
+        
+        if (copiedAssets.length > 5) {
+          console.log(`  ... and ${copiedAssets.length - 5} more assets`);
+        }
+      } else {
+        console.log('ℹ️ No assets directory found');
       }
 
-      // Create zip file
+      // ✅ STEP 4: Create ZIP with proper structure
       const outputPath = path.join(config.outputDir, `${topicId}.zip`);
       await this.createZipFile(packageTempDir, outputPath);
- 
-      // Get file size
+
+      // ✅ STEP 5: Get package info and cleanup
       const stats = await fs.stat(outputPath);
-      
-      // Clean up package temp directory
       await fs.remove(packageTempDir);
-  
+      console.log('🧹 Cleaned up package temp directory');
+
       return {
         filename: `${topicId}.zip`,
         fullPath: outputPath,
         size: stats.size
       };
-  
+
     } catch (error) {
       throw new Error(`Failed to package SCORM: ${error.message}`);
     }
   }
 
+  async getAllFilesRecursive(dir) {
+    const files = [];
+    
+    try {
+      const items = await fs.readdir(dir);
+      
+      for (const item of items) {
+        const fullPath = path.join(dir, item);
+        const stat = await fs.stat(fullPath);
+        
+        if (stat.isDirectory()) {
+          const subFiles = await this.getAllFilesRecursive(fullPath);
+          files.push(...subFiles);
+        } else {
+          files.push(fullPath);
+        }
+      }
+    } catch (error) {
+      console.warn(`⚠️ Error reading directory ${dir}:`, error.message);
+    }
+    
+    return files;
+  }
+
   async createZipFile(sourceDir, outputPath) {
     return new Promise((resolve, reject) => {
       const output = fs.createWriteStream(outputPath);
-      const archive = archiver('zip', { zlib: { level: 9 } });
+      const archive = archiver('zip', { 
+        zlib: { level: 9 }
+      });
 
+      let fileCount = 0;
+      
       output.on('close', () => {
-        console.log(`📦 Package created: ${(archive.pointer() / 1024).toFixed(1)} KB`);
+        const sizeKB = (archive.pointer() / 1024).toFixed(1);
+        console.log(`📦 SCORM package created: ${sizeKB} KB (${fileCount} files)`);
         resolve();
       });
 
-      archive.on('error', reject);
+      archive.on('error', (err) => {
+        console.error('❌ Archive error:', err);
+        reject(err);
+      });
+
+      // Track files being added
+      archive.on('entry', (entry) => {
+        fileCount++;
+        if (fileCount <= 10) {
+          console.log(`  📄 Adding to ZIP: ${entry.name}`);
+        }
+      });
+
       archive.pipe(output);
+      
+      // ✅ CRITICAL: Add files at root level (false = no subfolder)
       archive.directory(sourceDir, false);
+      
       archive.finalize();
     });
   }

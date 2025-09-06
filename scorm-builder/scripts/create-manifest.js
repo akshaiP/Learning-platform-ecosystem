@@ -7,18 +7,18 @@ class ManifestGenerator {
     this.templatePath = path.join(__dirname, '../templates/imsmanifest-template.xml');
   }
 
-  async generateManifest(topicConfig, config) {
+  async generateManifest(topicConfig, config, tempDir) {
     try {
       // Load manifest template
       const template = await fs.readFile(this.templatePath, 'utf8');
       
-      // Prepare manifest data
-      const manifestData = this.prepareManifestData(topicConfig, config);
+      // Prepare manifest data with XML escaping
+      const manifestData = await this.prepareManifestData(topicConfig, config, tempDir);
       
       // Render manifest
       const renderedManifest = Mustache.render(template, manifestData);
       
-      // Validate XML structure (basic check)
+      // Validate XML structure
       this.validateManifest(renderedManifest);
       
       return renderedManifest;
@@ -28,85 +28,95 @@ class ManifestGenerator {
     }
   }
 
-  prepareManifestData(topicConfig, config) {
+  async prepareManifestData(topicConfig, config, tempDir) {
     const data = {
-      // Basic identifiers
-      id: topicConfig.id,
-      title: topicConfig.title,
-      description: topicConfig.description,
+      // ✅ XML-ESCAPED CONTENT
+      id: this.escapeXML(topicConfig.id),
+      title: this.escapeXML(topicConfig.title), // This fixes "NLP & Text" issue
+      description: this.escapeXML(topicConfig.description || ''),
       
       // Build information
       build_time: topicConfig.buildTime || new Date().toISOString(),
       backend_url: topicConfig.backendUrl || config.backendUrl,
       
-      // Technical metadata
-      estimated_size: this.calculateEstimatedSize(topicConfig),
-      difficulty_level: topicConfig.difficulty_level || 'medium',
-      estimated_duration: topicConfig.estimated_duration || 'PT30M',
-      
-      // File list
-      additional_files: this.getAdditionalFiles(topicConfig),
-      
-      // Learning metadata
-      keywords: this.generateKeywords(topicConfig),
-      learning_resource_type: topicConfig.learning_resource_type || 'exercise'
+      // Asset files
+      assets: await this.collectAssetFiles(tempDir)
     };
 
+    console.log('📝 Manifest data prepared with XML escaping');
+    console.log(`   Title: "${data.title}" (escaped)`);
     return data;
   }
 
-  calculateEstimatedSize(topicConfig) {
-    // Rough estimation based on content complexity
-    let size = 50000; // Base HTML + CSS size
+  // ✅ CRITICAL: XML Escaping Function
+  escapeXML(text) {
+    if (!text) return '';
     
-    if (topicConfig.content) {
-      // Add estimates for different content types
-      if (topicConfig.content.concepts) {
-        size += topicConfig.content.concepts.length * 1000;
-      }
-      if (topicConfig.content.hints) {
-        size += topicConfig.content.hints.length * 500;
-      }
-      if (topicConfig.quiz) {
-        size += 2000;
-      }
-    }
-    
-    return size.toString();
+    return text
+      .replace(/&/g, '&amp;')      // & must be first
+      .replace(/</g, '&lt;')       // < 
+      .replace(/>/g, '&gt;')       // >
+      .replace(/"/g, '&quot;')     // "
+      .replace(/'/g, '&apos;');    // '
   }
 
-  generateKeywords(topicConfig) {
-    const keywords = ['interactive', 'chat-enabled', 'scorm-2004'];
+  async collectAssetFiles(tempDir) {
+    const assets = [];
     
-    // Add topic-specific keywords
-    if (topicConfig.keywords) {
-      keywords.push(...topicConfig.keywords);
+    try {
+      const assetsDir = path.join(tempDir, 'assets');
+      
+      if (await fs.pathExists(assetsDir)) {
+        console.log('📁 Collecting asset files for manifest...');
+        const allFiles = await this.getAllFilesRecursive(assetsDir);
+        
+        for (const file of allFiles) {
+          const relativePath = path.relative(tempDir, file);
+          const normalizedPath = relativePath.replace(/\\/g, '/');
+          assets.push(normalizedPath);
+        }
+      }
+      
+      console.log(`✅ Found ${assets.length} asset files`);
+      return assets;
+      
+    } catch (error) {
+      console.warn('⚠️ Error collecting assets:', error.message);
+      return [];
     }
-    
-    // Extract keywords from title and description
-    const titleWords = topicConfig.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-    keywords.push(...titleWords.slice(0, 3));
-    
-    return keywords.join(', ');
   }
 
-  getAdditionalFiles(topicConfig) {
+  async getAllFilesRecursive(dir) {
     const files = [];
     
-    // Add any custom assets
-    if (topicConfig.assets) {
-      files.push(...topicConfig.assets);
+    try {
+      const items = await fs.readdir(dir);
+      
+      for (const item of items) {
+        const fullPath = path.join(dir, item);
+        const stat = await fs.stat(fullPath);
+        
+        if (stat.isDirectory()) {
+          const subFiles = await this.getAllFilesRecursive(fullPath);
+          files.push(...subFiles);
+        } else {
+          files.push(fullPath);
+        }
+      }
+    } catch (error) {
+      console.warn(`⚠️ Error reading directory ${dir}:`, error.message);
     }
     
-    return files.length > 0 ? files : null;
+    return files;
   }
 
   validateManifest(manifest) {
     // Basic XML validation
     const requiredElements = [
       '<manifest',
+      '<metadata>',
       '<organizations',
-      '<resources',
+      '<resources>',
       '</manifest>'
     ];
 
@@ -116,19 +126,23 @@ class ManifestGenerator {
       }
     }
 
-    // Check for malformed XML (basic)
-    const openTags = (manifest.match(/</g) || []).length;
-    const closeTags = (manifest.match(/>/g) || []).length;
-    
-    if (openTags !== closeTags) {
-      console.warn('Potential XML malformation detected in manifest');
+    // ✅ CHECK FOR UNESCAPED AMPERSANDS
+    const unescapedAmpMatch = manifest.match(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-fA-F]+;)/);
+    if (unescapedAmpMatch) {
+      throw new Error(`Unescaped ampersand found in manifest: ${unescapedAmpMatch[0]}`);
     }
 
+    // Check SCORM 2004 schema
+    if (!manifest.includes('2004 4th Edition')) {
+      throw new Error('Manifest must specify SCORM 2004 4th Edition');
+    }
+
+    console.log('✅ Manifest XML validation passed');
     return true;
   }
 }
 
-module.exports = async function createManifest(topicConfig, config) {
+module.exports = async function createManifest(topicConfig, config, tempDir) {
   const generator = new ManifestGenerator();
-  return await generator.generateManifest(topicConfig, config);
+  return await generator.generateManifest(topicConfig, config, tempDir);
 };

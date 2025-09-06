@@ -12,5 +12,5 @@ Test Any Topic:
 
 # Complete test workflow for any topic
 npm run test:topic --topic=robot-arm-movement
-npm run test:topic --topic=sensor-integration
+npm run test:topic --topic=nlp-text-summarization
 npm run test:topic --topic=control-systems

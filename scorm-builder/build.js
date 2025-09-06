@@ -165,18 +165,17 @@ async function buildTopic(topicId, config) {
     log.verbose('Generating HTML content');
     const htmlContent = await generateTopic(topicConfig, config, tempDir);
     
-    // 3. Create manifest
     log.verbose('Creating SCORM manifest');
-    const manifestContent = await createManifest(topicConfig, config);
+    const manifestContent = await createManifest(topicConfig, config, tempDir);
     
-    // 4. Package everything (pass tempDir!)
+    // 4. Package everything
     log.verbose('Packaging SCORM content');
     const packageResult = await packageScorm(topicId, {
       html: htmlContent,
       manifest: manifestContent,
       topicConfig,
       config,
-      tempDir  // Add this!
+      tempDir
     });
     
     const buildTime = Date.now() - startTime;

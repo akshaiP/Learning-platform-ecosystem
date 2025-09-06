@@ -206,7 +206,7 @@ class TopicGenerator {
     };
   }
 
-  // Simplified CSS generation - now just returns minimal custom CSS
+  // Enhanced CSS generation with comprehensive hint system styles
   async generateStyles(topicConfig, config) {
     try {
       let customStyles = `/* Custom styles for ${topicConfig.title} */\n`;
@@ -225,16 +225,109 @@ class TopicGenerator {
         }
       }
       
-      // Add task-based learning specific styles
+      // Add comprehensive task-based learning and hint system styles
       customStyles += `
-/* Task-based learning template styles */
+/* ===== TASK-BASED LEARNING TEMPLATE STYLES ===== */
+
+/* Custom hint card animations */
 .hint-card {
-  transition: all 0.3s ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hint-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .hint-card.revealed {
-  transform: scale(1.02);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  animation: hintReveal 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Progress bar animation */
+#hintsProgressBar {
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Button hover effects */
+.hint-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hint-button:hover {
+  transform: translateY(-1px);
+}
+
+.hint-button:active {
+  transform: translateY(0);
+}
+
+/* Smooth reveal animation for hint content */
+.hint-content {
+  transition: all 0.4s ease-out;
+}
+
+/* Custom scrollbar for hints container */
+#hintsContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+#hintsContainer::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+#hintsContainer::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+#hintsContainer::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Focus states for accessibility */
+.hint-button:focus {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+/* Loading state for hint reveal */
+.hint-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.hint-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+/* Custom animations */
+@keyframes hintReveal {
+  0% { transform: translateY(20px) scale(0.95); opacity: 0; }
+  50% { transform: translateY(-5px) scale(1.02); opacity: 0.8; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes slideInUp {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* Print styles */
@@ -264,6 +357,21 @@ class TopicGenerator {
     margin-bottom: 0.5rem;
   }
 }
+
+/* Mobile-specific hint card adjustments */
+@media (max-width: 640px) {
+  .hint-card {
+    padding: 1rem;
+  }
+  
+  .hint-card .absolute.-top-3.-left-3 {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* ===== END TASK-BASED LEARNING STYLES ===== */
       `;
       
       return customStyles;
