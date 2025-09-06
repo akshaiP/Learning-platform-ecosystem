@@ -1,0 +1,151 @@
+{
+    "title": "NLP & Text Summarization with AI",
+    "description": "Master natural language processing fundamentals by building a real-world text summarization app using Google Gemini API and modern development tools",
+    
+    "learning_objectives": [
+      "Understand core NLP concepts and text processing techniques",
+      "Integrate Google Gemini API for text summarization tasks",
+      "Build full-stack web applications using AI-assisted coding",
+      "Deploy functional AI-powered summarization tools",
+      "Apply prompt engineering for optimal summarization results"
+    ],
+    
+    "content": {
+      "company_logo": {
+        "src": "nebula-logo.png",
+        "alt": "Nebula KnowLab Logo"
+      },
+      
+      "task_statement": "Build a Text Summarization Web App",
+      
+      "task_requirements": [
+        "Set up Google Gemini API access with free tier",
+        "Use Cursor IDE for AI-assisted development",
+        "Create frontend interface for text input/output",
+        "Implement backend API integration with Gemini",
+        "Add customizable summary length controls",
+        "Test and deploy your working application"
+      ],
+      
+      "hero_image": {
+        "src": "nlp-hero.jpg",
+        "alt": "AI-powered text summarization in action", 
+        "caption": "Transform long documents into concise, meaningful summaries using Google's Gemini AI"
+      },
+      
+      "concepts": [
+        {
+          "title": "Natural Language Processing",
+          "summary": "AI techniques for understanding and processing human language",
+          "image": {
+            "src": "nlp-concept.jpg",
+            "alt": "NLP processing pipeline illustration"
+          },
+          "learn_more_context": "nlp_fundamentals"
+        },
+        {
+          "title": "API Integration",
+          "summary": "Connecting external AI services to your applications", 
+          "image": {
+            "src": "api-integration.jpg",
+            "alt": "API connection diagram"
+          },
+          "learn_more_context": "api_integration"
+        },
+        {
+          "title": "Prompt Engineering",
+          "summary": "Crafting effective instructions for AI models",
+          "image": {
+            "src": "prompt-engineering.jpg",
+            "alt": "Prompt optimization examples"
+          },
+          "learn_more_context": "prompt_engineering"
+        }
+      ],
+      
+      "hints": [
+        {
+          "text": "Start by obtaining your free Google Gemini API key from Google AI Studio",
+          "step_image": {
+            "src": "step-1-api-key.jpg",
+            "alt": "Google AI Studio API key generation",
+            "caption": "Step 1: Navigate to Google AI Studio and generate your API key"
+          }
+        },
+        {
+          "text": "Set up Cursor IDE and create a new project for your summarization app",
+          "step_image": {
+            "src": "step-2-cursor-setup.jpg",
+            "alt": "Cursor IDE project setup",
+            "caption": "Step 2: Initialize your project in Cursor with proper folder structure"
+          }
+        },
+        {
+          "text": "Design your frontend with input area, summary controls, and output display",
+          "step_image": {
+            "src": "step-3-frontend-design.jpg",
+            "alt": "Frontend interface mockup",
+            "caption": "Step 3: Create an intuitive user interface for text input and summary output"
+          }
+        },
+        {
+          "text": "Implement the backend API call to Gemini with proper error handling",
+          "step_image": {
+            "src": "step-4-backend-api.jpg",
+            "alt": "Backend API implementation",
+            "caption": "Step 4: Set up secure API calls to Gemini with authentication and error handling"
+          }
+        },
+        {
+          "text": "Add summary length controls and test with various text types and lengths",
+          "step_image": {
+            "src": "step-5-testing.jpg",
+            "alt": "Testing different text inputs",
+            "caption": "Step 5: Test your app with different text types and optimize summary quality"
+          }
+        }
+      ],
+      
+      "task_images": [
+        {
+          "src": "gemini-api-studio.jpg",
+          "alt": "Google AI Studio interface",
+          "caption": "Google AI Studio - Your gateway to Gemini API access"
+        },
+        {
+          "src": "cursor-vibe-coding.jpg", 
+          "alt": "Cursor IDE in action",
+          "caption": "Cursor IDE enabling 'vibe coding' with AI assistance"
+        },
+        {
+          "src": "summarization-demo.jpg",
+          "alt": "Working summarization app",
+          "caption": "Final app: Transform long text into concise, meaningful summaries"
+        }
+      ]
+    },
+    
+    "quiz": {
+      "question": "What is the primary advantage of using Google's Gemini API for text summarization compared to traditional rule-based approaches?",
+      "options": [
+        "It's completely free with unlimited usage",
+        "It can understand context and meaning for more accurate summaries", 
+        "It works only with English text",
+        "It requires no API key setup"
+      ],
+      "correct_answer": 1,
+      "explanation_image": {
+        "src": "nlp-vs-traditional.jpg",
+        "alt": "Comparison of AI vs traditional text processing"
+      }
+    },
+    
+    "chat_contexts": {
+      "task_help": "Guide the learner through building the text summarization app step-by-step, from API setup to deployment",
+      "nlp_fundamentals": "Explain core NLP concepts, tokenization, and how AI models process human language",
+      "api_integration": "Detail how to securely integrate external APIs, handle authentication, and manage responses",
+      "prompt_engineering": "Teach effective prompt design for summarization tasks and optimization techniques", 
+      "quiz_failed": "Provide detailed explanation of AI-based vs traditional text processing approaches with examples",
+      "hints_exhausted": "Offer advanced troubleshooting for API integration, Cursor IDE usage, and deployment issues"
+    }
+  }  
