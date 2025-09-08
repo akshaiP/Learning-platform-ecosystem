@@ -21,7 +21,7 @@
 }
 
 .chat-header {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: linear-gradient(135deg, #4A9B8E 0%, #6B4C93 100%);
   color: white;
   padding: 20px;
   border-radius: 10px 0 0 0;
@@ -105,13 +105,13 @@
 }
 
 .user-message .message-content {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: linear-gradient(135deg, #4A9B8E 0%, #6B4C93 100%);
   color: white;
   padding: 12px 18px;
   border-radius: 20px 20px 4px 20px;
   font-size: 14px;
   line-height: 1.4;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(74, 155, 142, 0.35);
 }
 
 .assistant-message {
@@ -153,12 +153,12 @@
 }
 
 #chat-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: #4A9B8E;
+  box-shadow: 0 0 0 3px rgba(74, 155, 142, 0.15);
 }
 
 #chat-send {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: linear-gradient(135deg, #4A9B8E 0%, #6B4C93 100%);
   color: white;
   border: none;
   border-radius: 50%;
@@ -170,12 +170,12 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(107, 76, 147, 0.35);
 }
 
 #chat-send:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(107, 76, 147, 0.45);
 }
 
 #chat-send:active {
@@ -189,14 +189,14 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: linear-gradient(135deg, #4A9B8E 0%, #6B4C93 100%);
   color: white;
   font-size: 24px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(0, 123, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(74, 155, 142, 0.45);
   z-index: 9999;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   border: none;
@@ -204,7 +204,7 @@
 
 .chat-trigger:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 25px rgba(0, 123, 255, 0.5);
+  box-shadow: 0 6px 25px rgba(107, 76, 147, 0.5);
 }
 
 .chat-trigger:active {
@@ -257,7 +257,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #007bff;
+  background: #4A9B8E;
   animation: typing 1.4s infinite ease-in-out both;
 }
 

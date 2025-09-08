@@ -37,13 +37,17 @@ class ChatWidget {
     chatContainer.id = 'chat-widget';
     chatContainer.innerHTML = `
       <div class="chat-header">
-        <h3>🤖 Learning Assistant</h3>
+        <h3>Learning Assistant</h3>
         <button onclick="chatWidget.hideChat()" title="Close chat">×</button>
       </div>
       <div id="chat-messages" class="chat-messages"></div>
       <div class="chat-input-container">
-        <input type="text" id="chat-input" placeholder="Ask me anything about this topic...">
-        <button onclick="chatWidget.sendMessage()" id="chat-send" title="Send message">➤</button>
+        <input type="text" id="chat-input" placeholder="Ask your question...">
+        <button onclick="chatWidget.sendMessage()" id="chat-send" title="Send message">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M3 12L21 3L14 21L11 13L3 12Z" fill="currentColor"/>
+          </svg>
+        </button>
       </div>
     `;
     
@@ -73,7 +77,10 @@ class ChatWidget {
     const trigger = document.createElement('button');
     trigger.className = 'chat-trigger';
     trigger.title = 'Open Learning Assistant';
-    trigger.innerHTML = '💬';
+    trigger.innerHTML = `
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M20 2H4C2.895 2 2 2.895 2 4V22L6 18H20C21.105 18 22 17.105 22 16V4C22 2.895 21.105 2 20 2Z" fill="currentColor"/>
+      </svg>`;
     trigger.onclick = () => this.showChat();
     
     document.body.appendChild(trigger);
