@@ -1,3 +1,4 @@
+<!-- scorm-builder/templates/topic-template.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,15 +6,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}} - Nebula KnowLab</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'nebula-teal': '#4A9B8E',
-                        'nebula-purple': '#6B4C93',
-                        'nebula-gradient-start': '#4A9B8E',
-                        'nebula-gradient-end': '#6B4C93',
+                        'nebula': {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#4A9B8E',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        },
+                        'nebula-purple': {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            200: '#e9d5ff',
+                            300: '#d8b4fe',
+                            400: '#c084fc',
+                            500: '#6B4C93',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                            800: '#6b21a8',
+                            900: '#581c87',
+                        },
+                        'accent': '#FF6B6B',
+                        'success': '#10B981',
+                        'warning': '#F59E0B',
+                        'error': '#EF4444',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'display': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                        'medium': '0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'strong': '0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 20px 25px -5px rgba(0, 0, 0, 0.1)',
                     },
                     animation: {
                         'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -21,6 +56,7 @@
                         'slideInUp': 'slideInUp 0.5s ease-out',
                         'fadeIn': 'fadeIn 0.5s ease-out',
                         'hintReveal': 'hintReveal 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                        'shimmer': 'shimmer 2s linear infinite',
                     },
                     keyframes: {
                         slideInUp: {
@@ -35,6 +71,10 @@
                             '0%': { transform: 'translateY(20px) scale(0.95)', opacity: '0' },
                             '50%': { transform: 'translateY(-5px) scale(1.02)', opacity: '0.8' },
                             '100%': { transform: 'translateY(0) scale(1)', opacity: '1' }
+                        },
+                        shimmer: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
                         }
                     }
                 }
@@ -57,7 +97,7 @@
     <script src="chat-integration.js"></script>
     <script src="core-functions.js"></script>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen">
     <!-- Template Data Injection -->
     <script id="templateData" type="application/json">
         {
@@ -72,234 +112,248 @@
             "backendUrl": "{{backend_url}}",
             "chatContexts": {{{chatContextsJson}}}
         }
-        </script>
+    </script>
         
     <!-- Main Content Container -->
     <div id="pageWrapper" class="min-h-screen transition-all duration-300 ease-in-out">
         
-        <!-- 1. BRANDED HEADER -->
-        <header class="bg-gradient-to-r from-nebula-teal to-nebula-purple text-white sticky top-0 z-40 shadow-lg">
+        <!-- 1. ENHANCED MODERN HEADER -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-40 backdrop-blur-sm bg-white/95">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
+                <div class="flex items-center justify-between h-20">
                     <!-- Logo & Brand -->
                     <div class="flex items-center space-x-4">
                         {{#content.company_logo}}
                         <div class="flex-shrink-0">
-                            <img src="{{src}}" alt="{{alt}}" class="h-10 w-auto">
+                            <img src="{{src}}" alt="{{alt}}" class="h-12 w-auto">
                         </div>
                         {{/content.company_logo}}
                         {{^content.company_logo}}
-                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <svg class="w-6 h-6 text-white" viewBox="0 0 200 200" fill="currentColor">
-                                <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" stroke-width="8"/>
-                                <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" stroke-width="6" opacity="0.7"/>
-                                <circle cx="100" cy="100" r="40" fill="none" stroke="currentColor" stroke-width="4" opacity="0.5"/>
-                                <circle cx="100" cy="100" r="20" fill="currentColor" opacity="0.3"/>
-                            </svg>
+                        <div class="w-12 h-12 bg-gradient-to-br from-nebula-500 to-nebula-purple-500 rounded-2xl flex items-center justify-center shadow-medium">
+                            <i class="fas fa-atom text-white text-lg"></i>
                         </div>
                         {{/content.company_logo}}
                         <div>
-                            <h1 class="text-lg font-bold text-white">Nebula KnowLab</h1>
-                            <p class="text-xs text-white/80">{{title}}</p>
+                            <h1 class="text-xl font-bold text-gray-900">Nebula KnowLab</h1>
+                            <p class="text-sm text-gray-500 font-medium">{{title}}</p>
                         </div>
                     </div>
 
-                    <!-- Progress Indicator -->
-                    <div class="flex items-center space-x-4">
-                        <div class="hidden sm:block">
-                            <div class="flex items-center space-x-2">
-                                <span class="text-xs text-white/80" id="progressText">Task Understanding</span>
-                                <div class="w-24 bg-white/20 rounded-full h-2">
-                                    <div class="h-2 bg-white rounded-full transition-all duration-700" id="progressFill" style="width: 25%"></div>
+                    <!-- Progress & User Info -->
+                    <div class="flex items-center space-x-6">
+                        <!-- Progress Indicator -->
+                        <div class="hidden sm:flex items-center space-x-4">
+                            <div class="flex flex-col items-end">
+                                <span class="text-xs font-medium text-gray-500" id="progressText">Task Understanding</span>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <div class="w-32 bg-gray-200 rounded-full h-2">
+                                        <div class="h-2 bg-gradient-to-r from-nebula-500 to-nebula-purple-500 rounded-full transition-all duration-700" id="progressFill" style="width: 25%"></div>
+                                    </div>
+                                    <span class="text-xs font-semibold text-gray-700" id="progressPercent">25%</span>
                                 </div>
                             </div>
                         </div>
-                        <div id="learnerInfo" class="text-right">
-                            <span class="text-white/80 text-sm">Loading...</span>
+                        
+                        <!-- User Info -->
+                        <div id="learnerInfo" class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-nebula-500 to-nebula-purple-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-white text-sm"></i>
+                            </div>
+                            <span class="text-gray-700 text-sm font-medium">Loading...</span>
                         </div>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- 2. TASK HERO SECTION -->
-        <section class="bg-white border-b border-gray-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 2. MODERN HERO SECTION -->
+        <section class="bg-gradient-to-br from-white via-gray-50 to-nebula-50 border-b border-gray-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <!-- Task Statement -->
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-nebula-teal/10 text-nebula-teal mb-4">
-                        🎯 Your Challenge
+                <div class="text-center mb-12">
+                    <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-nebula-500 to-nebula-purple-500 text-white mb-6 shadow-soft">
+                        <i class="fas fa-target mr-2"></i>
+                        Your Challenge
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                    <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                         {{content.task_statement}}
                     </h2>
-                    <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
+                    <p class="text-xl text-gray-600 max-w-4xl mx-auto mb-10 leading-relaxed">
                         {{description}}
                     </p>
                 </div>
 
                 <!-- Hero Visual -->
                 {{#content.hero_image}}
-                <div class="relative mb-8">
-                    <div class="aspect-video lg:aspect-[21/9] overflow-hidden rounded-2xl shadow-2xl">
+                <div class="relative mb-12">
+                    <div class="aspect-video lg:aspect-[21/9] overflow-hidden rounded-3xl shadow-strong bg-white p-2">
                         <img src="{{src}}" alt="{{alt}}" 
-                             class="w-full h-full object-cover transition-transform duration-700 hover:scale-105">
+                             class="w-full h-full object-cover rounded-2xl transition-transform duration-700 hover:scale-105">
                     </div>
                     {{#caption}}
-                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent rounded-b-2xl">
-                        <p class="text-white p-6 font-medium">{{caption}}</p>
+                    <div class="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-medium">
+                        <p class="text-gray-800 font-medium">{{caption}}</p>
                     </div>
                     {{/caption}}
                 </div>
                 {{/content.hero_image}}
 
-                <!-- Task Requirements -->
-                {{#content.task_requirements.length}}
-                <div class="bg-gray-50 rounded-2xl p-6 mb-8">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">📋 Requirements</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {{#content.task_requirements}}
-                        <div class="flex items-start space-x-3">
-                            <div class="w-2 h-2 bg-nebula-teal rounded-full mt-2 flex-shrink-0"></div>
-                            <span class="text-gray-700">{{.}}</span>
-                        </div>
-                        {{/content.task_requirements}}
-                    </div>
-                </div>
-                {{/content.task_requirements.length}}
-
                 <!-- Primary Actions -->
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <button onclick="startTask()" 
-                            class="bg-gradient-to-r from-nebula-teal to-nebula-purple text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-2">
-                        <span>🚀</span><span>Start Working</span>
+                            class="group bg-gradient-to-r from-nebula-500 to-nebula-purple-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-medium hover:shadow-strong transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center space-x-3">
+                        <i class="fas fa-rocket group-hover:animate-bounce"></i>
+                        <span>Start Working</span>
                     </button>
                     <button onclick="openTaskHelp()" 
-                            class="border-2 border-nebula-teal text-nebula-teal px-8 py-4 rounded-xl font-semibold text-lg hover:bg-nebula-teal hover:text-white transition-all duration-200 flex items-center justify-center space-x-2">
-                        <span>💡</span><span>Get Guidance</span>
+                            class="group border-2 border-nebula-500 text-nebula-500 px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-nebula-500 hover:text-white transition-all duration-300 flex items-center justify-center space-x-3 shadow-soft hover:shadow-medium">
+                        <i class="fas fa-lightbulb group-hover:text-yellow-300"></i>
+                        <span>Get Guidance</span>
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- 3. WORK AREA -->
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            
-            <!-- Quick Concepts (Minimal) -->
-            {{#content.concepts.length}}
-            <div class="mb-12">
-                <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                    <span class="w-6 h-6 bg-nebula-teal rounded-lg flex items-center justify-center text-white text-sm mr-3">📚</span>
-                    Quick Reference
-                </h3>
+        <!-- 3. ENHANCED REQUIREMENTS SECTION -->
+        {{#content.task_requirements.length}}
+        <section class="bg-white border-b border-gray-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div class="text-center mb-10">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Project Requirements</h3>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Complete these essential tasks to successfully build your application</p>
+                </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {{#content.task_requirements}}
+                    <div class="group bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border border-gray-200 hover:border-nebula-300 hover:shadow-medium transition-all duration-300">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-gradient-to-r from-nebula-500 to-nebula-purple-500 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-check text-white text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-800 font-medium leading-relaxed">{{.}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {{/content.task_requirements}}
+                </div>
+            </div>
+        </section>
+        {{/content.task_requirements.length}}
+
+        <!-- 4. WORK AREA -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            
+            <!-- Quick Concepts -->
+            {{#content.concepts.length}}
+            <div class="mb-16">
+                <div class="text-center mb-10">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center">
+                        <i class="fas fa-book-open text-nebula-500 mr-3"></i>
+                        Key Concepts
+                    </h3>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Essential knowledge to help you complete the task successfully</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {{#content.concepts}}
-                    <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-100">
+                    <div class="group bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden border border-gray-100">
                         {{#image}}
-                        <div class="aspect-video overflow-hidden rounded-lg mb-4">
-                            <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-cover">
+                        <div class="aspect-video overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                            <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-contain transition-transform duration-500">
                         </div>
                         {{/image}}
-                        <h4 class="font-semibold text-gray-900 mb-2">{{title}}</h4>
-                        <p class="text-sm text-gray-600 mb-4">{{summary}}</p>
-                        <button onclick="openLearnMore('{{learn_more_context}}', '{{title}}')" 
-                                class="text-nebula-teal font-medium hover:text-nebula-purple transition-colors text-sm flex items-center space-x-1">
-                            <span>📖</span><span>Learn More</span>
-                        </button>
+                        <div class="p-6">
+                            <h4 class="font-bold text-gray-900 mb-3 text-lg">{{title}}</h4>
+                            <p class="text-gray-600 mb-6 leading-relaxed">{{summary}}</p>
+                            <button onclick="openLearnMore('{{learn_more_context}}', '{{title}}')" 
+                                    class="group/btn inline-flex items-center text-nebula-500 font-semibold hover:text-nebula-600 transition-colors">
+                                <i class="fas fa-arrow-right mr-2 group-hover/btn:translate-x-1 transition-transform duration-200"></i>
+                                <span>Learn More</span>
+                            </button>
+                        </div>
                     </div>
                     {{/content.concepts}}
                 </div>
             </div>
             {{/content.concepts.length}}
 
-            <!-- Dynamic Progressive Hints System -->
+            <!-- Enhanced Progressive Hints System -->
             {{#content.hints.length}}
-            <div class="mb-12">
-                <!-- Hints Header with Progress -->
-                <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 mb-6 border border-amber-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center text-white text-lg shadow-lg">
-                                💡
+            <div class="mb-16">
+                <!-- Hints Header -->
+                <div class="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 rounded-3xl p-8 mb-8 border border-amber-200">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-medium">
+                                <i class="fas fa-lightbulb text-white text-xl"></i>
                             </div>
                             <div>
-                                <h3 class="text-xl font-bold text-gray-900">Progressive Hints</h3>
-                                <p class="text-sm text-gray-600">Get step-by-step guidance when you need it</p>
+                                <h3 class="text-2xl font-bold text-gray-900">Progressive Hints</h3>
+                                <p class="text-gray-600 font-medium">Get step-by-step guidance when you need it</p>
                             </div>
                         </div>
                         <button onclick="toggleHintsSection()" 
-                                class="group bg-white/80 hover:bg-white border border-amber-300 text-amber-700 hover:text-amber-800 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 shadow-sm hover:shadow-md">
+                                class="group bg-white hover:bg-amber-50 border-2 border-amber-300 hover:border-amber-400 text-amber-700 hover:text-amber-800 px-6 py-3 rounded-2xl font-semibold transition-all duration-200 shadow-soft hover:shadow-medium">
                             <span id="hintsToggleText" class="flex items-center space-x-2">
                                 <span>Show Hints</span>
-                                <svg class="w-4 h-4 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
+                                <i class="fas fa-chevron-down transition-transform duration-200 group-hover:scale-110"></i>
                             </span>
                         </button>
                     </div>
                     
                     <!-- Progress Indicator -->
-                    <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-6">
                         <div class="flex-1">
-                            <div class="flex items-center justify-between text-xs text-gray-600 mb-2">
-                                <span>Hints Progress</span>
-                                <span id="hintsProgressText">0 of {{content.hints.length}} revealed</span>
+                            <div class="flex items-center justify-between text-sm text-gray-600 mb-3">
+                                <span class="font-medium">Hints Progress</span>
+                                <span id="hintsProgressText" class="font-semibold">0 of {{content.hints.length}} revealed</span>
                             </div>
-                            <div class="w-full bg-white/60 rounded-full h-2 overflow-hidden">
-                                <div id="hintsProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                            <div class="w-full bg-white/60 rounded-full h-3 overflow-hidden shadow-inner">
+                                <div id="hintsProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500 ease-out shadow-sm" style="width: 0%"></div>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-amber-600" id="hintsCountDisplay">{{content.hints.length}}</div>
-                            <div class="text-xs text-gray-500">Available</div>
+                        <div class="text-center bg-white rounded-2xl p-4 shadow-soft">
+                            <div class="text-3xl font-bold text-amber-600" id="hintsCountDisplay">{{content.hints.length}}</div>
+                            <div class="text-xs text-gray-500 font-medium">Available</div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Dynamic Hints Container - No Pre-allocated Space -->
+                <!-- Dynamic Hints Container -->
                 <div id="hintsContainer" class="hidden">
-                    <!-- Hints will be dynamically inserted here -->
-                    <div id="hintsList" class="space-y-4">
+                    <div id="hintsList" class="space-y-6">
                         <!-- Hints are added dynamically via JavaScript -->
                     </div>
                     
-                    <!-- Dynamic Action Buttons - Positioned after last hint -->
-                    <div id="hintsActions" class="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+                    <!-- Hint Actions -->
+                    <div id="hintsActions" class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                         <button onclick="revealNextHint()" id="revealHintBtn"
-                                class="group bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-3">
-                            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
+                                class="group bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center justify-center space-x-3">
+                            <i class="fas fa-eye group-hover:animate-pulse"></i>
                             <span>Reveal Next Hint</span>
                         </button>
                         
                         <button onclick="openHintsExhaustedChat()" id="hintsExhaustedBtn" 
-                                class="group bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 hidden">
-                            <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z"></path>
-                            </svg>
+                                class="group bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center justify-center space-x-3 hidden">
+                            <i class="fas fa-question-circle group-hover:animate-bounce"></i>
                             <span>I Still Need Help</span>
                         </button>
                     </div>
                     
-                    <!-- Hint Usage Statistics -->
-                    <div id="hintsStats" class="mt-6 bg-gray-50 rounded-xl p-4 hidden">
+                    <!-- Hint Statistics -->
+                    <div id="hintsStats" class="mt-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 hidden border border-gray-200">
                         <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-6">
                                 <div class="flex items-center space-x-2 text-gray-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    </svg>
-                                    <span>Hints used: <span id="hintsUsedCount">0</span></span>
+                                    <i class="fas fa-chart-bar text-nebula-500"></i>
+                                    <span class="font-medium">Hints used: <span id="hintsUsedCount" class="font-bold text-gray-900">0</span></span>
                                 </div>
                                 <div class="flex items-center space-x-2 text-gray-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    <span>Time spent: <span id="hintsTimeSpent">0m</span></span>
+                                    <i class="fas fa-clock text-nebula-purple-500"></i>
+                                    <span class="font-medium">Time spent: <span id="hintsTimeSpent" class="font-bold text-gray-900">0m</span></span>
                                 </div>
                             </div>
-                            <button onclick="resetHints()" class="text-amber-600 hover:text-amber-700 font-medium text-xs">
+                            <button onclick="resetHints()" class="text-amber-600 hover:text-amber-700 font-semibold text-sm hover:underline">
                                 Reset Hints
                             </button>
                         </div>
@@ -310,20 +364,23 @@
 
             <!-- Visual Context Gallery -->
             {{#content.task_images.length}}
-            <div class="mb-12">
-                <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                    <span class="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm mr-3">📸</span>
-                    Visual References
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="mb-16">
+                <div class="text-center mb-10">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center">
+                        <i class="fas fa-images text-blue-500 mr-3"></i>
+                        Visual References
+                    </h3>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Visual guides to help you understand the implementation</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {{#content.task_images}}
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                        <div class="aspect-video overflow-hidden">
-                            <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
+                    <div class="group bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden border border-gray-100">
+                        <div class="aspect-video overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                            <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-contain transition-transform duration-500">
                         </div>
                         {{#caption}}
-                        <div class="p-4">
-                            <p class="text-sm text-gray-600">{{caption}}</p>
+                        <div class="p-6">
+                            <p class="text-gray-700 font-medium leading-relaxed">{{caption}}</p>
                         </div>
                         {{/caption}}
                     </div>
@@ -333,48 +390,58 @@
             {{/content.task_images.length}}
         </section>
 
-        <!-- 4. KNOWLEDGE CHECK -->
+        <!-- 5. ENHANCED KNOWLEDGE CHECK -->
         {{#quiz}}
-        <section class="bg-gray-50 border-t border-gray-200">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-6">
-                        <h3 class="text-2xl font-bold flex items-center">
-                            <span class="text-2xl mr-3">🧠</span>
-                            Knowledge Check
-                        </h3>
-                        <p class="text-purple-100 mt-2">Test your understanding before moving forward</p>
+        <section class="bg-gradient-to-br from-gray-50 to-white border-t border-gray-200">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div class="bg-white rounded-3xl shadow-strong overflow-hidden border border-gray-100">
+                    <div class="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white px-8 py-8">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                <i class="fas fa-brain text-white text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-3xl font-bold">Knowledge Check</h3>
+                                <p class="text-purple-100 mt-1 text-lg">Test your understanding before moving forward</p>
+                            </div>
+                        </div>
                     </div>
                     <div class="p-8">
-                        <h4 class="text-xl font-semibold text-gray-900 mb-6">{{quiz.question}}</h4>
-                        <div class="space-y-3 mb-6" id="quizOptionsContainer">
+                        <h4 class="text-xl font-bold text-gray-900 mb-8 leading-relaxed">{{quiz.question}}</h4>
+                        <div class="space-y-4 mb-8" id="quizOptionsContainer">
                             {{#quiz.options}}
-                            <button class="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-nebula-teal hover:bg-gray-50 transition-all duration-200 quiz-option" 
+                            <button class="w-full text-left p-6 rounded-2xl border-2 border-gray-200 hover:border-nebula-400 hover:bg-nebula-50 transition-all duration-300 quiz-option group shadow-soft hover:shadow-medium" 
                                     data-option-index="{{@index}}">
-                                <span class="font-bold text-nebula-teal mr-3 option-letter"></span>
-                                <span class="option-text">{{.}}</span>
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-gray-100 group-hover:bg-nebula-100 rounded-xl flex items-center justify-center font-bold text-gray-600 group-hover:text-nebula-600 transition-colors option-letter"></div>
+                                    <span class="option-text text-gray-800 font-medium text-lg">{{.}}</span>
+                                </div>
                             </button>
                             {{/quiz.options}}
                         </div>
                         
-                        <div id="quizResult" class="hidden mb-4 p-4 rounded-xl"></div>
+                        <div id="quizResult" class="hidden mb-6 p-6 rounded-2xl shadow-soft"></div>
                         
                         {{#quiz.explanation_image}}
-                        <div id="quizExplanationImage" class="hidden mb-6 text-center">
-                            <img src="{{quiz.explanation_image.src}}" alt="{{quiz.explanation_image.alt}}" 
-                                 class="max-w-full h-auto rounded-xl shadow-md mx-auto">
-                            <p class="text-sm text-gray-600 mt-2 italic">Visual explanation</p>
+                        <div id="quizExplanationImage" class="hidden mb-8 text-center">
+                            <div class="inline-block bg-gray-50 rounded-2xl p-4 shadow-soft">
+                                <img src="{{quiz.explanation_image.src}}" alt="{{quiz.explanation_image.alt}}" 
+                                     class="max-w-full h-auto rounded-xl shadow-medium mx-auto">
+                                <p class="text-sm text-gray-600 mt-4 font-medium italic">Visual explanation</p>
+                            </div>
                         </div>
                         {{/quiz.explanation_image}}
                         
-                        <div id="quizActions" class="hidden flex flex-wrap gap-3">
+                        <div id="quizActions" class="hidden flex flex-wrap gap-4">
                             <button id="proceedBtn" onclick="proceedToNext()" 
-                                    class="bg-green-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-green-700 transition-colors hidden">
-                                ✅ Continue to Next Topic
+                                    class="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-2xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-medium hover:shadow-strong transform hover:-translate-y-1 hidden flex items-center space-x-2">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Continue to Next Topic</span>
                             </button>
                             <button onclick="openQuizExplanation()" 
-                                    class="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-xl font-medium hover:bg-blue-600 hover:text-white transition-all">
-                                📝 Explain Answer
+                                    class="border-2 border-blue-500 text-blue-600 px-8 py-4 rounded-2xl font-semibold hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-soft hover:shadow-medium flex items-center space-x-2">
+                                <i class="fas fa-question-circle"></i>
+                                <span>Explain Answer</span>
                             </button>
                         </div>
                     </div>
@@ -383,22 +450,25 @@
         </section>
         {{/quiz}}
 
-        <!-- Navigation Footer -->
+        <!-- Enhanced Navigation Footer -->
         <footer class="bg-white border-t border-gray-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-6">
                     <button onclick="goToPrevious()" 
-                            class="bg-gray-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-700 transition-colors">
-                        ← Previous Topic
+                            class="group bg-gray-600 hover:bg-gray-700 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center space-x-2">
+                        <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform duration-200"></i>
+                        <span>Previous Topic</span>
                     </button>
-                    <div class="flex gap-3">
+                    <div class="flex gap-4">
                         <button onclick="openSummaryChat()" 
-                                class="border-2 border-nebula-teal text-nebula-teal px-6 py-3 rounded-xl font-medium hover:bg-nebula-teal hover:text-white transition-all">
-                            📋 Get Summary
+                                class="group border-2 border-nebula-500 text-nebula-500 px-8 py-4 rounded-2xl font-semibold hover:bg-nebula-500 hover:text-white transition-all duration-300 shadow-soft hover:shadow-medium flex items-center space-x-2">
+                            <i class="fas fa-file-text group-hover:animate-pulse"></i>
+                            <span>Get Summary</span>
                         </button>
                         <button id="nextBtn" onclick="proceedToNext()" 
-                                class="bg-gradient-to-r from-nebula-teal to-nebula-purple text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all hidden">
-                            Next Topic →
+                                class="group bg-gradient-to-r from-nebula-500 to-nebula-purple-500 text-white px-8 py-4 rounded-2xl font-semibold shadow-medium hover:shadow-strong transition-all duration-300 transform hover:-translate-y-1 hidden flex items-center space-x-2">
+                            <span>Next Topic</span>
+                            <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-200"></i>
                         </button>
                     </div>
                 </div>
@@ -408,546 +478,560 @@
 
     <!-- Enhanced Floating Chat Trigger -->
     <button id="templateChatTrigger" onclick="openGeneralChat()" 
-            class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-nebula-teal to-nebula-purple text-white rounded-full shadow-2xl hover:scale-110 transition-all duration-300 flex items-center justify-center text-xl z-50">
-        💬
+            class="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-nebula-500 to-nebula-purple-500 text-white rounded-2xl shadow-strong hover:scale-110 transition-all duration-300 flex items-center justify-center text-xl z-50 group hover:shadow-xl">
+        <i class="fas fa-comments group-hover:animate-bounce"></i>
     </button>
 
-   <!-- COMPLETELY REVISED JavaScript Section -->
-<script>
-    // ✅ IMMEDIATE DATA LOADING - Load templateData right away, not in window.onload
-    (function() {
-        try {
-            // Load template data immediately when script runs
-            window.templateData = JSON.parse(document.getElementById('templateData').textContent);
-            console.log('✅ Template data loaded immediately:', window.templateData);
-            
-            // Set global variables immediately
-            window.maxHints = window.templateData.hints ? window.templateData.hints.length : 0;
-            window.quizCorrectAnswer = window.templateData.quiz ? window.templateData.quiz.correct_answer : 0;
-            
-            window.topicConfig = {
-                topic: window.templateData.id,
-                backendUrl: window.templateData.backendUrl,
-                contexts: window.templateData.chatContexts || {}
-            };
-            
-            window.learnerData = {
-                id: 'anonymous',
-                name: 'Learner',
-                progress: 'not_attempted'
-            };
-            
-            // Extract concepts data for context
-            if (window.templateData.concepts) {
-                window.conceptsData = window.templateData.concepts;
+    <!-- All your existing JavaScript remains unchanged -->
+    <script>
+        // ✅ IMMEDIATE DATA LOADING - Load templateData right away, not in window.onload
+        (function() {
+            try {
+                // Load template data immediately when script runs
+                window.templateData = JSON.parse(document.getElementById('templateData').textContent);
+                console.log('✅ Template data loaded immediately:', window.templateData);
+                
+                // Set global variables immediately
+                window.maxHints = window.templateData.hints ? window.templateData.hints.length : 0;
+                window.quizCorrectAnswer = window.templateData.quiz ? window.templateData.quiz.correct_answer : 0;
+                
+                window.topicConfig = {
+                    topic: window.templateData.id,
+                    backendUrl: window.templateData.backendUrl,
+                    contexts: window.templateData.chatContexts || {}
+                };
+                
+                window.learnerData = {
+                    id: 'anonymous',
+                    name: 'Learner',
+                    progress: 'not_attempted'
+                };
+                
+                // Extract concepts data for context
+                if (window.templateData.concepts) {
+                    window.conceptsData = window.templateData.concepts;
+                }
+                
+                console.log('✅ Global variables set:', {
+                    topic: window.templateData.title,
+                    quiz: window.templateData.quiz,
+                    hints: window.templateData.hints
+                });
+                
+            } catch (e) {
+                console.error('❌ Failed to load template data:', e);
+                // Fallback empty data
+                window.templateData = {
+                    title: 'Unknown Topic',
+                    taskStatement: 'Unknown Task',
+                    quiz: null,
+                    hints: []
+                };
+                window.maxHints = 0;
+                window.quizCorrectAnswer = 0;
+                window.topicConfig = { topic: 'unknown', backendUrl: '', contexts: {} };
+                window.learnerData = { id: 'anonymous', name: 'Learner', progress: 'not_attempted' };
             }
+        })();
+
+        // Initialize other global variables
+        window.currentHint = 0;
+        window.quizCompleted = false;
+        window.progressStep = 0;
+        window.revealedHints = [];
+        window.quizAttempt = null;
+        window.hintsStartTime = null;
+
+        // Update header progress bar and percentage text
+        function updateProgress(step) {
+            const progressFill = document.getElementById('progressFill');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressText = document.getElementById('progressText');
+
+            const stepMap = {
+                1: { pct: 25, label: 'Task Understanding' },
+                2: { pct: 50, label: 'In Progress' },
+                3: { pct: 75, label: 'Almost There' },
+                4: { pct: 100, label: 'Completed' }
+            };
+
+            const normalized = stepMap[step] ? step : 1;
+            window.progressStep = normalized;
+            const { pct, label } = stepMap[normalized];
+
+            if (progressFill) progressFill.style.width = pct + '%';
+            if (progressPercent) progressPercent.textContent = pct + '%';
+            if (progressText && label) progressText.textContent = label;
+        }
+
+        // ✅ ENHANCED DEBUGGING - Add detailed logging to buildChatContext
+        function buildChatContext(contextType, additionalData) {
+            const template = window.templateData;
             
-            console.log('✅ Global variables set:', {
-                topic: window.templateData.title,
-                quiz: window.templateData.quiz,
-                hints: window.templateData.hints
+            // Debug logging
+            console.log('🔍 Building chat context:', {
+                contextType: contextType,
+                templateData: template,
+                quiz: template ? template.quiz : 'no template',
+                additionalData: additionalData
             });
             
-        } catch (e) {
-            console.error('❌ Failed to load template data:', e);
-            // Fallback empty data
-            window.templateData = {
-                title: 'Unknown Topic',
-                taskStatement: 'Unknown Task',
-                quiz: null,
-                hints: []
-            };
-            window.maxHints = 0;
-            window.quizCorrectAnswer = 0;
-            window.topicConfig = { topic: 'unknown', backendUrl: '', contexts: {} };
-            window.learnerData = { id: 'anonymous', name: 'Learner', progress: 'not_attempted' };
-        }
-    })();
-
-    // Initialize other global variables
-    window.currentHint = 0;
-    window.quizCompleted = false;
-    window.progressStep = 0;
-    window.revealedHints = [];
-    window.quizAttempt = null;
-    window.hintsStartTime = null;
-
-    // ✅ ENHANCED DEBUGGING - Add detailed logging to buildChatContext
-    function buildChatContext(contextType, additionalData) {
-        const template = window.templateData;
-        
-        // Debug logging
-        console.log('🔍 Building chat context:', {
-            contextType: contextType,
-            templateData: template,
-            quiz: template ? template.quiz : 'no template',
-            additionalData: additionalData
-        });
-        
-        switch(contextType) {
-            case 'task_help':
-                return {
-                    context: 'help',
-                    message: `I need help with this task: "${template.taskStatement || 'the assigned task'}". Can you guide me through the approach?`,
-                    contextData: {
-                        taskStatement: template.taskStatement || 'Unknown task',
-                        taskRequirements: template.taskRequirements || [],
-                        topicTitle: template.title || 'This topic',
-                        learnerProgress: window.progressStep || 1
-                    }
-                };
-
-            case 'learn_more':
-                const conceptTitle = additionalData.conceptTitle || 'this concept';
-                const learnMoreContext = additionalData.learnMoreContext || 'general';
-                const conceptSummary = additionalData.conceptSummary || '';
-                
-                return {
-                    context: 'learn_more', 
-                    message: `I want to understand "${conceptTitle}" in detail. ${conceptSummary ? 'I know it is: ' + conceptSummary + '. ' : ''}Please explain it with examples and how it relates to ${template.title || 'this topic'}.`,
-                    contextData: {
-                        conceptTitle: conceptTitle,
-                        conceptSummary: conceptSummary,
-                        learnMoreContext: learnMoreContext,
-                        topicTitle: template.title || 'This topic',
-                        taskStatement: template.taskStatement || 'The assigned task'
-                    }
-                };
-
-            case 'quiz_failed':
-                const quiz = template.quiz || {};
-                const userAnswer = additionalData.userAnswer;
-                const correctAnswer = quiz.correct_answer;
-                
-                // ✅ Enhanced debugging for quiz data
-                console.log('🎯 Quiz context debug:', {
-                    quiz: quiz,
-                    userAnswer: userAnswer,
-                    correctAnswer: correctAnswer,
-                    options: quiz.options,
-                    question: quiz.question
-                });
-                
-                const userAnswerText = (quiz.options && Array.isArray(quiz.options) && typeof userAnswer === 'number' && userAnswer >= 0) 
-                    ? quiz.options[userAnswer] || 'unknown selection'
-                    : 'unknown selection';
-                    
-                const correctAnswerText = (quiz.options && Array.isArray(quiz.options) && typeof correctAnswer === 'number' && correctAnswer >= 0) 
-                    ? quiz.options[correctAnswer] || 'unknown answer'
-                    : 'unknown answer';
-                
-                const finalMessage = `I got the quiz wrong. The question was: "${quiz.question || 'the quiz question'}". I selected "${userAnswerText}" but the correct answer is "${correctAnswerText}". Please explain why my answer was wrong and help me understand the correct concept.`;
-                
-                console.log('📝 Final quiz message:', finalMessage);
-                
-                return {
-                    context: 'quiz_failed',
-                    message: finalMessage,
-                    contextData: {
-                        quizQuestion: quiz.question || 'Unknown question',
-                        userAnswer: userAnswer,
-                        userAnswerText: userAnswerText,
-                        correctAnswer: correctAnswer,
-                        correctAnswerText: correctAnswerText,
-                        allOptions: quiz.options || [],
-                        topicTitle: template.title || 'This topic',
-                        taskStatement: template.taskStatement || 'The assigned task'
-                    }
-                };
-
-            case 'quiz_explanation':
-                const quizData = template.quiz || {};
-                
-                console.log('📖 Quiz explanation debug:', {
-                    quizData: quizData,
-                    question: quizData.question,
-                    correctAnswer: quizData.correct_answer,
-                    options: quizData.options
-                });
-                
-                const correctAnswerForExplanation = (quizData.options && Array.isArray(quizData.options) && typeof quizData.correct_answer === 'number' && quizData.correct_answer >= 0)
-                    ? quizData.options[quizData.correct_answer] 
-                    : 'the correct answer';
-                    
-                const explanationMessage = `Please explain the answer to this quiz question in detail: "${quizData.question || 'the quiz question'}". The correct answer is "${correctAnswerForExplanation}". Help me understand why this is correct and provide examples.`;
-                
-                console.log('📝 Final explanation message:', explanationMessage);
-                    
-                return {
-                    context: 'learn_more',
-                    message: explanationMessage,
-                    contextData: {
-                        quizQuestion: quizData.question || 'Unknown question',
-                        correctAnswer: quizData.correct_answer,
-                        correctAnswerText: correctAnswerForExplanation,
-                        allOptions: quizData.options || [],
-                        topicTitle: template.title || 'This topic'
-                    }
-                };
-
-            case 'hints_exhausted':
-                const hintsCount = window.revealedHints ? window.revealedHints.length : 0;
-                const hintsText = window.revealedHints && window.revealedHints.length > 0 
-                    ? window.revealedHints.map((h, i) => `${i+1}. ${h}`).join(' ')
-                    : 'the available hints';
-                    
-                return {
-                    context: 'help',
-                    message: `I've read all ${hintsCount} hints but I still need more help with the task: "${template.taskStatement || 'the assigned task'}". The hints I've seen were: ${hintsText}. Can you provide additional guidance?`,
-                    contextData: {
-                        taskStatement: template.taskStatement || 'Unknown task',
-                        revealedHints: window.revealedHints || [],
-                        hintsCount: hintsCount,
-                        topicTitle: template.title || 'This topic',
-                        learnerProgress: window.progressStep || 1
-                    }
-                };
-
-            case 'summary':
-                return {
-                    context: 'summary',
-                    message: `Please provide a comprehensive summary of "${template.title || 'this topic'}". Focus on the key concepts and how they relate to the task: "${template.taskStatement || 'the assigned task'}".`,
-                    contextData: {
-                        topicTitle: template.title || 'This topic',
-                        topicDescription: template.description || 'No description available',
-                        taskStatement: template.taskStatement || 'The assigned task',
-                        learningObjectives: template.learningObjectives || [],
-                        userProgress: {
-                            step: window.progressStep || 1,
-                            hintsUsed: window.revealedHints ? window.revealedHints.length : 0,
-                            quizCompleted: window.quizCompleted || false
+            switch(contextType) {
+                case 'task_help':
+                    return {
+                        context: 'help',
+                        message: `I need help with this task: "${template.taskStatement || 'the assigned task'}". Can you guide me through the approach?`,
+                        contextData: {
+                            taskStatement: template.taskStatement || 'Unknown task',
+                            taskRequirements: template.taskRequirements || [],
+                            topicTitle: template.title || 'This topic',
+                            learnerProgress: window.progressStep || 1
                         }
-                    }
-                };
+                    };
 
-            case 'practice':
-                return {
-                    context: 'practice',
-                    message: `I want to practice the concepts from "${template.title || 'this topic'}". Can you provide exercises related to: "${template.taskStatement || 'the assigned task'}"?`,
-                    contextData: {
-                        topicTitle: template.title || 'This topic',
-                        taskStatement: template.taskStatement || 'The assigned task',
-                        learningObjectives: template.learningObjectives || []
-                    }
-                };
+                case 'learn_more':
+                    const conceptTitle = additionalData.conceptTitle || 'this concept';
+                    const learnMoreContext = additionalData.learnMoreContext || 'general';
+                    const conceptSummary = additionalData.conceptSummary || '';
+                    
+                    return {
+                        context: 'learn_more', 
+                        message: `I want to understand "${conceptTitle}" in detail. ${conceptSummary ? 'I know it is: ' + conceptSummary + '. ' : ''}Please explain it with examples and how it relates to ${template.title || 'this topic'}.`,
+                        contextData: {
+                            conceptTitle: conceptTitle,
+                            conceptSummary: conceptSummary,
+                            learnMoreContext: learnMoreContext,
+                            topicTitle: template.title || 'This topic',
+                            taskStatement: template.taskStatement || 'The assigned task'
+                        }
+                    };
 
-            default: // 'general'
-                return {
-                    context: 'general',
-                    message: `Hello! I have questions about "${template.title || 'this topic'}". I'm working on: "${template.taskStatement || 'the assigned task'}".`,
-                    contextData: {
-                        topicTitle: template.title || 'This topic',
-                        taskStatement: template.taskStatement || 'The assigned task'
-                    }
-                };
+                case 'quiz_failed':
+                    const quiz = template.quiz || {};
+                    const userAnswer = additionalData.userAnswer;
+                    const correctAnswer = quiz.correct_answer;
+                    
+                    // ✅ Enhanced debugging for quiz data
+                    console.log('🎯 Quiz context debug:', {
+                        quiz: quiz,
+                        userAnswer: userAnswer,
+                        correctAnswer: correctAnswer,
+                        options: quiz.options,
+                        question: quiz.question
+                    });
+                    
+                    const userAnswerText = (quiz.options && Array.isArray(quiz.options) && typeof userAnswer === 'number' && userAnswer >= 0) 
+                        ? quiz.options[userAnswer] || 'unknown selection'
+                        : 'unknown selection';
+                        
+                    const correctAnswerText = (quiz.options && Array.isArray(quiz.options) && typeof correctAnswer === 'number' && correctAnswer >= 0) 
+                        ? quiz.options[correctAnswer] || 'unknown answer'
+                        : 'unknown answer';
+                    
+                    const finalMessage = `I got the quiz wrong. The question was: "${quiz.question || 'the quiz question'}". I selected "${userAnswerText}" but the correct answer is "${correctAnswerText}". Please explain why my answer was wrong and help me understand the correct concept.`;
+                    
+                    console.log('📝 Final quiz message:', finalMessage);
+                    
+                    return {
+                        context: 'quiz_failed',
+                        message: finalMessage,
+                        contextData: {
+                            quizQuestion: quiz.question || 'Unknown question',
+                            userAnswer: userAnswer,
+                            userAnswerText: userAnswerText,
+                            correctAnswer: correctAnswer,
+                            correctAnswerText: correctAnswerText,
+                            allOptions: quiz.options || [],
+                            topicTitle: template.title || 'This topic',
+                            taskStatement: template.taskStatement || 'The assigned task'
+                        }
+                    };
+
+                case 'quiz_explanation':
+                    const quizData = template.quiz || {};
+                    
+                    console.log('📖 Quiz explanation debug:', {
+                        quizData: quizData,
+                        question: quizData.question,
+                        correctAnswer: quizData.correct_answer,
+                        options: quizData.options
+                    });
+                    
+                    const correctAnswerForExplanation = (quizData.options && Array.isArray(quizData.options) && typeof quizData.correct_answer === 'number' && quizData.correct_answer >= 0)
+                        ? quizData.options[quizData.correct_answer] 
+                        : 'the correct answer';
+                        
+                    const explanationMessage = `Please explain the answer to this quiz question in detail: "${quizData.question || 'the quiz question'}". The correct answer is "${correctAnswerForExplanation}". Help me understand why this is correct and provide examples.`;
+                    
+                    console.log('📝 Final explanation message:', explanationMessage);
+                        
+                    return {
+                        context: 'learn_more',
+                        message: explanationMessage,
+                        contextData: {
+                            quizQuestion: quizData.question || 'Unknown question',
+                            correctAnswer: quizData.correct_answer,
+                            correctAnswerText: correctAnswerForExplanation,
+                            allOptions: quizData.options || [],
+                            topicTitle: template.title || 'This topic'
+                        }
+                    };
+
+                case 'hints_exhausted':
+                    const hintsCount = window.revealedHints ? window.revealedHints.length : 0;
+                    const hintsText = window.revealedHints && window.revealedHints.length > 0 
+                        ? window.revealedHints.map((h, i) => `${i+1}. ${h}`).join(' ')
+                        : 'the available hints';
+                        
+                    return {
+                        context: 'help',
+                        message: `I've read all ${hintsCount} hints but I still need more help with the task: "${template.taskStatement || 'the assigned task'}". The hints I've seen were: ${hintsText}. Can you provide additional guidance?`,
+                        contextData: {
+                            taskStatement: template.taskStatement || 'Unknown task',
+                            revealedHints: window.revealedHints || [],
+                            hintsCount: hintsCount,
+                            topicTitle: template.title || 'This topic',
+                            learnerProgress: window.progressStep || 1
+                        }
+                    };
+
+                case 'summary':
+                    return {
+                        context: 'summary',
+                        message: `Please provide a comprehensive summary of "${template.title || 'this topic'}". Focus on the key concepts and how they relate to the task: "${template.taskStatement || 'the assigned task'}".`,
+                        contextData: {
+                            topicTitle: template.title || 'This topic',
+                            topicDescription: template.description || 'No description available',
+                            taskStatement: template.taskStatement || 'The assigned task',
+                            learningObjectives: template.learningObjectives || [],
+                            userProgress: {
+                                step: window.progressStep || 1,
+                                hintsUsed: window.revealedHints ? window.revealedHints.length : 0,
+                                quizCompleted: window.quizCompleted || false
+                            }
+                        }
+                    };
+
+                case 'practice':
+                    return {
+                        context: 'practice',
+                        message: `I want to practice the concepts from "${template.title || 'this topic'}". Can you provide exercises related to: "${template.taskStatement || 'the assigned task'}"?`,
+                        contextData: {
+                            topicTitle: template.title || 'This topic',
+                            taskStatement: template.taskStatement || 'The assigned task',
+                            learningObjectives: template.learningObjectives || []
+                        }
+                    };
+
+                default: // 'general'
+                    return {
+                        context: 'general',
+                        message: `Hello! I have questions about "${template.title || 'this topic'}". I'm working on: "${template.taskStatement || 'the assigned task'}".`,
+                        contextData: {
+                            topicTitle: template.title || 'This topic',
+                            taskStatement: template.taskStatement || 'The assigned task'
+                        }
+                    };
+            }
         }
-    }
 
-    // ✅ ENHANCED DYNAMIC CHAT SYSTEM with better debugging
-    function openDynamicChat(contextType, additionalData = {}) {
-        console.log('🚀 Opening dynamic chat:', contextType, additionalData);
-        console.log('📊 Current templateData:', window.templateData);
-        
-        window.ensureChatWidget(() => {
-            if (!window.chatWidget || !window.topicConfig) {
-                console.warn('Chat widget or topic config not ready');
-                return;
+        // ✅ ENHANCED DYNAMIC CHAT SYSTEM with better debugging
+        function openDynamicChat(contextType, additionalData = {}) {
+            console.log('🚀 Opening dynamic chat:', contextType, additionalData);
+            console.log('📊 Current templateData:', window.templateData);
+            
+            window.ensureChatWidget(() => {
+                if (!window.chatWidget || !window.topicConfig) {
+                    console.warn('Chat widget or topic config not ready');
+                    return;
+                }
+
+                // Build context-specific prompt and data
+                const chatConfig = buildChatContext(contextType, additionalData);
+                
+                console.log('💬 Final chat config:', chatConfig);
+                
+                chatWidget.initChatWidget({
+                    topic: window.topicConfig.topic,
+                    context: chatConfig.context,
+                    backendUrl: window.topicConfig.backendUrl,
+                    learnerData: window.learnerData,
+                    initialMessage: chatConfig.message,
+                    contextData: chatConfig.contextData
+                });
+                
+                console.log('🎯 Dynamic chat opened successfully');
+            });
+        }
+
+        // **UPDATED SPECIFIC CHAT FUNCTIONS**
+        function openTaskHelp() {
+            openDynamicChat('task_help');
+        }
+
+        function openGeneralChat() {
+            openDynamicChat('general');
+        }
+
+        function openLearnMore(learnMoreContext, conceptTitle) {
+            // Extract concept summary from template data if available
+            let conceptSummary = '';
+            if (window.templateData && window.templateData.concepts) {
+                const concept = window.templateData.concepts.find(c => c.title === conceptTitle);
+                conceptSummary = concept ? concept.summary : '';
             }
 
-            // Build context-specific prompt and data
-            const chatConfig = buildChatContext(contextType, additionalData);
-            
-            console.log('💬 Final chat config:', chatConfig);
-            
-            chatWidget.initChatWidget({
-                topic: window.topicConfig.topic,
-                context: chatConfig.context,
-                backendUrl: window.topicConfig.backendUrl,
-                learnerData: window.learnerData,
-                initialMessage: chatConfig.message,
-                contextData: chatConfig.contextData
+            openDynamicChat('learn_more', {
+                conceptTitle: conceptTitle,
+                learnMoreContext: learnMoreContext,
+                conceptSummary: conceptSummary
             });
-            
-            console.log('🎯 Dynamic chat opened successfully');
-        });
-    }
-
-    // **UPDATED SPECIFIC CHAT FUNCTIONS**
-    function openTaskHelp() {
-        openDynamicChat('task_help');
-    }
-
-    function openGeneralChat() {
-        openDynamicChat('general');
-    }
-
-    function openLearnMore(learnMoreContext, conceptTitle) {
-        // Extract concept summary from template data if available
-        let conceptSummary = '';
-        if (window.templateData && window.templateData.concepts) {
-            const concept = window.templateData.concepts.find(c => c.title === conceptTitle);
-            conceptSummary = concept ? concept.summary : '';
         }
 
-        openDynamicChat('learn_more', {
-            conceptTitle: conceptTitle,
-            learnMoreContext: learnMoreContext,
-            conceptSummary: conceptSummary
-        });
-    }
-
-    function openQuizFailureChat() {
-        if (window.quizAttempt) {
-            openDynamicChat('quiz_failed', {
-                userAnswer: window.quizAttempt.selectedOption
-            });
-        } else {
-            openDynamicChat('quiz_failed', {});
+        function openQuizFailureChat() {
+            if (window.quizAttempt) {
+                openDynamicChat('quiz_failed', {
+                    userAnswer: window.quizAttempt.selectedOption
+                });
+            } else {
+                openDynamicChat('quiz_failed', {});
+            }
         }
-    }
 
-    function openHintsExhaustedChat() {
-        openDynamicChat('hints_exhausted');
-    }
+        function openHintsExhaustedChat() {
+            openDynamicChat('hints_exhausted');
+        }
 
-    function openSummaryChat() {
-        openDynamicChat('summary');
-    }
+        function openSummaryChat() {
+            openDynamicChat('summary');
+        }
 
-    function openQuizExplanation() {
-        openDynamicChat('quiz_explanation');
-    }
+        function openQuizExplanation() {
+            openDynamicChat('quiz_explanation');
+        }
 
-    function openPracticeChat() {
-        openDynamicChat('practice');
-    }
+        function openPracticeChat() {
+            openDynamicChat('practice');
+        }
 
-    // **DYNAMIC HINT SYSTEM - No Pre-allocated Space**
-    function revealNextHint() {
-        if (window.currentHint < window.maxHints) {
-            const hintData = window.templateData.hints[window.currentHint];
-            if (hintData) {
-                // Create hint card dynamically
-                const hintCard = createHintCard(hintData, window.currentHint);
+        // **DYNAMIC HINT SYSTEM - No Pre-allocated Space**
+        function revealNextHint() {
+            if (window.currentHint < window.maxHints) {
+                const hintData = window.templateData.hints[window.currentHint];
+                if (hintData) {
+                    // Create hint card dynamically
+                    const hintCard = createHintCard(hintData, window.currentHint);
+                    
+                    // Add to hints list
+                    const hintsList = document.getElementById('hintsList');
+                    if (hintsList) {
+                        hintsList.appendChild(hintCard);
+                        
+                        // Animate the new hint card
+                        setTimeout(() => {
+                            hintCard.style.opacity = '1';
+                            hintCard.style.transform = 'translateY(0)';
+                            hintCard.classList.add('revealed');
+                            
+                            // Show checkmark after animation
+                            const checkmark = hintCard.querySelector('.absolute.top-4.right-4');
+                            if (checkmark) {
+                                setTimeout(() => {
+                                    checkmark.style.opacity = '1';
+                                }, 300);
+                            }
+                            
+                            // Scroll to the new hint smoothly
+                            hintCard.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'nearest' 
+                            });
+                            
+                        }, 50);
+                    }
+                    
+                    // Track revealed hint text for context
+                    window.revealedHints.push(hintData.text);
+                    window.currentHint++;
+                    
+                    // Update progress indicators
+                    updateHintsProgress();
+                    
+                    // Check if all hints are revealed
+                    if (window.currentHint >= window.maxHints) {
+                        setTimeout(() => {
+                            const exhaustedBtn = document.getElementById('hintsExhaustedBtn');
+                            const revealBtn = document.getElementById('revealHintBtn');
+                            const stats = document.getElementById('hintsStats');
+                            
+                            if (exhaustedBtn) {
+                                exhaustedBtn.classList.remove('hidden');
+                                exhaustedBtn.style.animation = 'slideInUp 0.5s ease-out';
+                            }
+                            
+                            if (revealBtn) {
+                                revealBtn.style.opacity = '0.5';
+                                revealBtn.disabled = true;
+                                revealBtn.innerHTML = '<i class="fas fa-check-circle"></i><span>All Hints Revealed</span>';
+                            }
+                            
+                            if (stats) {
+                                stats.classList.remove('hidden');
+                                stats.style.animation = 'fadeIn 0.5s ease-out';
+                            }
+                        }, 600);
+                    }
+                    
+                    if (window.currentHint === 1) {
+                        if (typeof updateProgress === 'function') updateProgress(2);
+                    }
+                }
+            }
+        }
+        
+        // **NEW: Create Hint Card Dynamically**
+        function createHintCard(hintData, index) {
+            const hintCard = document.createElement('div');
+            hintCard.className = 'hint-card group relative bg-white border border-gray-200 rounded-2xl p-6 opacity-0 transform translate-y-4 transition-all duration-500 ease-out shadow-soft hover:shadow-medium';
+            hintCard.setAttribute('data-hint-index', index);
+            hintCard.setAttribute('data-revealed', 'true');
+            
+            // Hint number (1-based for display)
+            const displayNumber = index + 1;
+            
+            hintCard.innerHTML = `
+                <!-- Hint Number Badge -->
+                <div class="absolute -top-4 -left-4 w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center text-white font-bold shadow-medium border-2 border-white">
+                    ${displayNumber}
+                </div>
                 
-                // Add to hints list
+                <!-- Hint Content -->
+                <div class="flex items-start space-x-4 pt-2">
+                    <div class="flex-1">
+                        ${hintData.step_image ? `
+                            <!-- Step Image -->
+                            <div class="mb-6 rounded-2xl overflow-hidden shadow-soft border border-gray-100 bg-gray-50">
+                                <img src="${hintData.step_image.src}" alt="${hintData.step_image.alt}" class="w-full h-auto transition-transform duration-300 group-hover:scale-105">
+                                ${hintData.step_image.caption ? `
+                                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t border-gray-200">
+                                        <p class="text-sm text-gray-700 font-medium">${hintData.step_image.caption}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Hint Text -->
+                        <div class="prose prose-lg max-w-none">
+                            <p class="text-gray-800 leading-relaxed font-medium">${hintData.text}</p>
+                        </div>
+                        
+                        <!-- Hint Actions -->
+                        <div class="mt-6 flex items-center space-x-4">
+                            <div class="flex items-center space-x-2 text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+                                <i class="fas fa-clock text-nebula-500"></i>
+                                <span class="font-medium">Step ${displayNumber} of ${window.maxHints}</span>
+                            </div>
+                            <div class="flex items-center space-x-2 text-sm text-gray-500 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2 rounded-lg">
+                                <i class="fas fa-lightbulb text-amber-500"></i>
+                                <span class="font-medium">Progressive guidance</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Revealed State Indicator -->
+                <div class="absolute top-4 right-4 opacity-0 transition-opacity duration-300">
+                    <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-medium">
+                        <i class="fas fa-check text-white text-sm"></i>
+                    </div>
+                </div>
+            `;
+            
+            return hintCard;
+        }
+        
+        // **NEW: Enhanced Progress Tracking**
+        function updateHintsProgress() {
+            const progressBar = document.getElementById('hintsProgressBar');
+            const progressText = document.getElementById('hintsProgressText');
+            const countDisplay = document.getElementById('hintsCountDisplay');
+            const usedCount = document.getElementById('hintsUsedCount');
+            
+            const totalHints = window.maxHints;
+            const revealedHints = window.currentHint;
+            const remainingHints = totalHints - revealedHints;
+            const progressPercentage = (revealedHints / totalHints) * 100;
+            
+            // Update progress bar with smooth animation
+            if (progressBar) {
+                progressBar.style.width = `${progressPercentage}%`;
+            }
+            
+            // Update progress text
+            if (progressText) {
+                progressText.textContent = `${revealedHints} of ${totalHints} revealed`;
+            }
+            
+            // Update count display
+            if (countDisplay) {
+                countDisplay.textContent = remainingHints;
+                if (remainingHints === 0) {
+                    countDisplay.parentElement.classList.add('text-green-600');
+                }
+            }
+            
+            // Update used count
+            if (usedCount) {
+                usedCount.textContent = revealedHints;
+            }
+            
+            // Update time tracking
+            updateHintsTimeTracking();
+        }
+        
+        // **NEW: Time Tracking for Hints**
+        function updateHintsTimeTracking() {
+            const timeSpent = document.getElementById('hintsTimeSpent');
+            if (timeSpent && window.hintsStartTime) {
+                const elapsed = Math.floor((Date.now() - window.hintsStartTime) / 1000 / 60);
+                timeSpent.textContent = `${elapsed}m`;
+            }
+        }
+        
+        // **NEW: Reset Hints Function - Dynamic System**
+        function resetHints() {
+            if (confirm('Are you sure you want to reset all hints? This will hide all revealed hints.')) {
+                window.currentHint = 0;
+                window.revealedHints = [];
+                window.hintsStartTime = Date.now();
+                
+                // Clear all dynamically created hint cards
                 const hintsList = document.getElementById('hintsList');
                 if (hintsList) {
-                    hintsList.appendChild(hintCard);
-                    
-                    // Animate the new hint card
-                    setTimeout(() => {
-                        hintCard.style.opacity = '1';
-                        hintCard.style.transform = 'translateY(0)';
-                        hintCard.classList.add('revealed');
-                        
-                        // Show checkmark after animation
-                        const checkmark = hintCard.querySelector('.absolute.top-4.right-4');
-                        if (checkmark) {
-                            setTimeout(() => {
-                                checkmark.style.opacity = '1';
-                            }, 300);
-                        }
-                        
-                        // Scroll to the new hint smoothly
-                        hintCard.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'nearest' 
-                        });
-                        
-                    }, 50);
+                    hintsList.innerHTML = '';
                 }
                 
-                // Track revealed hint text for context
-                window.revealedHints.push(hintData.text);
-                window.currentHint++;
+                // Reset buttons and stats
+                const exhaustedBtn = document.getElementById('hintsExhaustedBtn');
+                const revealBtn = document.getElementById('revealHintBtn');
+                const stats = document.getElementById('hintsStats');
                 
-                // Update progress indicators
+                if (exhaustedBtn) exhaustedBtn.classList.add('hidden');
+                if (stats) stats.classList.add('hidden');
+                
+                if (revealBtn) {
+                    revealBtn.style.opacity = '1';
+                    revealBtn.disabled = false;
+                    revealBtn.innerHTML = `
+                        <i class="fas fa-eye group-hover:animate-pulse"></i>
+                        <span>Reveal Next Hint</span>
+                    `;
+                }
+                
+                // Reset progress indicators
                 updateHintsProgress();
-                
-                // Check if all hints are revealed
-                if (window.currentHint >= window.maxHints) {
-                    setTimeout(() => {
-                        const exhaustedBtn = document.getElementById('hintsExhaustedBtn');
-                        const revealBtn = document.getElementById('revealHintBtn');
-                        const stats = document.getElementById('hintsStats');
-                        
-                        if (exhaustedBtn) {
-                            exhaustedBtn.classList.remove('hidden');
-                            exhaustedBtn.style.animation = 'slideInUp 0.5s ease-out';
-                        }
-                        
-                        if (revealBtn) {
-                            revealBtn.style.opacity = '0.5';
-                            revealBtn.disabled = true;
-                            revealBtn.innerHTML = '<span>✅ All Hints Revealed</span>';
-                        }
-                        
-                        if (stats) {
-                            stats.classList.remove('hidden');
-                            stats.style.animation = 'fadeIn 0.5s ease-out';
-                        }
-                    }, 600);
-                }
-                
-                if (window.currentHint === 1) {
-                    if (typeof updateProgress === 'function') updateProgress(2);
-                }
             }
         }
-    }
-    
-    // **NEW: Create Hint Card Dynamically**
-    function createHintCard(hintData, index) {
-        const hintCard = document.createElement('div');
-        hintCard.className = 'hint-card group relative bg-white border-2 border-gray-200 rounded-2xl p-6 opacity-0 transform translate-y-4 transition-all duration-500 ease-out shadow-sm hover:shadow-md';
-        hintCard.setAttribute('data-hint-index', index);
-        hintCard.setAttribute('data-revealed', 'true');
-        
-        // Hint number (1-based for display)
-        const displayNumber = index + 1;
-        
-        hintCard.innerHTML = `
-            <!-- Hint Number Badge -->
-            <div class="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg border-2 border-white">
-                ${displayNumber}
-            </div>
-            
-            <!-- Hint Content -->
-            <div class="flex items-start space-x-4 pt-2">
-                <div class="flex-1">
-                    ${hintData.step_image ? `
-                        <!-- Step Image -->
-                        <div class="mb-4 rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                            <img src="${hintData.step_image.src}" alt="${hintData.step_image.alt}" class="w-full h-auto transition-transform duration-300 group-hover:scale-105">
-                            ${hintData.step_image.caption ? `
-                                <div class="bg-gray-50 px-4 py-2 border-t border-gray-100">
-                                    <p class="text-xs text-gray-600 font-medium">${hintData.step_image.caption}</p>
-                                </div>
-                            ` : ''}
-                        </div>
-                    ` : ''}
-                    
-                    <!-- Hint Text -->
-                    <div class="prose prose-sm max-w-none">
-                        <p class="text-gray-800 leading-relaxed">${hintData.text}</p>
-                    </div>
-                    
-                    <!-- Hint Actions -->
-                    <div class="mt-4 flex items-center space-x-3">
-                        <div class="flex items-center space-x-2 text-xs text-gray-500">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span>Step ${displayNumber} of ${window.maxHints}</span>
-                        </div>
-                        <div class="flex items-center space-x-2 text-xs text-gray-500">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span>Progressive guidance</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Revealed State Indicator -->
-            <div class="absolute top-4 right-4 opacity-0 transition-opacity duration-300">
-                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                </div>
-            </div>
-        `;
-        
-        return hintCard;
-    }
-    
-    // **NEW: Enhanced Progress Tracking**
-    function updateHintsProgress() {
-        const progressBar = document.getElementById('hintsProgressBar');
-        const progressText = document.getElementById('hintsProgressText');
-        const countDisplay = document.getElementById('hintsCountDisplay');
-        const usedCount = document.getElementById('hintsUsedCount');
-        
-        const totalHints = window.maxHints;
-        const revealedHints = window.currentHint;
-        const remainingHints = totalHints - revealedHints;
-        const progressPercentage = (revealedHints / totalHints) * 100;
-        
-        // Update progress bar with smooth animation
-        if (progressBar) {
-            progressBar.style.width = `${progressPercentage}%`;
-        }
-        
-        // Update progress text
-        if (progressText) {
-            progressText.textContent = `${revealedHints} of ${totalHints} revealed`;
-        }
-        
-        // Update count display
-        if (countDisplay) {
-            countDisplay.textContent = remainingHints;
-            if (remainingHints === 0) {
-                countDisplay.parentElement.classList.add('text-green-600');
-            }
-        }
-        
-        // Update used count
-        if (usedCount) {
-            usedCount.textContent = revealedHints;
-        }
-        
-        // Update time tracking
-        updateHintsTimeTracking();
-    }
-    
-    // **NEW: Time Tracking for Hints**
-    function updateHintsTimeTracking() {
-        const timeSpent = document.getElementById('hintsTimeSpent');
-        if (timeSpent && window.hintsStartTime) {
-            const elapsed = Math.floor((Date.now() - window.hintsStartTime) / 1000 / 60);
-            timeSpent.textContent = `${elapsed}m`;
-        }
-    }
-    
-    // **NEW: Reset Hints Function - Dynamic System**
-    function resetHints() {
-        if (confirm('Are you sure you want to reset all hints? This will hide all revealed hints.')) {
-            window.currentHint = 0;
-            window.revealedHints = [];
-            window.hintsStartTime = Date.now();
-            
-            // Clear all dynamically created hint cards
-            const hintsList = document.getElementById('hintsList');
-            if (hintsList) {
-                hintsList.innerHTML = '';
-            }
-            
-            // Reset buttons and stats
-            const exhaustedBtn = document.getElementById('hintsExhaustedBtn');
-            const revealBtn = document.getElementById('revealHintBtn');
-            const stats = document.getElementById('hintsStats');
-            
-            if (exhaustedBtn) exhaustedBtn.classList.add('hidden');
-            if (stats) stats.classList.add('hidden');
-            
-            if (revealBtn) {
-                revealBtn.style.opacity = '1';
-                revealBtn.disabled = false;
-                revealBtn.innerHTML = `
-                    <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                    <span>Reveal Next Hint</span>
-                `;
-            }
-            
-            // Reset progress indicators
-            updateHintsProgress();
-        }
-    }
 
     // **ENHANCED QUIZ WITH CONTEXT TRACKING**
     function selectQuizOption(element, optionIndex) {
