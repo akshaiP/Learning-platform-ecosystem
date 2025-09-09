@@ -3,7 +3,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 40vw;
+  width: 50vw;
   height: 100vh;
   background: white;
   border-radius: 10px 0 0 10px;
@@ -18,6 +18,138 @@
 
 #chat-widget.open {
   transform: translateX(0);
+}
+
+/* Main content resizing when chat is open */
+body {
+  transition: margin-right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  min-width: 300px; /* Ensure main content doesn't get too narrow */
+}
+
+body.chat-open {
+  margin-right: 50vw;
+}
+
+/* Responsive content adjustments when chat is open */
+body.chat-open * {
+  box-sizing: border-box;
+}
+
+/* Prevent content from overflowing when chat is open */
+body.chat-open .container,
+body.chat-open .main-content,
+body.chat-open .content-wrapper,
+body.chat-open main,
+body.chat-open .page-content,
+body.chat-open .max-w-7xl,
+body.chat-open section .max-w-7xl {
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Adjust grid layouts when chat is open */
+body.chat-open .grid,
+body.chat-open .grid-container,
+body.chat-open .task-grid,
+body.chat-open .card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* Adjust flex layouts when chat is open */
+body.chat-open .flex,
+body.chat-open .flex-container,
+body.chat-open .task-container {
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Ensure cards and components resize properly */
+body.chat-open .card,
+body.chat-open .task-card,
+body.chat-open .component {
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+
+/* Adjust text content */
+body.chat-open h1,
+body.chat-open h2,
+body.chat-open h3,
+body.chat-open h4,
+body.chat-open h5,
+body.chat-open h6 {
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+body.chat-open p,
+body.chat-open .text-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Adjust progress bars and other UI elements */
+body.chat-open .progress-bar,
+body.chat-open .progress-container {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Fix header alignment when chat is open */
+body.chat-open header .max-w-7xl,
+body.chat-open header .container,
+body.chat-open header .mx-auto {
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Ensure header content doesn't overflow */
+body.chat-open header {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Adjust header flex layout when chat is open */
+body.chat-open header .flex {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Make header responsive to chat state */
+body.chat-open header .hidden.sm\\:flex {
+  display: flex !important;
+}
+
+/* Adjust header spacing when chat is open */
+body.chat-open header .space-x-6 {
+  gap: 1rem;
+}
+
+body.chat-open header .space-x-4 {
+  gap: 0.75rem;
+}
+
+/* Ensure main content doesn't get too narrow */
+@media (min-width: 1200px) {
+  body.chat-open {
+    margin-right: 50vw;
+  }
+}
+
+@media (max-width: 1199px) {
+  body.chat-open {
+    margin-right: 50vw;
+  }
 }
 
 .chat-header {
@@ -214,9 +346,24 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   #chat-widget {
-    width: 100vw;
+    width: 50vw;
     height: 100vh;
-    border-radius: 0;
+    border-radius: 10px 0 0 10px;
+  }
+  
+  body.chat-open {
+    margin-right: 50vw;
+  }
+  
+  /* Adjust header for mobile when chat is open */
+  body.chat-open header .flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  body.chat-open header .space-x-6 {
+    gap: 0.5rem;
   }
   
   .chat-trigger {
@@ -229,6 +376,29 @@
 }
 
 @media (max-width: 480px) {
+  #chat-widget {
+    width: 60vw;
+  }
+  
+  body.chat-open {
+    margin-right: 60vw;
+  }
+  
+  /* Further adjust header for small mobile when chat is open */
+  body.chat-open header .flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  body.chat-open header .space-x-4 {
+    gap: 0.5rem;
+  }
+  
+  body.chat-open header .space-x-6 {
+    gap: 0.5rem;
+  }
+  
   .chat-header {
     padding: 15px;
   }

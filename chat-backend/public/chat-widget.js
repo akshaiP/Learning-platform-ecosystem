@@ -187,6 +187,7 @@ class ChatWidget {
     const chatWidget = document.getElementById('chat-widget');
     if (chatWidget) {
       chatWidget.classList.add('open');
+      document.body.classList.add('chat-open');
       
       // Focus input when opening
       setTimeout(() => {
@@ -203,6 +204,7 @@ class ChatWidget {
     const chatWidget = document.getElementById('chat-widget');
     if (chatWidget) {
       chatWidget.classList.remove('open');
+      document.body.classList.remove('chat-open');
       
       // Fire custom event
       window.dispatchEvent(new CustomEvent('chatClosed'));
