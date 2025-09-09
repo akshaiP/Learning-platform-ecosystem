@@ -6,7 +6,8 @@ module.exports = {
     cors: {
       origins: [
         process.env.LMS_DOMAIN || 'https://prod.edrevel.com',
-        'http://localhost:8080'
+        'http://localhost:8080',
+        'https://cloud.scorm.com',
       ],
       credentials: true
     },
