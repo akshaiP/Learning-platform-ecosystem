@@ -28,7 +28,10 @@
             "alt": "Google AI Studio API key generation",
             "caption": "Step 1: Generate your free Gemini API key"
           },
-          "code": "// Store your API key securely\nconst GEMINI_API_KEY = 'your-api-key-here';\n\n// Test API connection\nconst testConnection = async () => {\n  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({\n      contents: [{ parts: [{ text: 'Hello, Gemini!' }] }]\n    })\n  });\n  return response.ok;\n};",
+          "code": {
+            "content": "// Store your API key securely\nconst GEMINI_API_KEY = 'your-api-key-here';\n\n// Test API connection\nconst testConnection = async () => {\n  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({\n      contents: [{ parts: [{ text: 'Hello, Gemini!' }] }]\n    })\n  });\n  return response.ok;\n};",
+            "language": "javascript"
+          },
           "hint": {
             "text": "Make sure to keep your API key secure and never commit it to version control. Use environment variables in production.",
             "image": {
@@ -36,7 +39,10 @@
               "alt": "API key security best practices",
               "caption": "Keep your API keys secure and never expose them in client-side code"
             },
-            "code": "// Environment variable example\nconst GEMINI_API_KEY = process.env.GEMINI_API_KEY;\n\n// For client-side, use a proxy server\n// Never expose API keys in frontend code!"
+            "code": {
+              "content": "// Environment variable example\nconst GEMINI_API_KEY = process.env.GEMINI_API_KEY;\n\n// For client-side, use a proxy server\n// Never expose API keys in frontend code!",
+              "language": "javascript"
+            }
           }
         },
         {
@@ -48,10 +54,16 @@
             "alt": "Cursor IDE project setup",
             "caption": "Step 2: Initialize your project in Cursor"
           },
-          "code": "<!-- index.html -->\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Text Summarizer</title>\n    <link rel=\"stylesheet\" href=\"styles.css\">\n</head>\n<body>\n    <div class=\"container\">\n        <h1>AI Text Summarizer</h1>\n        <textarea id=\"inputText\" placeholder=\"Enter your text here...\"></textarea>\n        <button id=\"summarizeBtn\">Summarize</button>\n        <div id=\"result\"></div>\n    </div>\n    <script src=\"script.js\"></script>\n</body>\n</html>",
+          "code": {
+            "content": "import requests\n\ndef summarize_text(text, api_key):\n    \"\"\"Simple text summarization using an API\"\"\"\n    url = \"https://api.example.com/summarize\"\n    payload = {'text': text, 'key': api_key}\n    response = requests.post(url, json=payload)\n    if response.status_code == 200:\n        return response.json()['summary']\n    else:\n        return \"Error summarizing text\"\n\n# Example usage\napi_key = 'your-api-key'\ntext = \"Long text to summarize...\"\nprint(summarize_text(text, api_key))",
+            "language": "python"
+          },
           "hint": {
             "text": "Use Cursor's AI features to help you generate boilerplate code and get suggestions as you build your application.",
-            "code": "// Use Cursor's AI features:\n// 1. Ctrl+K to generate code\n// 2. Ctrl+L to chat with AI\n// 3. Ask for specific implementations\n\n// Example: Ask Cursor to create a responsive layout\n// \"Create a responsive container with flexbox layout\""
+            "code": {
+              "content": "// Use Cursor's AI features:\n// 1. Ctrl+K to generate code\n// 2. Ctrl+L to chat with AI\n// 3. Ask for specific implementations\n\n// Example: Ask Cursor to create a responsive layout\n// \"Create a responsive container with flexbox layout\"",
+              "language": "javascript"
+            }
           }
         },
         {
@@ -63,7 +75,10 @@
             "alt": "Frontend interface mockup",
             "caption": "Step 3: Create an intuitive user interface"
           },
-          "code": "/* styles.css */\n.container {\n    max-width: 800px;\n    margin: 0 auto;\n    padding: 20px;\n    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n}\n\n#inputText {\n    width: 100%;\n    height: 200px;\n    padding: 15px;\n    border: 2px solid #ddd;\n    border-radius: 8px;\n    font-size: 16px;\n    resize: vertical;\n}\n\n#summarizeBtn {\n    background: #4A9B8E;\n    color: white;\n    padding: 12px 24px;\n    border: none;\n    border-radius: 6px;\n    font-size: 16px;\n    cursor: pointer;\n    margin: 10px 0;\n}\n\n#result {\n    margin-top: 20px;\n    padding: 15px;\n    background: #f8f9fa;\n    border-radius: 8px;\n    min-height: 100px;\n}",
+          "code": {
+            "content": "/* styles.css */\n.container {\n    max-width: 800px;\n    margin: 0 auto;\n    padding: 20px;\n    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n}\n\n#inputText {\n    width: 100%;\n    height: 200px;\n    padding: 15px;\n    border: 2px solid #ddd;\n    border-radius: 8px;\n    font-size: 16px;\n    resize: vertical;\n}\n\n#summarizeBtn {\n    background: #4A9B8E;\n    color: white;\n    padding: 12px 24px;\n    border: none;\n    border-radius: 6px;\n    font-size: 16px;\n    cursor: pointer;\n    margin: 10px 0;\n}\n\n#result {\n    margin-top: 20px;\n    padding: 15px;\n    background: #f8f9fa;\n    border-radius: 8px;\n    min-height: 100px;\n}",
+            "language": "css"
+          },
           "hint": {
             "text": "Focus on creating a clean, accessible design. Consider adding loading states and error handling for better user experience.",
             "image": {
@@ -82,10 +97,16 @@
             "alt": "Backend API implementation",
             "caption": "Step 4: Integrate with Gemini API"
           },
-          "code": "// script.js\nconst GEMINI_API_KEY = 'your-api-key-here';\nconst API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;\n\nasync function summarizeText(text, length = 'medium') {\n    const lengthPrompts = {\n        short: 'Summarize in 1-2 sentences',\n        medium: 'Summarize in 2-3 sentences',\n        long: 'Summarize in 3-4 sentences'\n    };\n    \n    const prompt = `${lengthPrompts[length]}: ${text}`;\n    \n    try {\n        const response = await fetch(API_URL, {\n            method: 'POST',\n            headers: { 'Content-Type': 'application/json' },\n            body: JSON.stringify({\n                contents: [{ parts: [{ text: prompt }] }]\n            })\n        });\n        \n        if (!response.ok) throw new Error('API request failed');\n        \n        const data = await response.json();\n        return data.candidates[0].content.parts[0].text;\n    } catch (error) {\n        console.error('Error:', error);\n        return 'Error generating summary. Please try again.';\n    }\n}\n\n// Event listeners\ndocument.getElementById('summarizeBtn').addEventListener('click', async () => {\n    const inputText = document.getElementById('inputText').value;\n    const resultDiv = document.getElementById('result');\n    \n    if (!inputText.trim()) {\n        resultDiv.textContent = 'Please enter some text to summarize.';\n        return;\n    }\n    \n    resultDiv.textContent = 'Generating summary...';\n    const summary = await summarizeText(inputText);\n    resultDiv.textContent = summary;\n});",
+          "code": {
+            "content": "// script.js\nconst GEMINI_API_KEY = 'your-api-key-here';\nconst API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;\n\nasync function summarizeText(text, length = 'medium') {\n    const lengthPrompts = {\n        short: 'Summarize in 1-2 sentences',\n        medium: 'Summarize in 2-3 sentences',\n        long: 'Summarize in 3-4 sentences'\n    };\n    \n    const prompt = `${lengthPrompts[length]}: ${text}`;\n    \n    try {\n        const response = await fetch(API_URL, {\n            method: 'POST',\n            headers: { 'Content-Type': 'application/json' },\n            body: JSON.stringify({\n                contents: [{ parts: [{ text: prompt }] }]\n            })\n        });\n        \n        if (!response.ok) throw new Error('API request failed');\n        \n        const data = await response.json();\n        return data.candidates[0].content.parts[0].text;\n    } catch (error) {\n        console.error('Error:', error);\n        return 'Error generating summary. Please try again.';\n    }\n}\n\n// Event listeners\ndocument.getElementById('summarizeBtn').addEventListener('click', async () => {\n    const inputText = document.getElementById('inputText').value;\n    const resultDiv = document.getElementById('result');\n    \n    if (!inputText.trim()) {\n        resultDiv.textContent = 'Please enter some text to summarize.';\n        return;\n    }\n    \n    resultDiv.textContent = 'Generating summary...';\n    const summary = await summarizeText(inputText);\n    resultDiv.textContent = summary;\n});",
+            "language": "javascript"
+          },
           "hint": {
             "text": "Test your API integration with different types of text. Consider adding retry logic and better error messages for production use.",
-            "code": "// Error handling example\nasync function summarizeWithRetry(text, maxRetries = 3) {\n  for (let i = 0; i < maxRetries; i++) {\n    try {\n      return await summarizeText(text);\n    } catch (error) {\n      if (i === maxRetries - 1) throw error;\n      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));\n    }\n  }\n}"
+            "code": {
+              "content": "// Error handling example\nasync function summarizeWithRetry(text, maxRetries = 3) {\n  for (let i = 0; i < maxRetries; i++) {\n    try {\n      return await summarizeText(text);\n    } catch (error) {\n      if (i === maxRetries - 1) throw error;\n      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));\n    }\n  }\n}",
+              "language": "javascript"
+            }
           }
         },
         {
@@ -97,7 +118,10 @@
             "alt": "Testing different text inputs",
             "caption": "Step 5: Add length controls and test your app"
           },
-          "code": "<!-- Add to HTML -->\n<div class=\"controls\">\n    <label>Summary Length:</label>\n    <input type=\"radio\" id=\"short\" name=\"length\" value=\"short\" checked>\n    <label for=\"short\">Short</label>\n    <input type=\"radio\" id=\"medium\" name=\"length\" value=\"medium\">\n    <label for=\"medium\">Medium</label>\n    <input type=\"radio\" id=\"long\" name=\"length\" value=\"long\">\n    <label for=\"long\">Long</label>\n</div>\n\n// Update JavaScript\ndocument.getElementById('summarizeBtn').addEventListener('click', async () => {\n    const inputText = document.getElementById('inputText').value;\n    const selectedLength = document.querySelector('input[name=\"length\"]:checked').value;\n    const resultDiv = document.getElementById('result');\n    \n    if (!inputText.trim()) {\n        resultDiv.textContent = 'Please enter some text to summarize.';\n        return;\n    }\n    \n    resultDiv.textContent = 'Generating summary...';\n    const summary = await summarizeText(inputText, selectedLength);\n    resultDiv.textContent = summary;\n});",
+          "code": {
+            "content": "<!-- Add to HTML -->\n<div class=\"controls\">\n    <label>Summary Length:</label>\n    <input type=\"radio\" id=\"short\" name=\"length\" value=\"short\" checked>\n    <label for=\"short\">Short</label>\n    <input type=\"radio\" id=\"medium\" name=\"length\" value=\"medium\">\n    <label for=\"medium\">Medium</label>\n    <input type=\"radio\" id=\"long\" name=\"length\" value=\"long\">\n    <label for=\"long\">Long</label>\n</div>\n\n// Update JavaScript\ndocument.getElementById('summarizeBtn').addEventListener('click', async () => {\n    const inputText = document.getElementById('inputText').value;\n    const selectedLength = document.querySelector('input[name=\"length\"]:checked').value;\n    const resultDiv = document.getElementById('result');\n    \n    if (!inputText.trim()) {\n        resultDiv.textContent = 'Please enter some text to summarize.';\n        return;\n    }\n    \n    resultDiv.textContent = 'Generating summary...';\n    const summary = await summarizeText(inputText, selectedLength);\n    resultDiv.textContent = summary;\n});",
+            "language": "html"
+          },
           "hint": {
             "text": "Test your app with various text types (articles, emails, documents) to ensure the summarization works well across different content types.",
             "image": {
@@ -105,7 +129,10 @@
               "alt": "Different text types for testing",
               "caption": "Test with various content types to ensure robust summarization"
             },
-            "code": "// Test with different text types\nconst testTexts = {\n  article: 'Long article text...',\n  email: 'Email content...',\n  document: 'Document text...'\n};\n\n// Test each type\nObject.entries(testTexts).forEach(([type, text]) => {\n  console.log(`Testing ${type}:`, await summarizeText(text));\n});"
+            "code": {
+              "content": "// Test with different text types\nconst testTexts = {\n  article: 'Long article text...',\n  email: 'Email content...',\n  document: 'Document text...'\n};\n\n// Test each type\nObject.entries(testTexts).forEach(([type, text]) => {\n  console.log(`Testing ${type}:`, await summarizeText(text));\n});",
+              "language": "javascript"
+            }
           }
         }
       ],

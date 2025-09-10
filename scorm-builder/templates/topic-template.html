@@ -7,6 +7,12 @@
     <title>{{title}} - Nebula KnowLab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Highlight.js for syntax highlighting (core + common languages) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+    <!-- Optional: Add more languages if needed (e.g., for Python) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/javascript.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -382,23 +388,21 @@
                                     </div>
                                     
                                     <!-- Code Block (if present) -->
-                                    {{#code}}
+                                    {{#code.content}}
                                     <div class="mb-6">
                                         <div class="flex items-center justify-between mb-3">
-                                            <h5 class="text-lg font-semibold text-gray-900 flex items-center">
-                                                <i class="fas fa-code text-green-500 mr-2"></i>
-                                                Code
-                                            </h5>
-                                            <button onclick="copyCode(this.dataset.stepIndex)" data-step-index="{{_idx}}" class="copy-code-btn bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-1">
-                                                <i class="fas fa-copy"></i>
-                                                <span>Copy</span>
-                                            </button>
+                                        <h5 class="text-lg font-semibold text-gray-900 flex items-center">
+                                            <i class="fas fa-code text-green-500 mr-2"></i>
+                                            Code
+                                        </h5>
+                                        <button onclick="copyCode(this.dataset.stepIndex)" data-step-index="{{_idx}}" class="copy-code-btn bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-1">
+                                            <i class="fas fa-copy"></i>
+                                            <span>Copy</span>
+                                        </button>
                                         </div>
-                                        <div class="bg-gray-900 rounded-xl p-4 shadow-medium overflow-x-auto">
-                                            <pre class="text-green-400 text-sm font-mono leading-relaxed"><code id="code-{{_idx}}">{{code}}</code></pre>
-                                        </div>
-                                    </div>
-                                    {{/code}}
+                                        <pre class="rounded-xl p-4 shadow-medium overflow-x-auto"><code id="code-{{_idx}}" class="language-{{code.language}}">{{{code.content}}}</code></pre>
+                                    </div>                                      
+                                    {{/code.content}}
                                 </div>
                             </div>
                             
@@ -436,7 +440,7 @@
                                             {{/hint.image}}
                                             
                                             <!-- Hint Code (if present) -->
-                                            {{#hint.code}}
+                                            {{#hint.code.content}}
                                             <div class="mb-4">
                                                 <div class="flex items-center justify-between mb-2">
                                                     <h6 class="text-sm font-semibold text-amber-800">Code Example:</h6>
@@ -446,18 +450,17 @@
                                                     </button>
                                                 </div>
                                                 <div class="bg-gray-900 rounded-lg p-3 shadow-medium overflow-x-auto">
-                                                    <pre class="text-green-400 text-xs font-mono leading-relaxed"><code id="hint-code-{{_idx}}">{{hint.code}}</code></pre>
+                                                    <pre><code id="hint-code-{{_idx}}" class="language-{{hint.code.language}}">{{{hint.code.content}}}</code></pre>
                                                 </div>
                                             </div>
-                                            {{/hint.code}}
+                                            {{/hint.code.content}}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             {{/hint}}
                         </div>
-                    </div>
-                    {{/content.task_steps}}
+                        {{/content.task_steps}}
                 </div>
                 
                 <!-- Task Actions -->
@@ -906,63 +909,72 @@
         // **NEW STEP-BASED HINT SYSTEM**
         function revealStepHint(stepIndex) {
             const hintContent = document.getElementById(`step-hint-${stepIndex}`);
-            const hintBtn = document.querySelector(`[data-step-index="${stepIndex}"]`);
+            const hintBtn = document.querySelector(`.step-hint-btn[data-step-index="${stepIndex}"]`);
+            const completeBtn = document.getElementById(`complete-btn-${stepIndex}`);
             
             if (hintContent && hintBtn && !hintBtn.disabled) {
-                // Check if hint was already revealed
-                if (!window.revealedHints) window.revealedHints = [];
-                const alreadyRevealed = window.revealedHints.some(h => h.step === parseInt(stepIndex));
-                
-                if (alreadyRevealed) {
-                    return; // Don't reveal again
+                // Check if already revealed or step is completed
+                if (window.completedSteps?.has(parseInt(stepIndex)) || window.revealedHints?.some(h => h.step === parseInt(stepIndex))) {
+                    return; // Don't reveal if completed or already shown
                 }
                 
-                // Disable the button to prevent multiple clicks
+                // Disable and hide the hint button
                 hintBtn.disabled = true;
-                hintBtn.style.opacity = '0.5';
+                hintBtn.style.display = 'none'; // Explicitly hide after reveal (per your request)
                 
-                // Hide the button and show the hint
-                hintBtn.style.display = 'none';
+                // Show hint content
                 hintContent.classList.remove('hidden');
                 
                 // Track hint usage
-                window.revealedHints.push({
-                    step: parseInt(stepIndex),
-                    timestamp: new Date().toISOString()
-                });
+                if (!window.revealedHints) window.revealedHints = [];
+                window.revealedHints.push({ step: parseInt(stepIndex), timestamp: new Date().toISOString() });
                 
-                // Update progress indicators
+                // Ensure Mark Completed button remains visible (prevent unintended hiding)
+                if (completeBtn) {
+                    completeBtn.style.display = 'block'; // Force visible if it was hidden by CSS
+                }
+                
+                // Update progress and animate reveal
                 updateTaskProgress();
-                
-                // Animate the hint reveal
                 hintContent.style.opacity = '0';
                 hintContent.style.transform = 'translateY(20px)';
                 hintContent.style.transition = 'all 0.5s ease-out';
-                
                 setTimeout(() => {
                     hintContent.style.opacity = '1';
                     hintContent.style.transform = 'translateY(0)';
                 }, 50);
                 
-                // Check if all hints are used
                 checkAllHintsUsed();
             }
         }
-        
-        // **NEW: Mark Step Completed**
+
         function markStepCompleted(stepIndex) {
             const idx = parseInt(stepIndex);
             if (Number.isNaN(idx)) return;
             if (!window.completedSteps) window.completedSteps = new Set();
+            if (window.completedSteps.has(idx)) return; // Already completed
+            
             window.completedSteps.add(idx);
             
-            // Disable the complete button and show done state
+            // Update complete button
             const btn = document.getElementById(`complete-btn-${idx}`);
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i><span class="align-middle">Completed</span>';
-                btn.classList.remove('border-green-500','text-green-600');
-                btn.classList.add('bg-green-500','text-white','border-green-600');
+                btn.classList.remove('border-green-500', 'text-green-600');
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+            }
+            
+            // Hide Reveal Hint button (per your suggestion: no need for hint after completion)
+            const hintBtn = document.querySelector(`.step-hint-btn[data-step-index="${idx}"]`);
+            if (hintBtn) {
+                hintBtn.style.display = 'none';
+            }
+            
+            // If hint was already revealed, ensure content stays visible
+            const hintContent = document.getElementById(`step-hint-${idx}`);
+            if (hintContent && !hintContent.classList.contains('hidden')) {
+                // Optional: You could hide hint content here if desired, but keeping it visible for reference
             }
             
             updateTaskProgress();
@@ -1083,9 +1095,10 @@
             const progressText = document.getElementById('taskProgressText');
             const hintsUsedDisplay = document.getElementById('hintsUsedDisplay');
             
-            const totalSteps = window.templateData.content?.task_steps?.length || 0;
+            // Corrected: Access taskSteps directly (not .content.task_steps)
+            const totalSteps = window.templateData.taskSteps?.length || 0;
             const hintsUsed = window.revealedHints ? window.revealedHints.length : 0;
-            const totalAvailableHints = window.templateData.content?.task_steps?.filter(step => step.hint).length || 0;
+            const totalAvailableHints = window.templateData.taskSteps?.filter(step => step.hint).length || 0;
             const completed = window.completedSteps ? window.completedSteps.size : 0;
             
             // Update hints used display
@@ -1098,7 +1111,7 @@
                 progressText.textContent = `${completed} of ${totalSteps} steps completed`;
             }
             
-            // Update progress bar (based on hints used vs total available hints)
+            // Update progress bar (based on completed steps)
             if (progressBar && totalSteps > 0) {
                 const progressPercentage = (completed / totalSteps) * 100;
                 progressBar.style.width = `${Math.min(progressPercentage, 100)}%`;

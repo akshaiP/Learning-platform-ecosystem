@@ -229,7 +229,7 @@ class TopicGenerator {
     };
 
     return data;
-}
+  }
 
   registerMustacheHelpers() {
     // Custom escape function for JSON data
@@ -528,7 +528,7 @@ class TopicGenerator {
         });
       }
 
-      // Validate task steps structure (NEW)
+      // Validate task steps structure (UPDATED for object-based code and hint.code)
       if (topicConfig.content.task_steps) {
         if (!Array.isArray(topicConfig.content.task_steps)) {
           throw new Error('task_steps must be an array');
@@ -552,9 +552,20 @@ class TopicGenerator {
             }
           }
           
-          // Validate code if present
-          if (step.code && typeof step.code !== 'string') {
-            throw new Error(`task_steps[${index}].code must be a string`);
+          // Validate code if present (now supports string or object)
+          if (step.code) {
+            if (typeof step.code === 'string') {
+              // Legacy format: acceptable
+            } else if (typeof step.code === 'object' && step.code !== null) {
+              if (typeof step.code.content !== 'string') {
+                throw new Error(`task_steps[${index}].code.content must be a string`);
+              }
+              if (step.code.language && typeof step.code.language !== 'string') {
+                throw new Error(`task_steps[${index}].code.language must be a string`);
+              }
+            } else {
+              throw new Error(`task_steps[${index}].code must be a string or an object with "content" (string) and optional "language" (string)`);
+            }
           }
           
           // Validate hint if present
@@ -579,9 +590,20 @@ class TopicGenerator {
                 }
               }
               
-              // Validate hint code if present
-              if (step.hint.code && typeof step.hint.code !== 'string') {
-                throw new Error(`task_steps[${index}].hint.code must be a string`);
+              // Validate hint code if present (now supports string or object)
+              if (step.hint.code) {
+                if (typeof step.hint.code === 'string') {
+                  // Legacy format: acceptable
+                } else if (typeof step.hint.code === 'object' && step.hint.code !== null) {
+                  if (typeof step.hint.code.content !== 'string') {
+                    throw new Error(`task_steps[${index}].hint.code.content must be a string`);
+                  }
+                  if (step.hint.code.language && typeof step.hint.code.language !== 'string') {
+                    throw new Error(`task_steps[${index}].hint.code.language must be a string`);
+                  }
+                } else {
+                  throw new Error(`task_steps[${index}].hint.code must be a string or an object with "content" (string) and optional "language" (string)`);
+                }
               }
             } else {
               throw new Error(`task_steps[${index}].hint must be a string or object`);

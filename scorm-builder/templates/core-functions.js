@@ -301,6 +301,12 @@ function getCompletionStatus() {
     };
 }
 
+document.addEventListener('DOMContentLoaded', (event) => {
+    document.querySelectorAll('pre code').forEach((el) => {
+        hljs.highlightElement(el);
+    });
+});
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeTemplate);
