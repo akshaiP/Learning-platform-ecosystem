@@ -53,7 +53,7 @@
     
     "hints": [
       {
-        "text": "Start by counting the joints that can move independently",
+        "text": "Here is the ROS Python joint control publisher code:\n\n#!/usr/bin/env python3\nimport rospy\nfrom sensor_msgs.msg import JointState\ndef joint_publisher():\n    pub = rospy.Publisher('/joint_states', JointState, queue_size=10)\n    rospy.init_node('joint_pub_demo', anonymous=True)\n    rate = rospy.Rate(1)  # 1 Hz\n    msg = JointState()\n    msg.name = [\n        \"joint2_to_joint1\",\n        \"joint3_to_joint2\",\n        \"joint4_to_joint3\",\n        \"joint5_to_joint4\",\n        \"joint6_to_joint5\",\n        \"joint6output_to_joint6\"\n    ]\n    poses = [\n        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],\n        [0.5, -0.5, 90.0, 0.0, 0.2, 0.0],\n        [-0.5, 0.5, -0.3, 0.0, -0.2, 0.0],\n        [0.2, 0.2, 90.2, 0.0, 0.2, 0.0]\n    ]\n    while not rospy.is_shutdown():\n        for pos in poses:\n            msg.header.stamp = rospy.Time.now()\n            msg.position = pos\n            pub.publish(msg)\n            rospy.loginfo(f\"Published: {pos}\")\n            rospy.sleep(2.0)  # hold for 2 seconds\n        rate.sleep()\nif __name__ == '__main__':\n    try:\n        joint_publisher()\n    except rospy.ROSInterruptException:\n        pass",
         "step_image": {
           "src": "step-1-joints.jpg",
           "alt": "Robot joints identification",

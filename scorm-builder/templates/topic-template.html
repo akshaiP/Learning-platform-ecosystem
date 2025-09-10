@@ -109,6 +109,7 @@
             "taskStatement": {{{taskStatementJson}}},
             "taskRequirements": {{{taskRequirementsJson}}},
             "learningObjectives": {{{learningObjectivesJson}}},
+            "taskSteps": {{{taskStepsJson}}},
             "backendUrl": "{{backend_url}}",
             "chatContexts": {{{chatContextsJson}}}
         }
@@ -214,32 +215,32 @@
             </div>
         </section>
 
-        <!-- 3. ENHANCED REQUIREMENTS SECTION -->
-        {{#content.task_requirements.length}}
+        <!-- 3. LEARNING OBJECTIVES SECTION -->
+        {{#learning_objectives.length}}
         <section class="bg-white border-b border-gray-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div class="text-center mb-10">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Project Requirements</h3>
-                    <p class="text-gray-600 max-w-2xl mx-auto">Complete these essential tasks to successfully build your application</p>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Learning Objectives</h3>
+                    <p class="text-gray-600 max-w-2xl mx-auto">What you'll achieve by completing this task</p>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {{#content.task_requirements}}
+                    {{#learning_objectives}}
                     <div class="group bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border border-gray-200 hover:border-nebula-300 hover:shadow-medium transition-all duration-300">
                         <div class="flex items-start space-x-4">
                             <div class="w-8 h-8 bg-gradient-to-r from-nebula-500 to-nebula-purple-500 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                <i class="fas fa-check text-white text-sm"></i>
+                                <i class="fas fa-target text-white text-sm"></i>
                             </div>
                             <div class="flex-1">
                                 <p class="text-gray-800 font-medium leading-relaxed">{{.}}</p>
                             </div>
                         </div>
                     </div>
-                    {{/content.task_requirements}}
+                    {{/learning_objectives}}
                 </div>
             </div>
         </section>
-        {{/content.task_requirements.length}}
+        {{/learning_objectives.length}}
 
         <!-- 4. WORK AREA -->
         <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -277,117 +278,204 @@
             </div>
             {{/content.concepts.length}}
 
-            <!-- Enhanced Progressive Hints System -->
-            {{#content.hints.length}}
+            <!-- Step-by-Step Task Instructions -->
+            {{#content.task_steps.length}}
             <div class="mb-16">
-                <!-- Hints Header -->
-                <div class="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 rounded-3xl p-8 mb-8 border border-amber-200">
+                <!-- Task Steps Header -->
+                <div class="bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 rounded-3xl p-8 mb-8 border border-blue-200">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center space-x-4">
-                            <div class="w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-medium">
-                                <i class="fas fa-lightbulb text-white text-xl"></i>
+                            <div class="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-medium">
+                                <i class="fas fa-tasks text-white text-xl"></i>
                             </div>
                             <div>
-                                <h3 class="text-2xl font-bold text-gray-900">Progressive Hints</h3>
-                                <p class="text-gray-600 font-medium">Get step-by-step guidance when you need it</p>
+                                <h3 class="text-2xl font-bold text-gray-900">Task Instructions</h3>
+                                <p class="text-gray-600 font-medium">Follow these steps to complete your project</p>
                             </div>
                         </div>
-                        <button onclick="toggleHintsSection()" 
-                                class="group bg-white hover:bg-amber-50 border-2 border-amber-300 hover:border-amber-400 text-amber-700 hover:text-amber-800 px-6 py-3 rounded-2xl font-semibold transition-all duration-200 shadow-soft hover:shadow-medium">
-                            <span id="hintsToggleText" class="flex items-center space-x-2">
-                                <span>Show Hints</span>
-                                <i class="fas fa-chevron-down transition-transform duration-200 group-hover:scale-110"></i>
-                            </span>
-                        </button>
+                    </div>
+                    
+                    <!-- Evaluation Alert -->
+                    <div class="bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 rounded-2xl p-4 mb-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-info-circle text-white text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-amber-800 font-semibold text-sm">
+                                    <i class="fas fa-chart-line mr-2"></i>
+                                    You will be evaluated based on the number of hints used during task completion
+                                </p>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Progress Indicator -->
                     <div class="flex items-center space-x-6">
                         <div class="flex-1">
                             <div class="flex items-center justify-between text-sm text-gray-600 mb-3">
-                                <span class="font-medium">Hints Progress</span>
-                                <span id="hintsProgressText" class="font-semibold">0 of {{content.hints.length}} revealed</span>
+                                <span class="font-medium">Task Progress</span>
+                                <span id="taskProgressText" class="font-semibold">0 of {{content.task_steps.length}} steps completed</span>
                             </div>
                             <div class="w-full bg-white/60 rounded-full h-3 overflow-hidden shadow-inner">
-                                <div id="hintsProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500 ease-out shadow-sm" style="width: 0%"></div>
+                                <div id="taskProgressBar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500 ease-out shadow-sm" style="width: 0%"></div>
                             </div>
                         </div>
-                        <div class="text-center bg-white rounded-2xl p-4 shadow-soft">
-                            <div class="text-3xl font-bold text-amber-600" id="hintsCountDisplay">{{content.hints.length}}</div>
-                            <div class="text-xs text-gray-500 font-medium">Available</div>
+                        <div class="text-center bg-white rounded-2xl p-4 shadow-soft min-w-[110px]">
+                            <div class="text-lg font-bold text-blue-600" id="hintsUsedDisplay">0/0</div>
+                            <div class="text-xs text-gray-500 font-medium">Hints Used</div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Dynamic Hints Container -->
-                <div id="hintsContainer" class="hidden">
-                    <div id="hintsList" class="space-y-6">
-                        <!-- Hints are added dynamically via JavaScript -->
-                    </div>
-                    
-                    <!-- Hint Actions -->
-                    <div id="hintsActions" class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                        <button onclick="revealNextHint()" id="revealHintBtn"
-                                class="group bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center justify-center space-x-3">
-                            <i class="fas fa-eye group-hover:animate-pulse"></i>
-                            <span>Reveal Next Hint</span>
-                        </button>
-                        
-                        <button onclick="openHintsExhaustedChat()" id="hintsExhaustedBtn" 
-                                class="group bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center justify-center space-x-3 hidden">
-                            <i class="fas fa-question-circle group-hover:animate-bounce"></i>
-                            <span>I Still Need Help</span>
-                        </button>
-                    </div>
-                    
-                    <!-- Hint Statistics -->
-                    <div id="hintsStats" class="mt-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 hidden border border-gray-200">
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center space-x-6">
-                                <div class="flex items-center space-x-2 text-gray-600">
-                                    <i class="fas fa-chart-bar text-nebula-500"></i>
-                                    <span class="font-medium">Hints used: <span id="hintsUsedCount" class="font-bold text-gray-900">0</span></span>
+                <!-- Task Steps Container -->
+                <div class="space-y-8">
+                    {{#content.task_steps}}
+                    <div class="task-step bg-white rounded-3xl shadow-soft border border-gray-200 overflow-hidden" data-step="{{_idx}}">
+                        <!-- Step Header -->
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-b border-gray-200">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-medium">
+                                    {{displayIndex}}
                                 </div>
-                                <div class="flex items-center space-x-2 text-gray-600">
-                                    <i class="fas fa-clock text-nebula-purple-500"></i>
-                                    <span class="font-medium">Time spent: <span id="hintsTimeSpent" class="font-bold text-gray-900">0m</span></span>
+                                <div class="flex-1">
+                                    <h4 class="text-xl font-bold text-gray-900">{{title}}</h4>
+                                    {{#description}}
+                                    <p class="text-gray-600 mt-1">{{description}}</p>
+                                    {{/description}}
+                                </div>
+                                <div class="flex items-center">
+                                    <button id="complete-btn-{{_idx}}" data-step-index="{{_idx}}" onclick="markStepCompleted(this.dataset.stepIndex)" class="text-sm px-3 py-2 rounded-xl border-2 border-green-500 text-green-600 font-semibold hover:bg-green-50 transition disabled:opacity-60">
+                                        <i class="fas fa-check mr-1"></i>
+                                        <span class="align-middle">Mark Completed</span>
+                                    </button>
                                 </div>
                             </div>
-                            <button onclick="resetHints()" class="text-amber-600 hover:text-amber-700 font-semibold text-sm hover:underline">
-                                Reset Hints
-                            </button>
+                        </div>
+                        
+                        <!-- Step Content -->
+                        <div class="p-8">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- Left Column: Image (if present) -->
+                                {{#image}}
+                                <div class="order-2 lg:order-1">
+                                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 shadow-soft">
+                                        <img src="{{src}}" alt="{{alt}}" class="w-full h-auto rounded-xl shadow-medium transition-transform duration-300 hover:scale-105">
+                                        {{#caption}}
+                                        <p class="text-sm text-gray-600 mt-3 font-medium text-center">{{caption}}</p>
+                                        {{/caption}}
+                                    </div>
+                                </div>
+                                {{/image}}
+                                
+                                <!-- Right Column: Instructions and Code -->
+                                <div class="order-1 lg:order-2 {{^image}}lg:col-span-2{{/image}}">
+                                    <!-- Instructions -->
+                                    <div class="mb-6">
+                                        <h5 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                                            <i class="fas fa-list-ol text-blue-500 mr-2"></i>
+                                            Instructions
+                                        </h5>
+                                        <div class="prose prose-lg max-w-none">
+                                            <p class="text-gray-700 leading-relaxed">{{instructions}}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Code Block (if present) -->
+                                    {{#code}}
+                                    <div class="mb-6">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h5 class="text-lg font-semibold text-gray-900 flex items-center">
+                                                <i class="fas fa-code text-green-500 mr-2"></i>
+                                                Code
+                                            </h5>
+                                            <button onclick="copyCode(this.dataset.stepIndex)" data-step-index="{{_idx}}" class="copy-code-btn bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-1">
+                                                <i class="fas fa-copy"></i>
+                                                <span>Copy</span>
+                                            </button>
+                                        </div>
+                                        <div class="bg-gray-900 rounded-xl p-4 shadow-medium overflow-x-auto">
+                                            <pre class="text-green-400 text-sm font-mono leading-relaxed"><code id="code-{{_idx}}">{{code}}</code></pre>
+                                        </div>
+                                    </div>
+                                    {{/code}}
+                                </div>
+                            </div>
+                            
+                            <!-- Hint Section (if present) -->
+                            {{#hint}}
+                            <div class="mt-8 pt-6 border-t border-gray-200">
+                                <button onclick="revealStepHint(this.dataset.stepIndex)" 
+                                        data-step-index="{{_idx}}"
+                                        class="step-hint-btn group bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-200 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center space-x-3">
+                                    <i class="fas fa-lightbulb group-hover:animate-pulse"></i>
+                                    <span>Reveal Hint</span>
+                                </button>
+                                
+                                <div id="step-hint-{{_idx}}" class="step-hint-content hidden mt-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6">
+                                    <div class="flex items-start space-x-4">
+                                        <div class="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-lightbulb text-white text-sm"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h6 class="font-semibold text-amber-800 mb-2">Hint</h6>
+                                            
+                                            <!-- Hint Text -->
+                                            <p class="text-amber-700 leading-relaxed mb-4">{{hint.text}}</p>
+                                            
+                                            <!-- Hint Image (if present) -->
+                                            {{#hint.image}}
+                                            <div class="mb-4">
+                                                <div class="bg-white rounded-xl p-3 shadow-soft">
+                                                    <img src="{{src}}" alt="{{alt}}" class="w-full h-auto max-h-96 object-contain rounded-lg shadow-medium">
+                                                    {{#caption}}
+                                                    <p class="text-sm text-amber-600 mt-2 font-medium text-center">{{caption}}</p>
+                                                    {{/caption}}
+                                                </div>
+                                            </div>
+                                            {{/hint.image}}
+                                            
+                                            <!-- Hint Code (if present) -->
+                                            {{#hint.code}}
+                                            <div class="mb-4">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <h6 class="text-sm font-semibold text-amber-800">Code Example:</h6>
+                                                    <button onclick="copyHintCode(this.dataset.stepIndex)" data-step-index="{{_idx}}" class="copy-hint-code-btn bg-amber-100 hover:bg-amber-200 text-amber-700 hover:text-amber-800 px-2 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center space-x-1">
+                                                        <i class="fas fa-copy text-xs"></i>
+                                                        <span>Copy</span>
+                                                    </button>
+                                                </div>
+                                                <div class="bg-gray-900 rounded-lg p-3 shadow-medium overflow-x-auto">
+                                                    <pre class="text-green-400 text-xs font-mono leading-relaxed"><code id="hint-code-{{_idx}}">{{hint.code}}</code></pre>
+                                                </div>
+                                            </div>
+                                            {{/hint.code}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{/hint}}
                         </div>
                     </div>
+                    {{/content.task_steps}}
+                </div>
+                
+                <!-- Task Actions -->
+                <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="openTaskHelp()" 
+                            class="group bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center justify-center space-x-3">
+                        <i class="fas fa-question-circle group-hover:animate-bounce"></i>
+                        <span>Need Help?</span>
+                    </button>
+                    
+                    <button onclick="openHintsExhaustedChat()" id="allHintsUsedBtn" 
+                            class="group bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center justify-center space-x-3 hidden">
+                        <i class="fas fa-comments group-hover:animate-bounce"></i>
+                        <span>Still Need Help?</span>
+                    </button>
                 </div>
             </div>
-            {{/content.hints.length}}
-
-            <!-- Visual Context Gallery -->
-            {{#content.task_images.length}}
-            <div class="mb-16">
-                <div class="text-center mb-10">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center">
-                        <i class="fas fa-images text-blue-500 mr-3"></i>
-                        Visual References
-                    </h3>
-                    <p class="text-gray-600 max-w-2xl mx-auto">Visual guides to help you understand the implementation</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {{#content.task_images}}
-                    <div class="group bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden border border-gray-100">
-                        <div class="aspect-video overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-                            <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-contain transition-transform duration-500">
-                        </div>
-                        {{#caption}}
-                        <div class="p-6">
-                            <p class="text-gray-700 font-medium leading-relaxed">{{caption}}</p>
-                        </div>
-                        {{/caption}}
-                    </div>
-                    {{/content.task_images}}
-                </div>
-            </div>
-            {{/content.task_images.length}}
+            {{/content.task_steps.length}}
         </section>
 
         <!-- 5. ENHANCED KNOWLEDGE CHECK -->
@@ -539,6 +627,7 @@
         window.quizCompleted = false;
         window.progressStep = 0;
         window.revealedHints = [];
+        window.completedSteps = new Set();
         window.quizAttempt = null;
         window.hintsStartTime = null;
 
@@ -814,78 +903,116 @@
             openDynamicChat('practice');
         }
 
-        // **DYNAMIC HINT SYSTEM - No Pre-allocated Space**
-        function revealNextHint() {
-            if (window.currentHint < window.maxHints) {
-                const hintData = window.templateData.hints[window.currentHint];
-                if (hintData) {
-                    // Create hint card dynamically
-                    const hintCard = createHintCard(hintData, window.currentHint);
-                    
-                    // Add to hints list
-                    const hintsList = document.getElementById('hintsList');
-                    if (hintsList) {
-                        hintsList.appendChild(hintCard);
-                        
-                        // Animate the new hint card
-                        setTimeout(() => {
-                            hintCard.style.opacity = '1';
-                            hintCard.style.transform = 'translateY(0)';
-                            hintCard.classList.add('revealed');
-                            
-                            // Show checkmark after animation
-                            const checkmark = hintCard.querySelector('.absolute.top-4.right-4');
-                            if (checkmark) {
-                                setTimeout(() => {
-                                    checkmark.style.opacity = '1';
-                                }, 300);
-                            }
-                            
-                            // Scroll to the new hint smoothly
-                            hintCard.scrollIntoView({ 
-                                behavior: 'smooth', 
-                                block: 'nearest' 
-                            });
-                            
-                        }, 50);
-                    }
-                    
-                    // Track revealed hint text for context
-                    window.revealedHints.push(hintData.text);
-                    window.currentHint++;
-                    
-                    // Update progress indicators
-                    updateHintsProgress();
-                    
-                    // Check if all hints are revealed
-                    if (window.currentHint >= window.maxHints) {
-                        setTimeout(() => {
-                            const exhaustedBtn = document.getElementById('hintsExhaustedBtn');
-                            const revealBtn = document.getElementById('revealHintBtn');
-                            const stats = document.getElementById('hintsStats');
-                            
-                            if (exhaustedBtn) {
-                                exhaustedBtn.classList.remove('hidden');
-                                exhaustedBtn.style.animation = 'slideInUp 0.5s ease-out';
-                            }
-                            
-                            if (revealBtn) {
-                                revealBtn.style.opacity = '0.5';
-                                revealBtn.disabled = true;
-                                revealBtn.innerHTML = '<i class="fas fa-check-circle"></i><span>All Hints Revealed</span>';
-                            }
-                            
-                            if (stats) {
-                                stats.classList.remove('hidden');
-                                stats.style.animation = 'fadeIn 0.5s ease-out';
-                            }
-                        }, 600);
-                    }
-                    
-                    if (window.currentHint === 1) {
-                        if (typeof updateProgress === 'function') updateProgress(2);
-                    }
+        // **NEW STEP-BASED HINT SYSTEM**
+        function revealStepHint(stepIndex) {
+            const hintContent = document.getElementById(`step-hint-${stepIndex}`);
+            const hintBtn = document.querySelector(`[data-step-index="${stepIndex}"]`);
+            
+            if (hintContent && hintBtn && !hintBtn.disabled) {
+                // Check if hint was already revealed
+                if (!window.revealedHints) window.revealedHints = [];
+                const alreadyRevealed = window.revealedHints.some(h => h.step === parseInt(stepIndex));
+                
+                if (alreadyRevealed) {
+                    return; // Don't reveal again
                 }
+                
+                // Disable the button to prevent multiple clicks
+                hintBtn.disabled = true;
+                hintBtn.style.opacity = '0.5';
+                
+                // Hide the button and show the hint
+                hintBtn.style.display = 'none';
+                hintContent.classList.remove('hidden');
+                
+                // Track hint usage
+                window.revealedHints.push({
+                    step: parseInt(stepIndex),
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Update progress indicators
+                updateTaskProgress();
+                
+                // Animate the hint reveal
+                hintContent.style.opacity = '0';
+                hintContent.style.transform = 'translateY(20px)';
+                hintContent.style.transition = 'all 0.5s ease-out';
+                
+                setTimeout(() => {
+                    hintContent.style.opacity = '1';
+                    hintContent.style.transform = 'translateY(0)';
+                }, 50);
+                
+                // Check if all hints are used
+                checkAllHintsUsed();
+            }
+        }
+        
+        // **NEW: Mark Step Completed**
+        function markStepCompleted(stepIndex) {
+            const idx = parseInt(stepIndex);
+            if (Number.isNaN(idx)) return;
+            if (!window.completedSteps) window.completedSteps = new Set();
+            window.completedSteps.add(idx);
+            
+            // Disable the complete button and show done state
+            const btn = document.getElementById(`complete-btn-${idx}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i><span class="align-middle">Completed</span>';
+                btn.classList.remove('border-green-500','text-green-600');
+                btn.classList.add('bg-green-500','text-white','border-green-600');
+            }
+            
+            updateTaskProgress();
+        }
+
+        // **NEW: Copy Code Function**
+        function copyCode(stepIndex) {
+            const codeElement = document.getElementById(`code-${stepIndex}`);
+            if (codeElement) {
+                const code = codeElement.textContent;
+                navigator.clipboard.writeText(code).then(() => {
+                    // Show success feedback
+                    const btn = document.querySelector(`[data-step-index="${stepIndex}"]`);
+                    if (btn) {
+                        const originalHTML = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+                        btn.classList.add('bg-green-100', 'text-green-800');
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = originalHTML;
+                            btn.classList.remove('bg-green-100', 'text-green-800');
+                        }, 2000);
+                    }
+                }).catch(err => {
+                    console.error('Failed to copy code:', err);
+                });
+            }
+        }
+        
+        // **NEW: Copy Hint Code Function**
+        function copyHintCode(stepIndex) {
+            const codeElement = document.getElementById(`hint-code-${stepIndex}`);
+            if (codeElement) {
+                const code = codeElement.textContent;
+                navigator.clipboard.writeText(code).then(() => {
+                    // Show success feedback
+                    const btn = document.querySelector(`[onclick="copyHintCode(this.dataset.stepIndex)"][data-step-index="${stepIndex}"]`);
+                    if (btn) {
+                        const originalHTML = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-check"></i><span>Copied!</span>';
+                        btn.classList.add('bg-green-100', 'text-green-800');
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = originalHTML;
+                            btn.classList.remove('bg-green-100', 'text-green-800');
+                        }, 2000);
+                    }
+                }).catch(err => {
+                    console.error('Failed to copy hint code:', err);
+                });
             }
         }
         
@@ -950,43 +1077,46 @@
             return hintCard;
         }
         
-        // **NEW: Enhanced Progress Tracking**
-        function updateHintsProgress() {
-            const progressBar = document.getElementById('hintsProgressBar');
-            const progressText = document.getElementById('hintsProgressText');
-            const countDisplay = document.getElementById('hintsCountDisplay');
-            const usedCount = document.getElementById('hintsUsedCount');
+        // **NEW: Task Progress Tracking**
+        function updateTaskProgress() {
+            const progressBar = document.getElementById('taskProgressBar');
+            const progressText = document.getElementById('taskProgressText');
+            const hintsUsedDisplay = document.getElementById('hintsUsedDisplay');
             
-            const totalHints = window.maxHints;
-            const revealedHints = window.currentHint;
-            const remainingHints = totalHints - revealedHints;
-            const progressPercentage = (revealedHints / totalHints) * 100;
+            const totalSteps = window.templateData.content?.task_steps?.length || 0;
+            const hintsUsed = window.revealedHints ? window.revealedHints.length : 0;
+            const totalAvailableHints = window.templateData.content?.task_steps?.filter(step => step.hint).length || 0;
+            const completed = window.completedSteps ? window.completedSteps.size : 0;
             
-            // Update progress bar with smooth animation
-            if (progressBar) {
-                progressBar.style.width = `${progressPercentage}%`;
+            // Update hints used display
+            if (hintsUsedDisplay) {
+                hintsUsedDisplay.textContent = `${hintsUsed}/${totalAvailableHints}`;
             }
             
             // Update progress text
             if (progressText) {
-                progressText.textContent = `${revealedHints} of ${totalHints} revealed`;
+                progressText.textContent = `${completed} of ${totalSteps} steps completed`;
             }
             
-            // Update count display
-            if (countDisplay) {
-                countDisplay.textContent = remainingHints;
-                if (remainingHints === 0) {
-                    countDisplay.parentElement.classList.add('text-green-600');
+            // Update progress bar (based on hints used vs total available hints)
+            if (progressBar && totalSteps > 0) {
+                const progressPercentage = (completed / totalSteps) * 100;
+                progressBar.style.width = `${Math.min(progressPercentage, 100)}%`;
+            }
+        }
+        
+        // **NEW: Check if all hints are used**
+        function checkAllHintsUsed() {
+            const totalAvailableHints = window.templateData.content?.task_steps?.filter(step => step.hint).length || 0;
+            const hintsUsed = window.revealedHints ? window.revealedHints.length : 0;
+            
+            if (hintsUsed >= totalAvailableHints && totalAvailableHints > 0) {
+                const allHintsBtn = document.getElementById('allHintsUsedBtn');
+                if (allHintsBtn) {
+                    allHintsBtn.classList.remove('hidden');
+                    allHintsBtn.style.animation = 'slideInUp 0.5s ease-out';
                 }
             }
-            
-            // Update used count
-            if (usedCount) {
-                usedCount.textContent = revealedHints;
-            }
-            
-            // Update time tracking
-            updateHintsTimeTracking();
         }
         
         // **NEW: Time Tracking for Hints**
@@ -1156,8 +1286,8 @@
             initializeTemplate();
         }
         
-        // Initialize hints system
-        initializeHintsSystem();
+        // Initialize step-based task system
+        initializeTaskSystem();
         
         console.log('✅ Template fully initialized');
         console.log('📊 Context data available:', {
@@ -1168,10 +1298,10 @@
         });
     };
     
-    // **NEW: Initialize Hints System - Dynamic Version**
-    function initializeHintsSystem() {
-        // Set up initial progress display
-        updateHintsProgress();
+    // **NEW: Initialize Step-Based Task System**
+    function initializeTaskSystem() {
+        // Initialize task progress tracking
+        updateTaskProgress();
         
         // Add click handlers for quiz options if they exist
         const quizOptions = document.querySelectorAll('.quiz-option');
@@ -1185,15 +1315,11 @@
             }
         });
         
-        // Initialize hints list container (no pre-existing cards to style)
-        const hintsList = document.getElementById('hintsList');
-        if (hintsList) {
-            // Clear any existing content
-            hintsList.innerHTML = '';
-            console.log('✅ Hints system initialized - ready for dynamic hint creation');
-        }
+        // Initialize step-based hint tracking
+        window.revealedHints = [];
         
-        console.log('✅ Dynamic hints system initialized with', window.maxHints, 'available hints');
+        console.log('✅ Step-based task system initialized');
+        console.log('📊 Task steps available:', window.templateData.content?.task_steps?.length || 0);
     }
 </script>
 </body>

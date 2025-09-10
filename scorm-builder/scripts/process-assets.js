@@ -115,6 +115,27 @@ class AssetProcessor {
       });
     }
     
+    // NEW: Extract task step images (for step-by-step instructions)
+    if (config.content?.task_steps && Array.isArray(config.content.task_steps)) {
+      config.content.task_steps.forEach((step, index) => {
+        if (step.image) {
+          addImage({
+            ...step.image,
+            stepIndex: index
+          }, 'task_step', false);
+        }
+        
+        // Extract hint images from task steps
+        if (step.hint && step.hint.image) {
+          addImage({
+            ...step.hint.image,
+            stepIndex: index,
+            isHint: true
+          }, 'hint_image', false);
+        }
+      });
+    }
+    
     // Extract quiz explanation image (enhanced display in modern template)
     if (config.quiz?.explanation_image) {
       addImage(config.quiz.explanation_image, 'quiz', false);
@@ -126,6 +147,8 @@ class AssetProcessor {
       task: images.filter(img => img.context === 'task').length,
       concept: images.filter(img => img.context === 'concept').length,
       step_image: images.filter(img => img.context === 'step_image').length,
+      task_step: images.filter(img => img.context === 'task_step').length,
+      hint_image: images.filter(img => img.context === 'hint_image').length,
       quiz: images.filter(img => img.context === 'quiz').length
     });
     
@@ -393,6 +416,17 @@ class AssetProcessor {
         issues.push({
           type: 'recommendation',
           message: `${hintsWithoutImages.length} hints missing step images for enhanced task-based learning`
+        });
+      }
+    }
+    
+    // Check for task steps with images
+    if (topicConfig.content?.task_steps) {
+      const stepsWithoutImages = topicConfig.content.task_steps.filter(step => !step.image);
+      if (stepsWithoutImages.length > 0) {
+        issues.push({
+          type: 'recommendation',
+          message: `${stepsWithoutImages.length} task steps missing images for enhanced visual learning`
         });
       }
     }

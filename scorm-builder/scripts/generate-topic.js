@@ -119,6 +119,26 @@ class TopicGenerator {
       });
     }
     
+    // Update task step images (NEW)
+    if (topicConfig.content?.task_steps) {
+      topicConfig.content.task_steps.forEach(step => {
+        if (step.image?.src) {
+          const newPath = imageMap[step.image.src];
+          if (newPath) {
+            step.image.src = newPath;
+          }
+        }
+        
+        // Update hint images
+        if (step.hint?.image?.src) {
+          const newPath = imageMap[step.hint.image.src];
+          if (newPath) {
+            step.hint.image.src = newPath;
+          }
+        }
+      });
+    }
+    
     // Update quiz image
     if (topicConfig.quiz?.explanation_image?.src) {
       const newPath = imageMap[topicConfig.quiz.explanation_image.src];
@@ -142,6 +162,7 @@ class TopicGenerator {
     if (!data.content.hints) data.content.hints = [];
     if (!data.content.task_images) data.content.task_images = [];
     if (!data.content.task_requirements) data.content.task_requirements = [];
+    if (!data.content.task_steps) data.content.task_steps = [];
     if (!data.learning_objectives) data.learning_objectives = [];
     if (!data.chat_contexts) data.chat_contexts = {};
     
@@ -161,21 +182,41 @@ class TopicGenerator {
       data.content.task_statement = data.task_statement;
     }
     
+    // Add stable indices to task steps for templating (Mustache has no @index)
+    if (Array.isArray(data.content.task_steps)) {
+      data.content.task_steps = data.content.task_steps.map((step, i) => ({
+        _idx: i,
+        displayIndex: i + 1,
+        ...step
+      }));
+    }
+
     data.learning_objectives.length = data.learning_objectives.length;
     data.content.concepts.length = data.content.concepts.length;
     data.content.hints.length = data.content.hints.length;
     data.content.task_images.length = data.content.task_images.length;
     data.content.task_requirements.length = data.content.task_requirements.length;
+    data.content.task_steps.length = data.content.task_steps.length;
     
-    data.hintsJson = JSON.stringify(data.content.hints || []);
-    data.quizJson = data.quiz ? JSON.stringify(data.quiz) : 'null';
-    data.chatContextsJson = JSON.stringify(data.chat_contexts || {});
+    // Safe stringify to avoid </script> prematurely closing the script tag
+    const safeJson = (obj) => {
+      const str = JSON.stringify(obj == null ? null : obj);
+      return (str || '')
+        .replace(/<\//g, '<\\/') // escape </script>, </style>, etc.
+        .replace(/\u2028/g, '\\u2028')
+        .replace(/\u2029/g, '\\u2029');
+    };
+
+    data.hintsJson = safeJson(data.content.hints || []);
+    data.quizJson = data.quiz ? safeJson(data.quiz) : 'null';
+    data.chatContextsJson = safeJson(data.chat_contexts || {});
     
-    data.titleJson = JSON.stringify(data.title || '');
-    data.descriptionJson = JSON.stringify(data.description || '');
-    data.taskStatementJson = JSON.stringify(data.content.task_statement || '');
-    data.taskRequirementsJson = JSON.stringify(data.content.task_requirements || []);
-    data.learningObjectivesJson = JSON.stringify(data.learning_objectives || []);
+    data.titleJson = safeJson(data.title || '');
+    data.descriptionJson = safeJson(data.description || '');
+    data.taskStatementJson = safeJson(data.content.task_statement || '');
+    data.taskRequirementsJson = safeJson(data.content.task_requirements || []);
+    data.learningObjectivesJson = safeJson(data.learning_objectives || []);
+    data.taskStepsJson = safeJson(data.content.task_steps || []);
     
     // Add company branding data
     data.company = {
@@ -482,6 +523,68 @@ class TopicGenerator {
               if (!hint.step_image.alt) {
                 console.warn(`hints[${index}].step_image missing alt text for accessibility`);
               }
+            }
+          }
+        });
+      }
+
+      // Validate task steps structure (NEW)
+      if (topicConfig.content.task_steps) {
+        if (!Array.isArray(topicConfig.content.task_steps)) {
+          throw new Error('task_steps must be an array');
+        }
+        
+        topicConfig.content.task_steps.forEach((step, index) => {
+          if (!step.title) {
+            throw new Error(`task_steps[${index}] missing title`);
+          }
+          if (!step.instructions) {
+            throw new Error(`task_steps[${index}] missing instructions`);
+          }
+          
+          // Validate step image if present
+          if (step.image) {
+            if (!step.image.src) {
+              throw new Error(`task_steps[${index}].image missing src`);
+            }
+            if (!step.image.alt) {
+              console.warn(`task_steps[${index}].image missing alt text for accessibility`);
+            }
+          }
+          
+          // Validate code if present
+          if (step.code && typeof step.code !== 'string') {
+            throw new Error(`task_steps[${index}].code must be a string`);
+          }
+          
+          // Validate hint if present
+          if (step.hint) {
+            if (typeof step.hint === 'string') {
+              // Legacy string format is acceptable
+              return;
+            }
+            
+            if (typeof step.hint === 'object') {
+              if (!step.hint.text) {
+                throw new Error(`task_steps[${index}].hint missing text property`);
+              }
+              
+              // Validate hint image if present
+              if (step.hint.image) {
+                if (!step.hint.image.src) {
+                  throw new Error(`task_steps[${index}].hint.image missing src`);
+                }
+                if (!step.hint.image.alt) {
+                  console.warn(`task_steps[${index}].hint.image missing alt text for accessibility`);
+                }
+              }
+              
+              // Validate hint code if present
+              if (step.hint.code && typeof step.hint.code !== 'string') {
+                throw new Error(`task_steps[${index}].hint.code must be a string`);
+              }
+            } else {
+              throw new Error(`task_steps[${index}].hint must be a string or object`);
             }
           }
         });
