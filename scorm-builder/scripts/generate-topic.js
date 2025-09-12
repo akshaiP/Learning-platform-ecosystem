@@ -228,6 +228,50 @@ class TopicGenerator {
       }
     };
 
+    // Enhanced escape function for safe HTML data attributes (handles quotes, backslashes, newlines robustly)
+    function escapeForHTMLAttribute(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')  // Escape ampersands first
+        .replace(/"/g, '&quot;') // Escape double quotes for HTML attributes
+        .replace(/'/g, '&#x27;') // Escape single quotes
+        .replace(/</g, '&lt;')   // Escape less than
+        .replace(/>/g, '&gt;')   // Escape greater than
+        .replace(/\n/g, '&#10;') // Preserve newlines as HTML entities
+        .replace(/\r/g, '&#13;') // Preserve carriage returns
+        .replace(/\t/g, '&#9;')  // Preserve tabs
+        .replace(/\u2028/g, '&#x2028;')  // Unicode line separator
+        .replace(/\u2029/g, '&#x2029;'); // Unicode paragraph separator
+    }
+
+    // NEW: Apply escaping and add isLongCode boolean for condition
+    if (Array.isArray(data.content.task_steps)) {
+      data.content.task_steps = data.content.task_steps.map(step => {
+        if (step.code && step.code.content) {
+          step.escapedContent = escapeForHTMLAttribute(step.code.content);
+          step.isLongCode = step.code.content.length > 100;  // LOWERED from 200 to 100
+        }
+        if (step.hint && step.hint.code && step.hint.code.content) {
+          step.hint.escapedContent = escapeForHTMLAttribute(step.hint.code.content);
+          step.hint.isLongCode = step.hint.code.content.length > 100;
+        }
+        return step;
+      });
+      
+      // MOVED: Console log AFTER the mapping is complete
+      console.log('Escaped content for steps:', data.content.task_steps.map(s => s.escapedContent));
+      
+      // Additional debugging for each step
+      data.content.task_steps.forEach((step, i) => {
+        console.log(`Step ${i + 1}:`, {
+          hasCode: !!step.code?.content,
+          codeLength: step.code?.content?.length || 0,
+          isLongCode: step.isLongCode,
+          escapedLength: step.escapedContent?.length || 0
+        });
+      });
+    }
+
     return data;
   }
 

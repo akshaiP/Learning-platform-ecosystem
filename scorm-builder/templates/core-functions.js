@@ -307,6 +307,89 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 });
 
+// Code Modal Functions
+function openCodeModal(code, language) {
+    const modal = document.getElementById('codeModal');
+    const codeContent = document.getElementById('modalCodeContent');
+    
+    // Clear previous content and classes
+    codeContent.textContent = code;
+    codeContent.className = '';
+
+    // Remove previous highlight state if any
+    if (codeContent.dataset && codeContent.dataset.highlighted) {
+        codeContent.removeAttribute('data-highlighted');
+    }
+
+    // Apply new language class
+    codeContent.classList.add(`language-${language}`);
+    
+    // Re-highlight
+    hljs.highlightElement(codeContent);
+    
+    modal.classList.remove('hidden');
+    modal.style.opacity = '0';
+    setTimeout(() => { modal.style.opacity = '1'; }, 10);
+}
+
+// Event listener for code modal buttons
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.open-code-modal-btn')) {
+        const button = e.target.closest('.open-code-modal-btn');
+        const code = button.dataset.code;
+        const language = button.dataset.language;
+        
+        // Decode HTML entities back to original text
+        const decodedCode = code
+            .replace(/&quot;/g, '"')
+            .replace(/&#x27;/g, "'")
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&#10;/g, '\n')
+            .replace(/&#13;/g, '\r')
+            .replace(/&#9;/g, '\t')
+            .replace(/&#x2028;/g, '\u2028')
+            .replace(/&#x2029;/g, '\u2029')
+            .replace(/&amp;/g, '&');
+            
+        openCodeModal(decodedCode, language);
+    }
+});
+
+function closeCodeModal() {
+    const modal = document.getElementById('codeModal');
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);  // Fade-out animation
+}
+
+function copyModalCode() {
+    const codeContent = document.getElementById('modalCodeContent').textContent;
+    navigator.clipboard.writeText(codeContent).then(() => {
+        // Optional: Show success toast or change button text temporarily
+        const btn = document.getElementById('modalCopyBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> <span>Copied!</span>';
+        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+
+// Close modal on overlay click (optional)
+document.getElementById('codeModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('codeModal')) {
+        closeCodeModal();
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !document.getElementById('codeModal').classList.contains('hidden')) {
+        closeCodeModal();
+    }
+});
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeTemplate);
