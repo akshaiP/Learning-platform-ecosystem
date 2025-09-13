@@ -10,6 +10,7 @@ module.exports = {
         'http://127.0.0.1:8080',
         'https://prod.edrevel.com',
         'https://cloud.scorm.com',
+        'https://academy.nebulaknowlab.com',
         'file://',
         'null'
       ],
