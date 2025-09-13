@@ -215,17 +215,63 @@
     },
     
     "quiz": {
-      "question": "What is the primary advantage of using Google's Gemini API for text summarization compared to traditional rule-based approaches?",
-      "options": [
-        "It's completely free with unlimited usage",
-        "It can understand context and meaning for more accurate summaries", 
-        "It works only with English text",
-        "It requires no API key setup"
+      "title": "Knowledge Check",
+      "description": "Test your understanding with these comprehensive questions",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What is the primary advantage of using Google's Gemini API for text summarization compared to traditional rule-based approaches?",
+          "options": [
+            "It's completely free with unlimited usage",
+            "It can understand context and meaning for more accurate summaries", 
+            "It works only with English text",
+            "It requires no API key setup"
+          ],
+          "correct_answer": 1,
+          "explanation": "AI-based APIs like Gemini can understand context, sentiment, and meaning in text, providing more accurate and nuanced summaries compared to simple rule-based approaches.",
+          "explanation_image": {
+            "src": "nlp-vs-traditional.jpg",
+            "alt": "Comparison of AI vs traditional text processing"
+          }
+        },
+        {
+          "id": "q2", 
+          "question": "Which of the following is the most important consideration when integrating an AI API into a web application?",
+          "options": [
+            "The API response speed",
+            "Proper error handling and fallback mechanisms",
+            "The number of API calls per minute",
+            "The API documentation quality"
+          ],
+          "correct_answer": 1,
+          "explanation": "Robust error handling and fallback mechanisms are crucial for production applications to ensure reliability and user experience when API calls fail.",
+          "explanation_image": {
+            "src": "api-integration.jpg",
+            "alt": "API integration best practices"
+          }
+        },
+        {
+          "id": "q3",
+          "question": "What is the main purpose of prompt engineering in AI text summarization?",
+          "options": [
+            "To reduce API costs",
+            "To improve the quality and relevance of AI-generated summaries",
+            "To make the API calls faster",
+            "To bypass API rate limits"
+          ],
+          "correct_answer": 1,
+          "explanation": "Prompt engineering helps craft effective instructions that guide the AI to produce more accurate, relevant, and contextually appropriate summaries.",
+          "explanation_image": {
+            "src": "prompt-engineering.jpg",
+            "alt": "Prompt engineering techniques"
+          }
+        }
       ],
-      "correct_answer": 1,
-      "explanation_image": {
-        "src": "nlp-vs-traditional.jpg",
-        "alt": "Comparison of AI vs traditional text processing"
+      "settings": {
+        "allow_retry": true,
+        "show_progress": true,
+        "randomize_questions": false,
+        "passing_score": 2
       }
     },
     

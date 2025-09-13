@@ -47,7 +47,10 @@ class TopicGenerator {
     const jsFiles = [
         'scorm-api.js',
         'chat-integration.js', 
-        'core-functions.js'
+        'core-functions.js',
+        'quiz-system.js',
+        'chat-system.js',
+        'task-system.js'
     ];
     
     for (const jsFile of jsFiles) {
@@ -159,11 +162,26 @@ class TopicGenerator {
       });
     }
     
-    // Update quiz image
-    if (topicConfig.quiz?.explanation_image?.src) {
-      const newPath = imageMap[topicConfig.quiz.explanation_image.src];
-      if (newPath) {
-        topicConfig.quiz.explanation_image.src = newPath;
+    // Update quiz images (both legacy and new multi-question format)
+    if (topicConfig.quiz) {
+      // Legacy single question format
+      if (topicConfig.quiz.explanation_image?.src) {
+        const newPath = imageMap[topicConfig.quiz.explanation_image.src];
+        if (newPath) {
+          topicConfig.quiz.explanation_image.src = newPath;
+        }
+      }
+      
+      // New multi-question format
+      if (topicConfig.quiz.questions && Array.isArray(topicConfig.quiz.questions)) {
+        topicConfig.quiz.questions.forEach((question, index) => {
+          if (question.explanation_image?.src) {
+            const newPath = imageMap[question.explanation_image.src];
+            if (newPath) {
+              question.explanation_image.src = newPath;
+            }
+          }
+        });
       }
     }
   }
@@ -528,18 +546,50 @@ class TopicGenerator {
       throw new Error(`Missing required fields: ${missing.join(', ')}`);
     }
 
-    // Validate quiz structure if present
+    // Validate quiz structure if present (both legacy and new multi-question format)
     if (topicConfig.quiz) {
-      if (!topicConfig.quiz.question) {
-        throw new Error('Quiz question is required');
-      }
-      if (!Array.isArray(topicConfig.quiz.options) || topicConfig.quiz.options.length < 2) {
-        throw new Error('Quiz must have at least 2 options');
-      }
-      if (typeof topicConfig.quiz.correct_answer !== 'number' || 
-          topicConfig.quiz.correct_answer < 0 || 
-          topicConfig.quiz.correct_answer >= topicConfig.quiz.options.length) {
-        throw new Error('Quiz correct_answer must be a valid option index');
+      // Check if it's the new multi-question format
+      if (topicConfig.quiz.questions && Array.isArray(topicConfig.quiz.questions)) {
+        // New multi-question format validation
+        if (topicConfig.quiz.questions.length === 0) {
+          throw new Error('Quiz must have at least one question');
+        }
+        
+        topicConfig.quiz.questions.forEach((question, index) => {
+          if (!question.question) {
+            throw new Error(`Quiz question ${index + 1} is missing the question text`);
+          }
+          if (!Array.isArray(question.options) || question.options.length < 2) {
+            throw new Error(`Quiz question ${index + 1} must have at least 2 options`);
+          }
+          if (typeof question.correct_answer !== 'number' || 
+              question.correct_answer < 0 || 
+              question.correct_answer >= question.options.length) {
+            throw new Error(`Quiz question ${index + 1} correct_answer must be a valid option index`);
+          }
+        });
+        
+        // Validate quiz settings if present
+        if (topicConfig.quiz.settings) {
+          if (typeof topicConfig.quiz.settings.passing_score === 'number' && 
+              (topicConfig.quiz.settings.passing_score < 0 || 
+               topicConfig.quiz.settings.passing_score > topicConfig.quiz.questions.length)) {
+            throw new Error('Quiz passing_score must be between 0 and total number of questions');
+          }
+        }
+      } else {
+        // Legacy single-question format validation
+        if (!topicConfig.quiz.question) {
+          throw new Error('Quiz question is required');
+        }
+        if (!Array.isArray(topicConfig.quiz.options) || topicConfig.quiz.options.length < 2) {
+          throw new Error('Quiz must have at least 2 options');
+        }
+        if (typeof topicConfig.quiz.correct_answer !== 'number' || 
+            topicConfig.quiz.correct_answer < 0 || 
+            topicConfig.quiz.correct_answer >= topicConfig.quiz.options.length) {
+          throw new Error('Quiz correct_answer must be a valid option index');
+        }
       }
     }
 

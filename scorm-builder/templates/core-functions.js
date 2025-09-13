@@ -2,12 +2,9 @@
 let templateData = {};
 let currentHint = 0;
 let maxHints = 0;
-let quizCompleted = false;
 let progressStep = 0;
-let quizCorrectAnswer = 0;
 let topicConfig = {};
 let learnerData = {};
-let selectedQuizOption = null;
 
 function initializeTemplate() {
     // Parse template data
@@ -20,7 +17,6 @@ function initializeTemplate() {
 
     // Initialize variables
     maxHints = templateData.hints ? templateData.hints.length : 0;
-    quizCorrectAnswer = templateData.quiz ? templateData.quiz.correct_answer : 0;
     
     topicConfig = {
         topic: templateData.id,
@@ -37,7 +33,6 @@ function initializeTemplate() {
     
     // Initialize UI
     updateProgress(1);
-    setupQuizOptions();
     setupHintSystem();
 }
 
@@ -59,89 +54,10 @@ function updateProgress(step) {
     if (progressText) progressText.textContent = steps[step - 1] || steps[0];
     
     // Show next button when completed
-    if (step >= 4 && quizCompleted) {
+    if (step >= 4 && (window.quizCompleted || false)) {
         const nextBtn = document.getElementById('nextBtn');
         if (nextBtn) nextBtn.classList.remove('hidden');
     }
-}
-
-function setupQuizOptions() {
-    const options = document.querySelectorAll('.quiz-option');
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-    
-    options.forEach((option, index) => {
-        const letterSpan = option.querySelector('.option-letter');
-        if (letterSpan && letters[index]) {
-            letterSpan.textContent = letters[index] + '.';
-        }
-        
-        // Remove existing listeners and add new ones
-        option.removeEventListener('click', handleQuizClick);
-        option.addEventListener('click', function() {
-            handleQuizClick(this, index);
-        });
-    });
-}
-
-function handleQuizClick(element, optionIndex) {
-    // Prevent multiple selections (fixed answer approach)
-    if (selectedQuizOption !== null) return;
-    
-    selectedQuizOption = optionIndex;
-    const options = document.querySelectorAll('.quiz-option');
-    
-    // Update visual states
-    options.forEach((opt, i) => {
-        opt.classList.remove('bg-green-100', 'border-green-500', 'text-green-800', 
-                            'bg-red-100', 'border-red-500', 'text-red-800');
-        
-        if (i === optionIndex) {
-            if (optionIndex === quizCorrectAnswer) {
-                opt.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
-            } else {
-                opt.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
-            }
-        }
-    });
-    
-    // Show results and actions
-    const result = document.getElementById('quizResult');
-    const actions = document.getElementById('quizActions');
-    const explanationImage = document.getElementById('quizExplanationImage');
-    
-    if (optionIndex === quizCorrectAnswer) {
-        // Correct answer
-        if (result) {
-            result.className = 'block mb-4 p-4 rounded-xl bg-green-100 text-green-800 border border-green-300';
-            result.textContent = '✅ Excellent! You understand the concept correctly.';
-        }
-        
-        if (explanationImage) explanationImage.classList.remove('hidden');
-        
-        const proceedBtn = document.getElementById('proceedBtn');
-        if (proceedBtn) proceedBtn.classList.remove('hidden');
-        
-        quizCompleted = true;
-        updateProgress(4);
-        
-    } else {
-        // Wrong answer
-        if (result) {
-            result.className = 'block mb-4 p-4 rounded-xl bg-red-100 text-red-800 border border-red-300';
-            result.textContent = '❌ Not quite right. Let me help you understand the correct answer.';
-        }
-        
-        if (explanationImage) explanationImage.classList.remove('hidden');
-        
-        // Trigger remedial chat after a brief delay
-        setTimeout(() => {
-            if (typeof openQuizFailureChat === 'function') {
-                openQuizFailureChat();
-            }
-        }, 2000);
-    }
-    
-    if (actions) actions.classList.remove('hidden');
 }
 
 function setupHintSystem() {
@@ -203,38 +119,6 @@ function revealNextHint() {
     }
 }
 
-// Chat sidebar management functions
-function openChatSidebar() {
-    const sidebar = document.getElementById('chatSidebar');
-    const pageWrapper = document.getElementById('pageWrapper');
-    
-    if (sidebar) {
-        sidebar.classList.remove('hidden');
-        setTimeout(() => {
-            sidebar.classList.remove('translate-x-full');
-            if (pageWrapper) {
-                pageWrapper.style.marginRight = '384px'; // 24rem = 384px
-            }
-        }, 10);
-    }
-}
-
-function closeChatSidebar() {
-    const sidebar = document.getElementById('chatSidebar');
-    const pageWrapper = document.getElementById('pageWrapper');
-    
-    if (sidebar) {
-        sidebar.classList.add('translate-x-full');
-        if (pageWrapper) {
-            pageWrapper.style.marginRight = '0';
-        }
-        
-        setTimeout(() => {
-            sidebar.classList.add('hidden');
-        }, 300);
-    }
-}
-
 // Learning state management
 function recordLearningAction(action, context = {}) {
     const learningEvent = {
@@ -271,46 +155,30 @@ function taskCompleted() {
     updateProgress(3);
 }
 
-// Utility functions for template interaction
-function resetQuiz() {
-    selectedQuizOption = null;
-    quizCompleted = false;
-    
-    const options = document.querySelectorAll('.quiz-option');
-    options.forEach(opt => {
-        opt.classList.remove('bg-green-100', 'border-green-500', 'text-green-800', 
-                            'bg-red-100', 'border-red-500', 'text-red-800');
-    });
-    
-    const result = document.getElementById('quizResult');
-    const actions = document.getElementById('quizActions');
-    const explanationImage = document.getElementById('quizExplanationImage');
-    
-    if (result) result.classList.add('hidden');
-    if (actions) actions.classList.add('hidden');
-    if (explanationImage) explanationImage.classList.add('hidden');
-}
-
 function getCompletionStatus() {
+    // Get quiz status from the multi-question system if available
+    const multiQuizStatus = {
+        quizCompleted: window.quizCompleted || false,
+        quizScore: window.quizScore || 0,
+        currentQuestionIndex: window.currentQuestionIndex || 0,
+        totalQuestions: window.quizQuestions ? window.quizQuestions.length : 0,
+        answers: window.quizAnswers || {}
+    };
+    
     return {
         progressStep: progressStep,
         hintsRevealed: currentHint,
-        quizCompleted: quizCompleted,
-        quizAnswer: selectedQuizOption,
-        isCorrect: selectedQuizOption === quizCorrectAnswer
+        quizCompleted: multiQuizStatus.quizCompleted,
+        multiQuiz: multiQuizStatus
     };
 }
-
-document.addEventListener('DOMContentLoaded', (event) => {
-    document.querySelectorAll('pre code').forEach((el) => {
-        hljs.highlightElement(el);
-    });
-});
 
 // Code Modal Functions
 function openCodeModal(code, language) {
     const modal = document.getElementById('codeModal');
     const codeContent = document.getElementById('modalCodeContent');
+    
+    if (!modal || !codeContent) return;
     
     // Clear previous content and classes
     codeContent.textContent = code;
@@ -325,68 +193,91 @@ function openCodeModal(code, language) {
     codeContent.classList.add(`language-${language}`);
     
     // Re-highlight
-    hljs.highlightElement(codeContent);
+    if (typeof hljs !== 'undefined') {
+        hljs.highlightElement(codeContent);
+    }
     
     modal.classList.remove('hidden');
     modal.style.opacity = '0';
     setTimeout(() => { modal.style.opacity = '1'; }, 10);
 }
 
-// Event listener for code modal buttons
+function closeCodeModal() {
+    const modal = document.getElementById('codeModal');
+    if (!modal) return;
+    
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function copyModalCode() {
+    const codeContent = document.getElementById('modalCodeContent');
+    if (!codeContent) return;
+    
+    navigator.clipboard.writeText(codeContent.textContent).then(() => {
+        const btn = document.getElementById('modalCopyBtn');
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> <span>Copied!</span>';
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        }
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', (event) => {
+    if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach((el) => {
+            hljs.highlightElement(el);
+        });
+    }
+});
+
+// Code modal event listeners
 document.addEventListener('click', (e) => {
     if (e.target.closest('.open-code-modal-btn')) {
         const button = e.target.closest('.open-code-modal-btn');
         const code = button.dataset.code;
         const language = button.dataset.language;
         
-        // Decode HTML entities back to original text
-        const decodedCode = code
-            .replace(/&quot;/g, '"')
-            .replace(/&#x27;/g, "'")
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&#10;/g, '\n')
-            .replace(/&#13;/g, '\r')
-            .replace(/&#9;/g, '\t')
-            .replace(/&#x2028;/g, '\u2028')
-            .replace(/&#x2029;/g, '\u2029')
-            .replace(/&amp;/g, '&');
-            
-        openCodeModal(decodedCode, language);
+        if (code && language) {
+            // Decode HTML entities back to original text
+            const decodedCode = code
+                .replace(/&quot;/g, '"')
+                .replace(/&#x27;/g, "'")
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&#10;/g, '\n')
+                .replace(/&#13;/g, '\r')
+                .replace(/&#9;/g, '\t')
+                .replace(/&#x2028;/g, '\u2028')
+                .replace(/&#x2029;/g, '\u2029')
+                .replace(/&amp;/g, '&');
+                
+            openCodeModal(decodedCode, language);
+        }
     }
 });
 
-function closeCodeModal() {
+// Close modal on overlay click
+document.addEventListener('click', (e) => {
     const modal = document.getElementById('codeModal');
-    modal.style.opacity = '0';
-    setTimeout(() => {
-        modal.classList.add('hidden');
-    }, 300);  // Fade-out animation
-}
-
-function copyModalCode() {
-    const codeContent = document.getElementById('modalCodeContent').textContent;
-    navigator.clipboard.writeText(codeContent).then(() => {
-        // Optional: Show success toast or change button text temporarily
-        const btn = document.getElementById('modalCopyBtn');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check"></i> <span>Copied!</span>';
-        setTimeout(() => { btn.innerHTML = originalText; }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy:', err);
-    });
-}
-
-// Close modal on overlay click (optional)
-document.getElementById('codeModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('codeModal')) {
+    if (e.target === modal && modal) {
         closeCodeModal();
     }
 });
 
+// Close modal on escape key
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !document.getElementById('codeModal').classList.contains('hidden')) {
-        closeCodeModal();
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('codeModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeCodeModal();
+        }
     }
 });
 
@@ -401,8 +292,9 @@ if (document.readyState === 'loading') {
 window.updateProgress = updateProgress;
 window.revealNextHint = revealNextHint;
 window.toggleHintsSection = toggleHintsSection;
-window.openChatSidebar = openChatSidebar;
-window.closeChatSidebar = closeChatSidebar;
 window.startTask = startTask;
 window.taskCompleted = taskCompleted;
 window.getCompletionStatus = getCompletionStatus;
+window.openCodeModal = openCodeModal;
+window.closeCodeModal = closeCodeModal;
+window.copyModalCode = copyModalCode;

@@ -157,9 +157,25 @@ class AssetProcessor {
       });
     }
     
-    // Extract quiz explanation image (enhanced display in modern template)
-    if (config.quiz?.explanation_image) {
-      addImage(config.quiz.explanation_image, 'quiz', false);
+    // Extract quiz images (both legacy and new multi-question format)
+    if (config.quiz) {
+      // Legacy single question format
+      if (config.quiz.explanation_image) {
+        addImage(config.quiz.explanation_image, 'quiz', false);
+      }
+      
+      // New multi-question format
+      if (config.quiz.questions && Array.isArray(config.quiz.questions)) {
+        config.quiz.questions.forEach((question, index) => {
+          if (question.explanation_image) {
+            addImage({
+              ...question.explanation_image,
+              questionIndex: index,
+              questionId: question.id || `q${index + 1}`
+            }, 'quiz', false);
+          }
+        });
+      }
     }
     
     console.log(`📊 Found ${images.length} image references:`, {

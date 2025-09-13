@@ -164,18 +164,50 @@ class TopicValidator {
       }
     }
 
-    // Quiz validation
+    // Quiz validation (both legacy and new multi-question format)
     if (config.quiz) {
-      if (!config.quiz.question) {
-        errors.push('Quiz: Missing question');
-      }
-      if (!Array.isArray(config.quiz.options) || config.quiz.options.length < 2) {
-        errors.push('Quiz: Must have at least 2 options');
-      }
-      if (typeof config.quiz.correct_answer !== 'number' || 
-          config.quiz.correct_answer < 0 || 
-          (config.quiz.options && config.quiz.correct_answer >= config.quiz.options.length)) {
-        errors.push('Quiz: Invalid correct_answer index');
+      // Check if it's the new multi-question format
+      if (config.quiz.questions && Array.isArray(config.quiz.questions)) {
+        // New multi-question format validation
+        if (config.quiz.questions.length === 0) {
+          errors.push('Quiz: Must have at least one question');
+        }
+        
+        config.quiz.questions.forEach((question, index) => {
+          if (!question.question) {
+            errors.push(`Quiz question ${index + 1}: Missing question text`);
+          }
+          if (!Array.isArray(question.options) || question.options.length < 2) {
+            errors.push(`Quiz question ${index + 1}: Must have at least 2 options`);
+          }
+          if (typeof question.correct_answer !== 'number' || 
+              question.correct_answer < 0 || 
+              question.correct_answer >= question.options.length) {
+            errors.push(`Quiz question ${index + 1}: Invalid correct_answer index`);
+          }
+        });
+        
+        // Validate quiz settings if present
+        if (config.quiz.settings) {
+          if (typeof config.quiz.settings.passing_score === 'number' && 
+              (config.quiz.settings.passing_score < 0 || 
+               config.quiz.settings.passing_score > config.quiz.questions.length)) {
+            errors.push('Quiz: Invalid passing_score (must be between 0 and total questions)');
+          }
+        }
+      } else {
+        // Legacy single-question format validation
+        if (!config.quiz.question) {
+          errors.push('Quiz: Missing question');
+        }
+        if (!Array.isArray(config.quiz.options) || config.quiz.options.length < 2) {
+          errors.push('Quiz: Must have at least 2 options');
+        }
+        if (typeof config.quiz.correct_answer !== 'number' || 
+            config.quiz.correct_answer < 0 || 
+            (config.quiz.options && config.quiz.correct_answer >= config.quiz.options.length)) {
+          errors.push('Quiz: Invalid correct_answer index');
+        }
       }
     }
 
@@ -224,8 +256,21 @@ class TopicValidator {
       }
     }
     
-    if (config.quiz && config.quiz.explanation_image) {
-      addImage(config.quiz.explanation_image);
+    // Extract quiz images (both legacy and new multi-question format)
+    if (config.quiz) {
+      // Legacy single question format
+      if (config.quiz.explanation_image) {
+        addImage(config.quiz.explanation_image);
+      }
+      
+      // New multi-question format
+      if (config.quiz.questions && Array.isArray(config.quiz.questions)) {
+        config.quiz.questions.forEach(question => {
+          if (question.explanation_image) {
+            addImage(question.explanation_image);
+          }
+        });
+      }
     }
 
     return images;
