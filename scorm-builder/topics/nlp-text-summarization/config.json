@@ -23,22 +23,36 @@
           "title": "Set up Google Gemini API Access",
           "description": "Get your free API key from Google AI Studio",
           "instructions": "Navigate to Google AI Studio (https://aistudio.google.com/) and create a new API key. This will give you access to the Gemini API for free with generous usage limits.",
-          "image": {
-            "src": "step-1-api-key.jpg",
-            "alt": "Google AI Studio API key generation",
-            "caption": "Step 1: Generate your free Gemini API key"
-          },
+          "images": [
+            {
+              "src": "gemini-api-studio.jpg",
+              "alt": "Google AI Studio API key generation",
+              "caption": "Step 1: Generate your free Gemini API key"
+            },
+            {
+              "src": "step-2-cursor-setup.jpg",
+              "alt": "Google AI Studio interface",
+              "caption": "Find API keys under 'Get API key' in AI Studio"
+            }
+          ],
           "code": {
             "content": "// Store your API key securely\nconst GEMINI_API_KEY = 'your-api-key-here';\n\n// Test API connection\nconst testConnection = async () => {\n  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({\n      contents: [{ parts: [{ text: 'Hello, Gemini!' }] }]\n    })\n  });\n  return response.ok;\n};",
             "language": "javascript"
           },
           "hint": {
             "text": "Make sure to keep your API key secure and never commit it to version control. Use environment variables in production.",
-            "image": {
-              "src": "api-key-security.jpg",
-              "alt": "API key security best practices",
-              "caption": "Keep your API keys secure and never expose them in client-side code"
-            },
+            "images": [
+              {
+                "src": "gemini-api-studio.jpg",
+                "alt": "API key security best practices",
+                "caption": "Keep your API keys secure and never expose them in client-side code"
+              },
+              {
+                "src": "gemini-api-studio.jpg",
+                "alt": "Google AI Studio API key location",
+                "caption": "Copy the key and store it server-side"
+              }
+            ],
             "code": {
               "content": "// Environment variable example\nconst GEMINI_API_KEY = process.env.GEMINI_API_KEY;\n\n// For client-side, use a proxy server\n// Never expose API keys in frontend code!",
               "language": "javascript"
@@ -49,11 +63,18 @@
           "title": "Set up Cursor IDE Project",
           "description": "Create a new project structure for your summarization app",
           "instructions": "Open Cursor IDE and create a new project folder. Set up the basic HTML, CSS, and JavaScript files for your text summarization application.",
-          "image": {
-            "src": "step-2-cursor-setup.jpg",
-            "alt": "Cursor IDE project setup",
-            "caption": "Step 2: Initialize your project in Cursor"
-          },
+          "images": [
+            {
+              "src": "cursor-vibe-coding.jpg",
+              "alt": "Cursor IDE project setup",
+              "caption": "Step 2: Initialize your project in Cursor"
+            },
+            {
+              "src": "cursor-vibe-coding.jpg",
+              "alt": "Cursor IDE 'vibe coding' with AI",
+              "caption": "Use AI assists to scaffold quickly"
+            }
+          ],
           "code": {
             "content": "import requests\n\ndef summarize_text(text, api_key):\n    \"\"\"Simple text summarization using an API\"\"\"\n    url = \"https://api.example.com/summarize\"\n    payload = {'text': text, 'key': api_key}\n    response = requests.post(url, json=payload)\n    if response.status_code == 200:\n        return response.json()['summary']\n    else:\n        return \"Error summarizing text\"\n\n# Example usage\napi_key = 'your-api-key'\ntext = \"Long text to summarize...\"\nprint(summarize_text(text, api_key))",
             "language": "python"

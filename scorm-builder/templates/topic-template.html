@@ -357,7 +357,7 @@
                         <!-- Step Content -->
                         <div class="p-8">
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <!-- Left Column: Image (if present) -->
+                                <!-- Left Column: Images (single or carousel) -->
                                 {{#image}}
                                 <div class="order-2 lg:order-1">
                                     <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 shadow-soft">
@@ -368,9 +368,33 @@
                                     </div>
                                 </div>
                                 {{/image}}
+                                {{#hasMultipleImages}}
+                                <div class="order-2 lg:order-1">
+                                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 shadow-soft">
+                                        <div class="relative" data-carousel="step" data-step-index="{{_idx}}">
+                                            <div class="overflow-hidden rounded-xl">
+                                                <div class="h-80 sm:h-96 bg-white rounded-xl">
+                                                    <div class="flex h-full w-full transition-transform duration-500" id="step-carousel-track-{{_idx}}">
+                                                        {{#images}}
+                                                        <div class="w-full h-full flex-none flex items-center justify-center">
+                                                            <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-contain rounded-xl shadow-medium">
+                                                        </div>
+                                                        {{/images}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between items-center mt-3">
+                                                <button class="px-3 py-2 rounded-lg bg-white border border-gray-200 shadow-soft text-gray-700 text-sm" data-step-index="{{_idx}}" onclick="prevStepImage(this.dataset.stepIndex)"><i class="fas fa-chevron-left mr-1"></i>Prev</button>
+                                                <div class="text-xs text-gray-500"><span id="step-carousel-indicator-{{_idx}}">1</span> / {{imagesLength}}</div>
+                                                <button class="px-3 py-2 rounded-lg bg-white border border-gray-200 shadow-soft text-gray-700 text-sm" data-step-index="{{_idx}}" onclick="nextStepImage(this.dataset.stepIndex)">Next<i class="fas fa-chevron-right ml-1"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{/hasMultipleImages}}
                                 
                                 <!-- Right Column: Instructions and Code -->
-                                <div class="order-1 lg:order-2 {{^image}}lg:col-span-2{{/image}}">
+                                <div class="order-1 lg:order-2 {{^hasAnyImage}}lg:col-span-2{{/hasAnyImage}}">
                                     <!-- Instructions -->
                                     <div class="mb-6">
                                         <h5 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
@@ -435,7 +459,7 @@
                                             <!-- Hint Text -->
                                             <p class="text-amber-700 leading-relaxed mb-4">{{hint.text}}</p>
                                             
-                                            <!-- Hint Image (if present) -->
+                                            <!-- Hint Image(s) (single or carousel) -->
                                             {{#hint.image}}
                                             <div class="mb-4">
                                                 <div class="bg-white rounded-xl p-3 shadow-soft">
@@ -446,6 +470,30 @@
                                                 </div>
                                             </div>
                                             {{/hint.image}}
+                                            {{#hintHasMultipleImages}}
+                                            <div class="mb-4">
+                                                <div class="bg-white rounded-xl p-3 shadow-soft">
+                                                    <div class="relative" data-carousel="hint" data-step-index="{{_idx}}">
+                                                        <div class="overflow-hidden rounded-xl">
+                                                            <div class="h-80 bg-white rounded-xl">
+                                                                <div class="flex h-full w-full transition-transform duration-500" id="hint-carousel-track-{{_idx}}">
+                                                                    {{#hint.images}}
+                                                                    <div class="w-full h-full flex-none flex items-center justify-center">
+                                                                        <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-contain rounded-lg shadow-medium">
+                                                                    </div>
+                                                                    {{/hint.images}}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex justify-between items-center mt-3">
+                                                            <button class="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-sm" data-step-index="{{_idx}}" onclick="prevHintImage(this.dataset.stepIndex)"><i class="fas fa-chevron-left mr-1"></i>Prev</button>
+                                                            <div class="text-xs text-amber-600"><span id="hint-carousel-indicator-{{_idx}}">1</span> / {{hintImagesLength}}</div>
+                                                            <button class="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-sm" data-step-index="{{_idx}}" onclick="nextHintImage(this.dataset.stepIndex)">Next<i class="fas fa-chevron-right ml-1"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {{/hintHasMultipleImages}}
                                             
                                             <!-- Hint Code (if present) -->
                                             {{#hint.code.content}}
@@ -1361,6 +1409,81 @@
         console.log('✅ Step-based task system initialized');
         console.log('📊 Task steps available:', window.templateData.content?.task_steps?.length || 0);
     }
+
+    // === Simple per-step carousel state ===
+    window.__stepCarouselIndex = {};
+    window.__hintCarouselIndex = {};
+    function updateCarousel(trackId, indicatorId, index) {
+        const track = document.getElementById(trackId);
+        const indicator = document.getElementById(indicatorId);
+        if (!track) return;
+        const total = track.children ? track.children.length : 0;
+        if (total === 0) return 0;
+        const clamped = Math.max(0, Math.min(index, total - 1));
+        // Ensure each child takes full width of track's viewport
+        Array.from(track.children).forEach(child => {
+            child.style.minWidth = '100%';
+        });
+        track.style.transform = `translateX(-${clamped * 100}%)`;
+        if (indicator) indicator.textContent = String(clamped + 1);
+        return clamped;
+    }
+    window.nextStepImage = function(stepIdx) {
+        const key = String(stepIdx);
+        const trackId = `step-carousel-track-${stepIdx}`;
+        const indicatorId = `step-carousel-indicator-${stepIdx}`;
+        const track = document.getElementById(trackId);
+        if (!track) return;
+        const total = track.children ? track.children.length : 0;
+        const current = (window.__stepCarouselIndex[key] || 0) + 1;
+        window.__stepCarouselIndex[key] = updateCarousel(trackId, indicatorId, current % total);
+    };
+    window.prevStepImage = function(stepIdx) {
+        const key = String(stepIdx);
+        const trackId = `step-carousel-track-${stepIdx}`;
+        const indicatorId = `step-carousel-indicator-${stepIdx}`;
+        const track = document.getElementById(trackId);
+        if (!track) return;
+        const total = track.children ? track.children.length : 0;
+        const current = (window.__stepCarouselIndex[key] || 0) - 1;
+        const next = (current + total) % total;
+        window.__stepCarouselIndex[key] = updateCarousel(trackId, indicatorId, next);
+    };
+    window.nextHintImage = function(stepIdx) {
+        const key = String(stepIdx);
+        const trackId = `hint-carousel-track-${stepIdx}`;
+        const indicatorId = `hint-carousel-indicator-${stepIdx}`;
+        const track = document.getElementById(trackId);
+        if (!track) return;
+        const total = track.children ? track.children.length : 0;
+        const current = (window.__hintCarouselIndex[key] || 0) + 1;
+        window.__hintCarouselIndex[key] = updateCarousel(trackId, indicatorId, current % total);
+    };
+    window.prevHintImage = function(stepIdx) {
+        const key = String(stepIdx);
+        const trackId = `hint-carousel-track-${stepIdx}`;
+        const indicatorId = `hint-carousel-indicator-${stepIdx}`;
+        const track = document.getElementById(trackId);
+        if (!track) return;
+        const total = track.children ? track.children.length : 0;
+        const current = (window.__hintCarouselIndex[key] || 0) - 1;
+        const next = (current + total) % total;
+        window.__hintCarouselIndex[key] = updateCarousel(trackId, indicatorId, next);
+    };
+
+    // Ensure first slide is active for all carousels after load
+    window.addEventListener('load', () => {
+        const stepTracks = document.querySelectorAll('[id^="step-carousel-track-"]');
+        stepTracks.forEach(el => {
+            const id = el.id.replace('step-carousel-track-','');
+            updateCarousel(`step-carousel-track-${id}`, `step-carousel-indicator-${id}`, 0);
+        });
+        const hintTracks = document.querySelectorAll('[id^="hint-carousel-track-"]');
+        hintTracks.forEach(el => {
+            const id = el.id.replace('hint-carousel-track-','');
+            updateCarousel(`hint-carousel-track-${id}`, `hint-carousel-indicator-${id}`, 0);
+        });
+    });
 </script>
 </body>
 </html>

@@ -122,18 +122,38 @@ class TopicGenerator {
     // Update task step images (NEW)
     if (topicConfig.content?.task_steps) {
       topicConfig.content.task_steps.forEach(step => {
+        // Single image legacy
         if (step.image?.src) {
           const newPath = imageMap[step.image.src];
           if (newPath) {
             step.image.src = newPath;
           }
         }
+        // Multiple images new
+        if (Array.isArray(step.images)) {
+          step.images.forEach(img => {
+            if (img?.src) {
+              const newPath = imageMap[img.src];
+              if (newPath) img.src = newPath;
+            }
+          });
+        }
         
         // Update hint images
-        if (step.hint?.image?.src) {
-          const newPath = imageMap[step.hint.image.src];
-          if (newPath) {
-            step.hint.image.src = newPath;
+        if (step.hint) {
+          if (step.hint.image?.src) {
+            const newPath = imageMap[step.hint.image.src];
+            if (newPath) {
+              step.hint.image.src = newPath;
+            }
+          }
+          if (Array.isArray(step.hint.images)) {
+            step.hint.images.forEach(img => {
+              if (img?.src) {
+                const newPath = imageMap[img.src];
+                if (newPath) img.src = newPath;
+              }
+            });
           }
         }
       });
@@ -184,11 +204,40 @@ class TopicGenerator {
     
     // Add stable indices to task steps for templating (Mustache has no @index)
     if (Array.isArray(data.content.task_steps)) {
-      data.content.task_steps = data.content.task_steps.map((step, i) => ({
-        _idx: i,
-        displayIndex: i + 1,
-        ...step
-      }));
+      data.content.task_steps = data.content.task_steps.map((step, i) => {
+        // Normalize images: allow either image (single) or images (array)
+        let images = [];
+        if (Array.isArray(step.images)) {
+          images = step.images;
+        } else if (step.image) {
+          images = [step.image];
+        }
+
+        // Normalize hint images similarly
+        let hint = step.hint;
+        if (hint && typeof hint === 'object') {
+          if (Array.isArray(hint.images)) {
+            // ok
+          } else if (hint.image) {
+            hint = { ...hint, images: [hint.image] };
+          }
+        }
+        const imagesLength = Array.isArray(images) ? images.length : 0;
+        const hintImagesLength = hint && Array.isArray(hint.images) ? hint.images.length : 0;
+
+        return {
+          _idx: i,
+          displayIndex: i + 1,
+          images,
+          // Preserve single image for backward-compat template conditions
+          image: images && images.length === 1 ? images[0] : undefined,
+          ...step,
+          hint,
+          imagesLength,
+          hintImagesLength,
+          hasAnyImage: imagesLength > 0
+        };
+      });
     }
 
     data.learning_objectives.length = data.learning_objectives.length;
@@ -254,6 +303,11 @@ class TopicGenerator {
         if (step.hint && step.hint.code && step.hint.code.content) {
           step.hint.escapedContent = escapeForHTMLAttribute(step.hint.code.content);
           step.hint.isLongCode = step.hint.code.content.length > 100;
+        }
+        // Precompute flags for template rendering
+        step.hasMultipleImages = Array.isArray(step.images) && step.images.length > 1;
+        if (step.hint && typeof step.hint === 'object') {
+          step.hintHasMultipleImages = Array.isArray(step.hint.images) && step.hint.images.length > 1;
         }
         return step;
       });
@@ -586,7 +640,7 @@ class TopicGenerator {
             throw new Error(`task_steps[${index}] missing instructions`);
           }
           
-          // Validate step image if present
+          // Validate step image(s) if present
           if (step.image) {
             if (!step.image.src) {
               throw new Error(`task_steps[${index}].image missing src`);
@@ -594,6 +648,12 @@ class TopicGenerator {
             if (!step.image.alt) {
               console.warn(`task_steps[${index}].image missing alt text for accessibility`);
             }
+          }
+          if (Array.isArray(step.images)) {
+            step.images.forEach((img, imgIdx) => {
+              if (!img.src) throw new Error(`task_steps[${index}].images[${imgIdx}] missing src`);
+              if (!img.alt) console.warn(`task_steps[${index}].images[${imgIdx}] missing alt text for accessibility`);
+            });
           }
           
           // Validate code if present (now supports string or object)
@@ -624,7 +684,7 @@ class TopicGenerator {
                 throw new Error(`task_steps[${index}].hint missing text property`);
               }
               
-              // Validate hint image if present
+              // Validate hint image(s) if present
               if (step.hint.image) {
                 if (!step.hint.image.src) {
                   throw new Error(`task_steps[${index}].hint.image missing src`);
@@ -632,6 +692,12 @@ class TopicGenerator {
                 if (!step.hint.image.alt) {
                   console.warn(`task_steps[${index}].hint.image missing alt text for accessibility`);
                 }
+              }
+              if (Array.isArray(step.hint.images)) {
+                step.hint.images.forEach((img, imgIdx) => {
+                  if (!img.src) throw new Error(`task_steps[${index}].hint.images[${imgIdx}] missing src`);
+                  if (!img.alt) console.warn(`task_steps[${index}].hint.images[${imgIdx}] missing alt text for accessibility`);
+                });
               }
               
               // Validate hint code if present (now supports string or object)

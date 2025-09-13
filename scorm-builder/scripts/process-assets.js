@@ -124,6 +124,16 @@ class AssetProcessor {
             stepIndex: index
           }, 'task_step', false);
         }
+        // NEW: Extract multiple step images if provided
+        if (Array.isArray(step.images)) {
+          step.images.forEach((img, i) => {
+            addImage({
+              ...img,
+              stepIndex: index,
+              imageIndex: i
+            }, 'task_step', false);
+          });
+        }
         
         // Extract hint images from task steps
         if (step.hint && step.hint.image) {
@@ -132,6 +142,17 @@ class AssetProcessor {
             stepIndex: index,
             isHint: true
           }, 'hint_image', false);
+        }
+        // NEW: Extract multiple hint images if provided
+        if (step.hint && Array.isArray(step.hint.images)) {
+          step.hint.images.forEach((img, i) => {
+            addImage({
+              ...img,
+              stepIndex: index,
+              isHint: true,
+              imageIndex: i
+            }, 'hint_image', false);
+          });
         }
       });
     }
