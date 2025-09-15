@@ -1,0 +1,302 @@
+{
+  "title": "Robotics Fundamentals",
+  "description": "Learn the fundamentals of robotic arm control by building a step-by-step project that simulates precise arm movements using code and interactive tasks.",
+  
+  "learning_objectives": [
+    "Understand the fundamental working principles of robots",
+    "Identify different classifications of robots based on their structure",
+    "Explore real-time applications of robotics across industries",
+    "Trace the evolution and generations of robotic systems",
+    "Perform basic robotic jogging tasks",
+    "Gain hands-on experience in robot programming using ROS (Robot Operating System)"
+  ],
+
+  "content": {
+    "company_logo": {
+      "src": "nebula-logo.png",
+      "alt": "Nebula KnowLab Logo"
+    },
+
+    "task_statement": "Robot fundamentals",
+
+    "task_steps": [
+    {
+      "title": "Open VS Code Terminal",
+      "description": "Start by opening a terminal inside Visual Studio Code to run your ROS2 commands.",
+      "instructions": "Launch VS Code, open your workspace folder, and start a new terminal window from the menu: `Terminal > New Terminal`.",
+      "images": [
+        {
+          "src": "1.png",
+          "alt": "VS Code terminal",
+          "caption": "Step 1: Open a VS Code terminal to run ROS2 commands"
+        }
+      ],
+      "hint": {
+        "text": "Make sure your ROS2 environment is sourced in the terminal before running any commands (e.g., `source /opt/ros/humble/setup.bash`)."
+      }
+    },
+    {
+      "title": "Launch RViz",
+      "description": "Start the RViz visualization environment using a ROS2 launch file.",
+      "instructions": "Use the `ros2 launch` command to start the launch file from your package. Launch files are usually stored inside the `launch/` directory of a ROS2 package.",
+      "images": [
+        {
+          "src": "2.png",
+          "alt": "RViz window open",
+          "caption": "Step 2: Launch your robot in RViz"
+        }
+      ],
+      "code": {
+        "content": "ros2 launch nebula my_robot.launch.py",
+        "language": "bash"
+      },
+      "hint": {
+        "text": "Remember: The general syntax is `ros2 launch <package_name> <launch_file>`. Replace `<launch_file>` with your actual file name."
+      }
+    },
+    {
+      "title": "Confirm RViz is Running",
+      "description": "Verify that the RViz visualization window has opened successfully.",
+      "instructions": "Press Enter after typing your launch command. A new window should open showing your robot’s visualization in RViz.",
+      "images": [
+        {
+          "src": "3a.png",
+          "alt": "RViz interface",
+          "caption": "Step 3: Confirm the RViz visualization window opens"
+        },
+        {
+          "src": "3b.png",
+          "alt": "RViz interface",
+          "caption": "Step 3: Confirm the RViz visualization window opens"
+        }
+      ],
+      "hint": {
+        "text": "If RViz doesn’t open, double-check the launch file name and ensure that ROS2 is properly sourced."
+      }
+    },
+    {
+      "title": "Create a Python Node",
+      "description": "Write a Python node to publish joint states to your robot in RViz.",
+      "instructions": "Create a Python file in your ROS2 package (e.g., inside `nebula/nebula/`). Use the `Node` class from `rclpy` and publish `JointState` messages with your robot’s joint names.",
+      "images": [
+        {
+          "src": "4a.png",
+          "alt": "Python ROS2 node example",
+          "caption": "Step 4: Write your Python node for publishing joint states"
+        }
+      ],
+      "code": {
+        "content": "import rclpy\nfrom rclpy.node import Node\nfrom sensor_msgs.msg import JointState\n\nclass DancingRobot(Node):\n    def __init__(self):\n        super().__init__(\"dancing_robot\")\n        self.pub = self.create_publisher(JointState, \"joint_states\", 10)\n        self.names = [\n            \"joint2_to_joint1\",\n            \"joint3_to_joint2\",\n            \"joint4_to_joint3\",\n            \"joint5_to_joint4\",\n            \"joint6_to_joint5\",\n            \"joint6output_to_joint6\",\n            \"gripper_controller\"\n        ]",
+        "language": "python"
+      },
+      "hint": {
+        "text": "The Node class is imported from `rclpy.node`. Make sure the joint names match those in your URDF and GUI."
+      }
+    },
+    {
+      "title": "Run Your Node",
+      "description": "Execute your Python node and observe the robot movement in RViz.",
+      "instructions": "Run your script with the `ros2 run` command using your package name and script entry point. Keep the RViz window open to see the updates.",
+      "images": [
+        {
+          "src": "4b.png",
+          "alt": "Running ROS2 node",
+          "caption": "Step 5: Run your Python node and see joint updates in RViz"
+        }
+      ],
+      "code": {
+        "content": "ros2 run nebula dancing_robot",
+        "language": "bash"
+      },
+      "hint": {
+        "text": "Stop the node anytime with `Ctrl+C`. Reflect: What happens to RViz visualization when the node stops?"
+      }
+    },
+    {
+      "title": "Program Movements",
+      "description": "Send joint position values to move the robot into desired poses.",
+      "instructions": "Define arrays of joint positions in your Python node and publish them sequentially to simulate motion.",
+      "images": [
+        {
+          "src": "5.gif",
+          "alt": "Robot arm moving",
+          "caption": "Step 6: Program desired joint positions"
+        }
+      ],
+      "code": {
+        "content": "self.positions_list = [\n    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],   # neutral\n    [0.5, -0.5,  1.0, -0.5,  0.3, -0.3,  0.2],   # pose 1\n    # Add more poses here...\n]",
+        "language": "python"
+      },
+      "hint": {
+        "text": "Experiment with joint values and timing delays. Reflection: How does reducing the delay affect the smoothness of motion?"
+      }
+    }
+  ],
+
+    "hero_image": {
+      "src": "robot-arm-hero.jpg",
+      "alt": "Robotic arm performing precise movement",
+      "caption": "Control robotic arms for industrial and research applications"
+    },
+
+    "concepts": [
+    {
+      "title": "Robot Functionality & Operation",
+      "summary": "Understanding how robots sense, process, and act in their environment.",
+      "image": {
+        "src": "robot-functionality.jpg",
+        "alt": "Diagram showing robot sensors, processor, and actuators"
+      },
+      "learn_more_context": "robot_functionality"
+    },
+    {
+      "title": "Mechanical Structures of Robots",
+      "summary": "Exploring different structural designs such as articulated arms, SCARA, and mobile bases.",
+      "image": {
+        "src": "mechanical-structure.jpg",
+        "alt": "Different robot structural designs including articulated and SCARA"
+      },
+      "learn_more_context": "robot_structures"
+    },
+    {
+      "title": "Collaborative Robots (Cobots)",
+      "summary": "Introduction to robots designed to safely work alongside humans.",
+      "image": {
+        "src": "cobots.jpg",
+        "alt": "Collaborative robot assisting a human worker"
+      },
+      "learn_more_context": "cobots"
+    },
+    {
+      "title": "Robot Mobility Mechanisms",
+      "summary": "Examining how robots move using wheels, legs, or tracks for various terrains.",
+      "image": {
+        "src": "mobility.jpg",
+        "alt": "Examples of wheeled, legged, and tracked robots"
+      },
+      "learn_more_context": "robot_mobility"
+    },
+    {
+      "title": "Industrial and Real-world Applications",
+      "summary": "Overview of how robots are used in manufacturing, healthcare, logistics, and more.",
+      "image": {
+        "src": "applications.jpg",
+        "alt": "Robots in factories, hospitals, and logistics"
+      },
+      "learn_more_context": "robot_applications"
+    },
+    {
+      "title": "Core Robotic Components and Essentials",
+      "summary": "Identifying essential hardware and software components of robotic systems.",
+      "image": {
+        "src": "robot-components.jpg",
+        "alt": "Key components like sensors, actuators, controllers"
+      },
+      "learn_more_context": "robot_components"
+    },
+    {
+      "title": "Evolution and Generations of Robots",
+      "summary": "Studying the development stages of robotics from early machines to modern AI-driven robots.",
+      "image": {
+        "src": "evolution.jpg",
+        "alt": "Timeline showing evolution from early robots to AI-driven systems"
+      },
+      "learn_more_context": "robot_evolution"
+    }
+]
+  },
+
+  "quiz": {
+  "title": "Knowledge Check",
+  "description": "Test your understanding of robotics fundamentals",
+  "questions": [
+    {
+      "id": "q1",
+      "question": "What is the primary function of a robot in an automated system?",
+      "options": [
+        "To entertain users",
+        "To perform repetitive or complex tasks with precision",
+        "To store data",
+        "To monitor human workers"
+      ],
+      "correct_answer": 1,
+      "explanation": "Robots in automated systems are designed to handle repetitive or complex tasks with high accuracy and reliability."
+    },
+    {
+      "id": "q2",
+      "question": "Which of the following best describes a collaborative robot (Cobot)?",
+      "options": [
+        "A robot that functions underwater",
+        "A robot used only in space missions",
+        "A robot that can work safely alongside humans",
+        "A robot that operates entirely autonomously in isolated environments"
+      ],
+      "correct_answer": 2,
+      "explanation": "Collaborative robots (Cobots) are specifically designed with safety features to operate in close proximity with humans."
+    },
+    {
+      "id": "q3",
+      "question": "What determines a robot’s mechanical structure?",
+      "options": [
+        "Its ability to process natural language",
+        "Its battery size",
+        "The design and configuration of its joints, arms, and frames",
+        "Its programming language"
+      ],
+      "correct_answer": 2,
+      "explanation": "A robot’s mechanical structure is based on its physical design, including how joints, arms, and frames are arranged."
+    },
+    {
+      "id": "q4",
+      "question": "What is a key benefit of using robots in industrial applications?",
+      "options": [
+        "Increased manual labor requirements",
+        "Slower production rates",
+        "Higher precision and efficiency",
+        "Reduced technology use"
+      ],
+      "correct_answer": 2,
+      "explanation": "Robots in industry improve precision and efficiency, leading to higher quality and faster production processes."
+    },
+    {
+      "id": "q5",
+      "question": "What does ROS (Robot Operating System) primarily provide?",
+      "options": [
+        "A mechanical structure for robots",
+        "A software framework for writing robot applications",
+        "A platform for hardware manufacturing",
+        "An interface for video streaming"
+      ],
+      "correct_answer": 1,
+      "explanation": "ROS is an open-source software framework that provides tools and libraries for building robot applications."
+    },
+    {
+      "id": "q6",
+      "question": "What distinguishes a mobile robot from other types?",
+      "options": [
+        "It stays fixed in one position",
+        "It can move through its environment",
+        "It only performs calculations",
+        "It requires human assistance for every action"
+      ],
+      "correct_answer": 1,
+      "explanation": "Mobile robots are capable of navigating through their environment rather than staying fixed in one place."
+    }
+  ],
+    "settings": {
+      "allow_retry": true,
+      "show_progress": true,
+      "randomize_questions": false,
+      "passing_score": 2
+    }
+  },
+
+  "chat_contexts": {
+    "task_help": "Guide the learner through robotic arm setup, basic movements, and programming pick-and-place operations.",
+    "robot_arm_dof": "Explain degrees of freedom in robotics with examples of 3 DOF vs 6 DOF arms.",
+    "servo_motors": "Detail how servo motors work, their control signals, and why they are ideal for robotics.",
+    "feedback_control": "Explain closed-loop systems and how sensors provide corrections for precise movements.",
+    "quiz_failed": "Review core concepts of DOF, servo motors, and feedback control with examples.",
+    "hints_exhausted": "Provide troubleshooting guidance for wiring, motor calibration, and code debugging."
+  }
+}
