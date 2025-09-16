@@ -143,7 +143,7 @@
                         </div>
                         {{/content.company_logo}}
                         <div>
-                            <h1 class="text-xl font-bold text-gray-900">Nebula KnowLab</h1>
+                            <h1 class="text-xl font-bold bg-clip-text text-transparent bg-[linear-gradient(90deg,#2F5E60,#4B2D59,#7A7F83,#8B3A2A)]">Nebula KnowLab</h1>
                             <p class="text-sm text-gray-500 font-medium">{{title}}</p>
                         </div>
                     </div>
@@ -203,19 +203,7 @@
                 </div>
                 {{/content.hero_image}}
 
-                <!-- Primary Actions -->
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button onclick="startTask()" 
-                            class="group bg-gradient-to-r from-nebula-500 to-nebula-purple-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-medium hover:shadow-strong transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center space-x-3">
-                        <i class="fas fa-rocket group-hover:animate-bounce"></i>
-                        <span>Start Working</span>
-                    </button>
-                    <button onclick="openTaskHelp()" 
-                            class="group border-2 border-nebula-500 text-nebula-500 px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-nebula-500 hover:text-white transition-all duration-300 flex items-center justify-center space-x-3 shadow-soft hover:shadow-medium">
-                        <i class="fas fa-lightbulb group-hover:text-yellow-300"></i>
-                        <span>Get Guidance</span>
-                    </button>
-                </div>
+                
             </div>
         </section>
 
@@ -809,6 +797,16 @@
                 initializeQuiz();
             }
             
+            // Auto-set header progress to "In Progress" when steps exist (no Start button)
+            try {
+                const steps = (window.templateData && (window.templateData.taskSteps || window.templateData.content?.task_steps)) || [];
+                if (Array.isArray(steps) && steps.length > 0) {
+                    if (typeof updateProgress === 'function') updateProgress(2);
+                }
+            } catch (e) {
+                console.warn('Progress init skipped:', e);
+            }
+
             // Initialize chat system
             if (window.chatSystem && window.templateData && window.topicConfig && window.learnerData) {
                 window.chatSystem.initialize(window.templateData, window.topicConfig, window.learnerData);
