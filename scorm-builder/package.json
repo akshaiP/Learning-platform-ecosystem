@@ -15,14 +15,19 @@
         "test:topic": "npm run validate && npm run build:topic && npm run extract && npm run serve:test",
         "serve:test": "node test-server.js",
         "lint": "eslint .",
-        "prestart": "npm run validate"
+        "prestart": "npm run validate",
+        "start:ui": "node web-ui/server.js",
+        "dev:ui": "nodemon web-ui/server.js"
     },
     "dependencies": {
         "archiver": "^6.0.1",
         "chalk": "^4.1.2",
         "commander": "^11.0.0",
+        "ejs": "^3.1.10",
+        "express": "^5.1.0",
         "fs-extra": "^11.1.1",
         "joi": "^17.9.2",
+        "multer": "^2.0.2",
         "mustache": "^4.2.0",
         "unzipper": "^0.12.3",
         "uuid": "^9.0.0",

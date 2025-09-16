@@ -235,7 +235,10 @@ class TopicGenerator {
         let hint = step.hint;
         if (hint && typeof hint === 'object') {
           if (Array.isArray(hint.images)) {
-            // ok
+            // If exactly one image is provided, also expose it as hint.image for the template
+            if (hint.images.length === 1) {
+              hint = { ...hint, image: hint.images[0] };
+            }
           } else if (hint.image) {
             hint = { ...hint, images: [hint.image] };
           }
@@ -552,45 +555,49 @@ class TopicGenerator {
       if (topicConfig.quiz.questions && Array.isArray(topicConfig.quiz.questions)) {
         // New multi-question format validation
         if (topicConfig.quiz.questions.length === 0) {
-          throw new Error('Quiz must have at least one question');
+          // Make this a warning instead of error
+          console.warn('⚠️ Quiz has no questions - quiz section will be hidden');
+        } else {
+          topicConfig.quiz.questions.forEach((question, index) => {
+            if (!question.question) {
+              throw new Error(`Quiz question ${index + 1} is missing the question text`);
+            }
+            if (!Array.isArray(question.options) || question.options.length < 2) {
+              throw new Error(`Quiz question ${index + 1} must have at least 2 options`);
+            }
+            if (typeof question.correct_answer !== 'number' || 
+                question.correct_answer < 0 || 
+                question.correct_answer >= question.options.length) {
+              throw new Error(`Quiz question ${index + 1} correct_answer must be a valid option index`);
+            }
+          });
         }
         
-        topicConfig.quiz.questions.forEach((question, index) => {
-          if (!question.question) {
-            throw new Error(`Quiz question ${index + 1} is missing the question text`);
-          }
-          if (!Array.isArray(question.options) || question.options.length < 2) {
-            throw new Error(`Quiz question ${index + 1} must have at least 2 options`);
-          }
-          if (typeof question.correct_answer !== 'number' || 
-              question.correct_answer < 0 || 
-              question.correct_answer >= question.options.length) {
-            throw new Error(`Quiz question ${index + 1} correct_answer must be a valid option index`);
-          }
-        });
-        
         // Validate quiz settings if present
-        if (topicConfig.quiz.settings) {
+        if (topicConfig.quiz.settings && topicConfig.quiz.questions.length > 0) {
           if (typeof topicConfig.quiz.settings.passing_score === 'number' && 
               (topicConfig.quiz.settings.passing_score < 0 || 
-               topicConfig.quiz.settings.passing_score > topicConfig.quiz.questions.length)) {
+              topicConfig.quiz.settings.passing_score > topicConfig.quiz.questions.length)) {
             throw new Error('Quiz passing_score must be between 0 and total number of questions');
           }
         }
       } else {
         // Legacy single-question format validation
         if (!topicConfig.quiz.question) {
-          throw new Error('Quiz question is required');
-        }
-        if (!Array.isArray(topicConfig.quiz.options) || topicConfig.quiz.options.length < 2) {
-          throw new Error('Quiz must have at least 2 options');
-        }
-        if (typeof topicConfig.quiz.correct_answer !== 'number' || 
-            topicConfig.quiz.correct_answer < 0 || 
-            topicConfig.quiz.correct_answer >= topicConfig.quiz.options.length) {
-          throw new Error('Quiz correct_answer must be a valid option index');
+          console.warn('⚠️ Quiz question is missing - quiz section will be hidden');
+        } else {
+          if (!Array.isArray(topicConfig.quiz.options) || topicConfig.quiz.options.length < 2) {
+            throw new Error('Quiz must have at least 2 options');
+          }
+          if (typeof topicConfig.quiz.correct_answer !== 'number' || 
+              topicConfig.quiz.correct_answer < 0 || 
+              topicConfig.quiz.correct_answer >= topicConfig.quiz.options.length) {
+            throw new Error('Quiz correct_answer must be a valid option index');
+          }
         }
       }
+    } else {
+      console.log('ℹ️ No quiz defined - quiz section will be hidden');
     }
 
     // Enhanced validation for new template structure

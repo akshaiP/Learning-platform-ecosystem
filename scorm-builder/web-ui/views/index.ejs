@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/form-styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'nebula': {
+                            500: '#4A9B8E',
+                            600: '#3d8379',
+                            700: '#2f6b64'
+                        },
+                        'nebula-purple': {
+                            500: '#6B4C93',
+                            600: '#5a3d7a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-gradient-to-r from-nebula-500 to-nebula-purple-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">SCORM Builder</h1>
+                        <p class="text-sm text-gray-500">Create Interactive Learning Content</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="saveDraft()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Save Draft
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <form id="scormForm" class="space-y-8">
+            
+            <!-- Topic Basic Information -->
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                <div class="flex items-center mb-6">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3">1</div>
+                    <h2 class="text-2xl font-bold text-gray-900">Topic Information</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Topic Title *</label>
+                        <input type="text" name="title" required 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
+                               placeholder="e.g., NLP & Text Summarization with AI">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Topic ID *</label>
+                        <input type="text" name="topicId" required 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
+                               placeholder="e.g., nlp-text-summarization">
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                    <textarea name="description" required rows="3"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
+                              placeholder="Brief description of what learners will achieve..."></textarea>
+                </div>
+                
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Task Statement *</label>
+                    <input type="text" name="taskStatement" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
+                           placeholder="e.g., Build a Text Summarization Web App">
+                </div>
+                
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
+                    <div class="flex items-center space-x-4">
+                        <input type="file" name="companyLogo" accept="image/*" class="hidden" id="companyLogoInput">
+                        <button type="button" onclick="document.getElementById('companyLogoInput').click()" 
+                                class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-4 text-center hover:border-gray-400 transition-colors">
+                            <i class="fas fa-upload text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-600">Click to upload logo</p>
+                        </button>
+                        <div id="companyLogoPreview" class="hidden">
+                            <img class="h-12 w-auto rounded-lg shadow-sm" alt="Company Logo Preview">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Learning Objectives -->
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-3">2</div>
+                        <h2 class="text-2xl font-bold text-gray-900">Learning Objectives</h2>
+                    </div>
+                    <button type="button" onclick="addLearningObjective()" 
+                            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Objective
+                    </button>
+                </div>
+                
+                <div id="learningObjectives" class="space-y-4">
+                    <div class="flex items-center space-x-4 learning-objective-item">
+                        <input type="text" name="learningObjectives[]" 
+                               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                               placeholder="What will learners achieve?">
+                        <button type="button" onclick="removeLearningObjective(this)" 
+                                class="text-red-500 hover:text-red-700 p-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Task Steps Builder -->
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">3</div>
+                        <h2 class="text-2xl font-bold text-gray-900">Task Steps</h2>
+                    </div>
+                    <button type="button" onclick="addTaskStep()" 
+                            class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Step
+                    </button>
+                </div>
+                
+                <div id="taskSteps" class="space-y-8">
+                    <!-- Task steps will be dynamically added here -->
+                </div>
+            </section>
+
+            <!-- Hero Section & Concepts -->
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                <div class="flex items-center mb-6">
+                    <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold mr-3">4</div>
+                    <h2 class="text-2xl font-bold text-gray-900">Hero Section & Concepts</h2>
+                </div>
+                
+                <!-- Hero Image -->
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Hero Image</label>
+                    <div class="flex items-center space-x-4">
+                        <input type="file" name="heroImage" accept="image/*" class="hidden" id="heroImageInput">
+                        <button type="button" onclick="document.getElementById('heroImageInput').click()" 
+                                class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-4 text-center hover:border-gray-400 transition-colors">
+                            <i class="fas fa-image text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-600">Upload hero image</p>
+                        </button>
+                        <div id="heroImagePreview" class="hidden">
+                            <img class="h-24 w-auto rounded-lg shadow-sm" alt="Hero Image Preview">
+                        </div>
+                    </div>
+                    <input type="text" name="heroImageCaption" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 mt-4"
+                           placeholder="Hero image caption (optional)">
+                </div>
+                
+                <!-- Concepts -->
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Key Concepts</h3>
+                        <button type="button" onclick="addConcept()" 
+                                class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm">
+                            <i class="fas fa-plus mr-2"></i>Add Concept
+                        </button>
+                    </div>
+                    <div id="concepts" class="space-y-6">
+                        <!-- Concepts will be dynamically added here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quiz Builder -->
+            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold mr-3">5</div>
+                        <h2 class="text-2xl font-bold text-gray-900">Knowledge Check Quiz</h2>
+                    </div>
+                    <button type="button" onclick="addQuizQuestion()" 
+                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Question
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
+                        <input type="text" name="quizTitle" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                               placeholder="e.g., Knowledge Check" value="Knowledge Check">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Description</label>
+                        <input type="text" name="quizDescription" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                               placeholder="Brief description of the quiz">
+                    </div>
+                </div>
+                
+                <div id="quizQuestions" class="space-y-6">
+                    <!-- Quiz questions will be dynamically added here -->
+                </div>
+            </section>
+
+            <!-- Generate Section -->
+            <section class="bg-gradient-to-r from-nebula-500 to-nebula-purple-500 rounded-2xl shadow-lg p-8 text-white">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold mb-4">Generate Your SCORM Package</h2>
+                    <p class="text-lg mb-8 opacity-90">Review your content and generate the final SCORM package for your LMS</p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button type="button" onclick="generateSCORM()" 
+                                class="bg-white text-nebula-500 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors flex items-center justify-center space-x-3 shadow-lg">
+                            <i class="fas fa-cogs"></i>
+                            <span>Generate SCORM Package</span>
+                        </button>
+                        <button type="button" onclick="startPreviewServer()" 
+                                class="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-nebula-500 transition-colors flex items-center justify-center space-x-3">
+                            <i class="fas fa-eye"></i>
+                            <span>Preview Content</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </form>
+    </main>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-nebula-500 mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Generating SCORM Package</h3>
+            <p class="text-gray-600">Please wait while we build your learning content...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center">
+            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check text-white text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">SCORM Package Generated!</h3>
+            <p class="text-gray-600 mb-6">Your learning content is ready for download and preview.</p>
+            <div class="space-y-3">
+                <button id="downloadBtn" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors w-full">
+                    <i class="fas fa-download mr-2"></i>Download SCORM Package
+                </button>
+                <button id="previewBtn" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors w-full">
+                    <i class="fas fa-eye mr-2"></i>Preview in Test Server
+                </button>
+                <button type="button" onclick="document.getElementById('successModal').classList.add('hidden')" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors w-full">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/form-handler.js"></script>
+    <script src="/js/image-upload.js"></script>
+
+    <script>
+        // Add this function to handle preview - UPDATED
+        function startPreviewServer() {
+            console.log('Starting preview server...');
+            
+            // Start the test server
+            fetch('/start-preview', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show immediate feedback
+                        alert('Preview server is starting... Opening in 3 seconds');
+                        
+                        // Open preview in new tab after delay
+                        setTimeout(() => {
+                            window.open('http://localhost:8080', '_blank');
+                        }, 3000);
+                    } else {
+                        alert('Failed to start preview server: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Preview error:', error);
+                    alert('Could not start preview server. Make sure the SCORM package was generated successfully.');
+                });
+        }
+        
+        // Update the success modal to connect the preview button
+        function showSuccessModal(downloadUrl, filename) {
+            const modal = document.getElementById('successModal');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const previewBtn = document.getElementById('previewBtn');
+            
+            downloadBtn.onclick = () => {
+                window.location.href = downloadUrl;
+                modal.classList.add('hidden');
+            };
+            
+            // Connect preview button to the function
+            previewBtn.onclick = () => {
+                startPreviewServer();
+            };
+            
+            modal.classList.remove('hidden');
+        }
+    </script>        
+</body>
+</html>

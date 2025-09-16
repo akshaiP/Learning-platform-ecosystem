@@ -192,25 +192,6 @@
           },
           "learn_more_context": "prompt_engineering"
         }
-      ],
-      
-      
-      "task_images": [
-        {
-          "src": "gemini-api-studio.jpg",
-          "alt": "Google AI Studio interface",
-          "caption": "Google AI Studio - Your gateway to Gemini API access"
-        },
-        {
-          "src": "cursor-vibe-coding.jpg", 
-          "alt": "Cursor IDE in action",
-          "caption": "Cursor IDE enabling 'vibe coding' with AI assistance"
-        },
-        {
-          "src": "summarization-demo.jpg",
-          "alt": "Working summarization app",
-          "caption": "Final app: Transform long text into concise, meaningful summaries"
-        }
       ]
     },
     
