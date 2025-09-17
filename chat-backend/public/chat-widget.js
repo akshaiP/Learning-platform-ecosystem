@@ -14,6 +14,7 @@ class ChatWidget {
     this.currentTopic = options.topic || 'general';
     this.currentContext = options.context || 'general';
     this.learnerData = options.learnerData || {};
+    this.contextData = options.contextData || null; // optional hidden context for first message only
     
     if (!this.isInitialized) {
       this.createUI();
@@ -105,6 +106,14 @@ class ChatWidget {
         learnerData: this.learnerData,
         isFirstMessage: isFirst
       };
+
+      // If first message and we have extra hidden context, append it to the message that goes to backend
+      if (isFirst && this.contextData && this.contextData.additionalContextText) {
+        const hiddenContext = this.contextData.additionalContextText.trim();
+        if (hiddenContext) {
+          payload.message = `${messageText}\n\nAdditional context: ${hiddenContext}`;
+        }
+      }
 
       if (this.sessionId && !isFirst) {
         payload.sessionId = this.sessionId;

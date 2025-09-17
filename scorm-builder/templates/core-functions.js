@@ -19,7 +19,7 @@ function initializeTemplate() {
     maxHints = templateData.hints ? templateData.hints.length : 0;
     
     topicConfig = {
-        topic: templateData.id,
+        topic: templateData.title || templateData.id,
         backendUrl: templateData.backendUrl,
         contexts: templateData.chatContexts || {}
     };

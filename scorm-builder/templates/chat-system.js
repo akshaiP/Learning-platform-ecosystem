@@ -37,6 +37,14 @@ class ChatSystem {
                 const conceptTitle = additionalData.conceptTitle || 'this concept';
                 const learnMoreContext = additionalData.learnMoreContext || 'general';
                 const conceptSummary = additionalData.conceptSummary || '';
+                let additionalContextText = '';
+                if (this.topicConfig && this.topicConfig.contexts) {
+                    additionalContextText = this.topicConfig.contexts[learnMoreContext] || '';
+                }
+                // If mapping not found, fall back to the literal learn_more_context value (which may itself be a prompt)
+                if (!additionalContextText && typeof learnMoreContext === 'string') {
+                    additionalContextText = learnMoreContext;
+                }
                 
                 return {
                     context: 'learn_more', 
@@ -45,6 +53,7 @@ class ChatSystem {
                         conceptTitle: conceptTitle,
                         conceptSummary: conceptSummary,
                         learnMoreContext: learnMoreContext,
+                        additionalContextText: additionalContextText,
                         topicTitle: template.title || 'This topic',
                         taskStatement: template.taskStatement || 'The assigned task'
                     }
