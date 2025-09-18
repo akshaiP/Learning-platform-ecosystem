@@ -447,7 +447,7 @@
                                             <h6 class="font-semibold text-amber-800 mb-2">Hint</h6>
                                             
                                             <!-- Hint Text -->
-                                            <p class="text-amber-700 leading-relaxed mb-4">{{hint.text}}</p>
+                                            <p class="text-amber-700 leading-relaxed mb-4 whitespace-pre-line">{{{hint.text}}}</p>
                                             
                                             <!-- Hint Image(s) (single or carousel) -->
                                             {{#hint.image}}
@@ -619,6 +619,168 @@
             </div>
         </section>
         {{/quiz}}
+
+        <section class="bg-gradient-to-br from-gray-50 to-white border-t border-gray-200">
+            <div id="feedback-form" class="max-w-xl mx-auto p-8 bg-white/90 rounded-2xl shadow-strong border border-gray-200 mt-12">
+                    <!-- Hidden template data for SCORM integration -->
+                    <script type="application/json" id="templateData">
+                        {"id": "course-001", "title": "Sample Course"}
+                    </script>
+
+                    <h2 class="text-2xl font-bold text-center text-gray-800 mb-8">📋 Course Feedback</h2>
+
+                    <label class="block mb-2 font-semibold text-gray-700">Difficulty Level:</label>
+                    <div class="flex gap-4 mb-6 flex-wrap">
+                        <label class="radio-option flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-gray-50 cursor-pointer hover:bg-blue-50 transition" for="diff-easy">
+                            <input type="radio" id="diff-easy" name="difficulty" value="Easy" class="accent-nebula-500">
+                            <span class="font-medium text-gray-700">Easy</span>
+                        </label>
+                        <label class="radio-option flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-gray-50 cursor-pointer hover:bg-blue-50 transition" for="diff-medium">
+                            <input type="radio" id="diff-medium" name="difficulty" value="Medium" checked class="accent-nebula-500">
+                            <span class="font-medium text-gray-700">Medium</span>
+                        </label>
+                        <label class="radio-option flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-gray-50 cursor-pointer hover:bg-blue-50 transition" for="diff-hard">
+                            <input type="radio" id="diff-hard" name="difficulty" value="Hard" class="accent-nebula-500">
+                            <span class="font-medium text-gray-700">Hard</span>
+                        </label>
+                    </div>
+
+                    <label for="taskSuggestions" class="block mb-2 font-semibold text-gray-700">Task-based Suggestions:</label>
+                    <textarea id="taskSuggestions" placeholder="Share your suggestions..." class="w-full min-h-[80px] p-3 mb-6 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-nebula-500"></textarea>
+
+                    <label for="improvementSuggestions" class="block mb-2 font-semibold text-gray-700">Improvement Suggestions:</label>
+                    <textarea id="improvementSuggestions" placeholder="How can we improve?" class="w-full min-h-[80px] p-3 mb-6 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-nebula-500"></textarea>
+
+                    <label class="block mb-2 font-semibold text-gray-700">Faced any difficulty while learning?</label>
+                    <select id="facedDifficulty" class="w-full p-3 mb-6 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-nebula-500">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+
+                    <textarea id="difficultyDetails" placeholder="If yes, describe..." style="display:none;" class="w-full min-h-[60px] p-3 mb-6 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-nebula-500"></textarea>
+
+                    <button onclick="submitFeedback()" class="w-full py-3 px-6 bg-nebula-500 hover:bg-nebula-600 text-white font-semibold rounded-lg shadow-md transition">Submit Feedback</button>
+
+        <script type="module">
+                    // 🔹 Firebase SDK
+                    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+                    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
+                    import { getFirestore, collection, addDoc, serverTimestamp } 
+                        from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+                    // 🔹 Firebase Config
+                    const firebaseConfig = {
+                        apiKey: "AIzaSyBhROBmVVOcM5yYbSzW5C3StWsGqv1GHyE",
+                        authDomain: "forms-72965.firebaseapp.com",
+                        projectId: "forms-72965",
+                        storageBucket: "forms-72965.firebasestorage.app",
+                        messagingSenderId: "51252204087",
+                        appId: "1:51252204087:web:bde35116613b1404c2a5b2",
+                        measurementId: "G-XPWKMKF4FS"
+                    };
+
+                    const app = initializeApp(firebaseConfig);
+                    const analytics = getAnalytics(app);
+                    const db = getFirestore(app);
+
+                    // 🔹 Parse templateData JSON
+                    function getTemplateData() {
+                        try {
+                            const raw = document.getElementById("templateData").textContent;
+                            return JSON.parse(raw);
+                        } catch (e) {
+                            console.error("❌ Could not parse templateData:", e);
+                            return {};
+                        }
+                    }
+
+                    // 🔹 UI Helpers for Radio Buttons
+                    document.querySelectorAll('input[name="difficulty"]').forEach(radio => {
+                        radio.addEventListener('change', function() {
+                            // Remove selected class from all options
+                            document.querySelectorAll('.radio-option').forEach(option => {
+                                option.classList.remove('selected');
+                            });
+                            // Add selected class to the parent of checked radio
+                            if (this.checked) {
+                                this.closest('.radio-option').classList.add('selected');
+                            }
+                        });
+                    });
+
+                    // Set initial selected state
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const checkedRadio = document.querySelector('input[name="difficulty"]:checked');
+                        if (checkedRadio) {
+                            checkedRadio.closest('.radio-option').classList.add('selected');
+                        }
+                    });
+
+                    document.getElementById("facedDifficulty").addEventListener("change", (e) => {
+                        document.getElementById("difficultyDetails").style.display = e.target.value === "yes" ? "block" : "none";
+                    });
+
+                    // 🔹 Submit Form
+                    window.submitFeedback = async function() {
+                        // Use scorm-api.js for learner data if available
+                        let learnerId = "unknown-learner";
+                        let learnerName = "Anonymous";
+                        if (window.scormLearnerData && window.scormLearnerData.id) {
+                            learnerId = window.scormLearnerData.id;
+                        }
+                        if (window.scormLearnerData && window.scormLearnerData.name) {
+                            learnerName = window.scormLearnerData.name;
+                        }
+
+                        // Get template data
+                        const templateData = getTemplateData();
+                        const courseId = templateData.id || "unknown-course";
+                        const courseTitle = templateData.title || "Untitled Course";
+
+                        // Get selected difficulty level
+                        const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked');
+                        const difficultyValue = selectedDifficulty ? selectedDifficulty.value : "Medium";
+
+                        const data = {
+                            learnerId,
+                            learnerName,
+                            courseId,
+                            courseTitle,
+                            difficulty: difficultyValue,
+                            taskSuggestions: document.getElementById("taskSuggestions").value,
+                            improvementSuggestions: document.getElementById("improvementSuggestions").value,
+                            facedDifficulty: document.getElementById("facedDifficulty").value === "yes",
+                            difficultyDetails: document.getElementById("difficultyDetails").value,
+                            submittedAt: serverTimestamp()
+                        };
+
+                        try {
+                            await addDoc(collection(db, "feedbacks"), data);
+                            alert("✅ Feedback submitted successfully!");
+                            // Reset form fields
+                            const mediumRadio = document.querySelector('input[name="difficulty"][value="Medium"]');
+                            if (mediumRadio) mediumRadio.checked = true;
+                            document.querySelectorAll('.radio-option').forEach(option => {
+                                option.classList.remove('selected');
+                            });
+                            const checkedRadio = document.querySelector('input[name="difficulty"]:checked');
+                            if (checkedRadio) {
+                                const label = checkedRadio.closest('.radio-option');
+                                if (label) label.classList.add('selected');
+                            }
+                            document.getElementById("taskSuggestions").value = "";
+                            document.getElementById("improvementSuggestions").value = "";
+                            document.getElementById("facedDifficulty").value = "no";
+                            document.getElementById("difficultyDetails").value = "";
+                            document.getElementById("difficultyDetails").style.display = "none";
+                        } catch (e) {
+                            console.error("❌ Error adding document: ", e);
+                            alert("Error submitting feedback.");
+                        }
+                    };
+                </script>
+        </div>
+        </section>
 
         <!-- Enhanced Navigation Footer -->
         <footer class="bg-white border-t border-gray-200">

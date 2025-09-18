@@ -1,0 +1,227 @@
+{
+    "title": "Fundamentals of Robotics",
+    "description": "Basics",
+  
+    "learning_objectives": [
+      "Understand the Fundamental Principles of Robotics",
+      "Compare Traditional Robotics Control with ROS-Based Control",
+      "Learn how to operate robots using ROS Slider GUI"
+    ],
+  
+    "content": {
+      "company_logo": {
+        "src": "nebula-logo.png",
+        "alt": "Nebula KnowLab Logo"
+      },
+  
+      "task_statement": "Fundamentals of Robotics",
+  
+      "task_steps": [
+        {
+            "title": "Open Command Prompt",
+            "description": "Start by opening a command prompt on your system to run ROS commands.",
+            "instructions": "Open a command prompt window",
+            "images": [
+            {
+                "src": "1.png",
+                "alt": "Ubuntu terminal",
+                "caption": "Step 1: Open a terminal to run ROS2 commands"
+            }
+            ]
+        },
+        {
+            "title": "Launch Ubuntu ROS Terminal",
+            "description": "From your environment options, select Ubuntu to start the ROS terminal session.",
+            "instructions": "Select the Ubuntu terminal option",
+            "images": [
+            {
+                "src": "2.png",
+                "alt": "Ubuntu terminal launch",
+                "caption": "Step 2: Launch Ubuntu terminal for ROS2"
+            }
+            ]
+        },
+        {
+            "title": "Launch RViz",
+            "description": "Open RViz visualization to monitor robot state and environment.",
+            "instructions": "1) Enter the ROS launch command:\n2) Wait for RViz to start\n3) A new window should open displaying the visualization",
+            "images": [
+            {
+                "src": "3.png",
+                "alt": "RViz launch",
+                "caption": "Step 3: Launch RViz using ROS2 command"
+            }
+            ],
+            "code": {
+                "content": "ros2 launch nebula gripper.launch.py",
+                "language": "bash"
+            }
+        },
+        {
+            "title": "RViz Visualization",
+            "description": "Verify that RViz has successfully started and shows your robot layout.",
+            "instructions": "1) Look for the RViz window\n2) Ensure no errors are displayed\n3) Confirm the robot model is visible in the 3D view",
+            "images": [
+            {
+                "src": "4.png",
+                "alt": "RViz visualization"
+            }
+            ]
+        },
+        {
+            "title": "Check Robot in Layout",
+            "description": "Make sure your robot is correctly displayed inside the RViz layout.",
+            "instructions": "1) Look for the robot model in the RViz scene\n2) Confirm all joints and links are properly loaded",
+            "images": [
+            {
+                "src": "5.png",
+                "alt": "Robot layout in RViz",
+                "caption": "Step 4: Verify robot model inside RViz layout"
+            }
+            ]
+        },
+        {
+            "title": "Adjust Position Layout",
+            "description": "Rearrange the RViz tabs and slider panels for easier programming.",
+            "instructions": "1) Drag the panels in RViz to create a comfortable workspace\n2) Place the slider GUI next to the 3D robot view",
+            "images": [
+            {
+                "src": "5.png",
+                "alt": "Adjusting RViz panels",
+                "caption": "Step 5: Adjust RViz layout and sliders for easier control"
+            }
+            ]
+        },
+        {
+            "title": "Robot Programming with Sliders",
+            "description": "Control the robot joint-by-joint, record waypoints, and test movements.",
+            "instructions": "Generate a program to move the robot from Point A to Point B using the sliders.\na) Approach Point A\nb) Close the gripper to grasp the object\nc) Retract upwards slightly\nd) Move to Point B\ne) Lower down to place the object\nf) Open the gripper to release\ng) Return to the home position\n\n Use sliders to adjust each motion, record waypoints for every step, and play them sequentially.",
+            "images": [
+            {
+                "src": "6.png",
+                "alt": "Robot programming with sliders"
+            }
+            ],
+            "hint": {
+                "text": "a) Use sliders to move robot joints and operate the gripper\nb) Click 'Record Waypoint' to save the current pose as a waypoint\nc) Select a waypoint and use 'Play Selected' to replay it\n   - You can also play waypoints sequentially\n   - Delete waypoints if you recorded an incorrect pose\nd) Adjust the movement speed with the speed slider"
+              }
+        }
+    ],
+
+      "hero_image": {
+        "src": "ros-robotics-hero.png",
+        "alt": "ROS-based robot control"
+      },
+  
+      "concepts": [
+        {
+          "title": "1. Fundamental Working Principles of Robots",
+          "summary": "Robots follow the cycle of Sensing → Processing → Acting to interact with their environment.",
+          "image": {
+            "src": "fundamental.jpeg",
+            "alt": "Robot cycle: sensing, processing, acting"
+          },
+          "learn_more_context": "robot_principles"
+        },
+        {
+          "title": "2. Traditional Robotics vs. ROS",
+          "summary": "Traditional robotics is proprietary and hardware-tied, while ROS is open-source, modular, and supports simulation (RViz, Gazebo).",
+          "image": {
+            "src": "trad-vs-ros.jpeg",
+            "alt": "Comparison chart of traditional vs ROS"
+          },
+          "learn_more_context": "ros_vs_traditional"
+        },
+        {
+          "title": "3. GUI-Based Robot Control in ROS",
+          "summary": "ROS enables real-time robot operation via GUI sliders, publishing joint angles or velocities to topics.",
+          "image": {
+            "src": "slider-control.jpeg",
+            "alt": "ROS slider GUI for robot control"
+          },
+          "learn_more_context": "ros_gui_control"
+        }
+      ]
+    },
+  
+    "quiz": {
+      "title": "Knowledge Check: ROS Robotics",
+      "description": "Test your understanding of ROS-based robotics concepts",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Which of the following best represents the working cycle of robots?",
+          "options": [
+            "Build → Code → Test",
+            "Sense → Process → Act",
+            "Input → Store → Output",
+            "Charge → Work → Rest"
+          ],
+          "correct_answer": 1,
+          "explanation": "Robots operate in a loop of sensing the environment, processing data, and acting based on decisions."
+        },
+        {
+          "id": "q2",
+          "question": "What is a major advantage of ROS over traditional robotics programming?",
+          "options": [
+            "It works only with one brand of robots",
+            "It is proprietary and costly",
+            "It is open-source and modular",
+            "It eliminates the need for sensors"
+          ],
+          "correct_answer": 2,
+          "explanation": "ROS is open-source, modular, and allows integration across different robot platforms."
+        },
+        {
+          "id": "q3",
+          "question": "In ROS, sensor data is shared between nodes using:",
+          "options": [
+            "USB cables",
+            "Topics and messages",
+            "Only files",
+            "Power supply"
+          ],
+          "correct_answer": 1,
+          "explanation": "ROS nodes communicate by publishing and subscribing to topics using structured messages."
+        },
+        {
+          "id": "q4",
+          "question": "What happens when you move a slider in a ROS slider GUI?",
+          "options": [
+            "It publishes commands to a ROS topic",
+            "It increases the battery capacity",
+            "It deletes a ROS node",
+            "It restarts the controller"
+          ],
+          "correct_answer": 0,
+          "explanation": "Slider movement in ROS GUIs publishes messages (e.g., joint angles) to a topic."
+        },
+        {
+          "id": "q5",
+          "question": "Why is GUI-based control useful in robotics learning?",
+          "options": [
+            "Makes robots look fancy",
+            "Allows intuitive real-time control",
+            "Reduces the need for programming entirely",
+            "Increases robot weight"
+          ],
+          "correct_answer": 1,
+          "explanation": "GUI sliders provide intuitive, hands-on real-time control, making it easier to learn robot operation."
+        }
+      ],
+      "settings": {
+        "allow_retry": true,
+        "show_progress": true,
+        "randomize_questions": false,
+        "passing_score": 3
+      }
+    },
+  
+    "chat_contexts": {
+      "task_help": "Guide the learner through setting up the ROS slider GUI and visualizing joint movement in RViz.",
+      "ros_vs_traditional": "Explain the differences between traditional robot programming and modular ROS-based frameworks.",
+      "slider_gui": "Detail how slider GUIs publish messages to topics in ROS and allow intuitive robot control.",
+      "quiz_failed": "Review sense-process-act, ROS communication (topics), and GUI slider publishing with simple examples.",
+      "hints_exhausted": "Provide troubleshooting steps for ROS2 environment sourcing, slider GUI installation, and RViz setup."
+    }
+  }  
