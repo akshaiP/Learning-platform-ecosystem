@@ -152,6 +152,17 @@ class QuizSystem {
         }
 
         if (result) result.classList.remove('hidden');
+
+        // Disable all options after selection to prevent changes
+        try {
+            options.forEach(opt => {
+                opt.disabled = true;
+                opt.classList.add('cursor-not-allowed', 'opacity-75');
+            });
+        } catch (e) {
+            // no-op safeguard
+        }
+
         this.updateNavigation();
     }
 
