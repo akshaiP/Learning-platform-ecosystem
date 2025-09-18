@@ -109,7 +109,8 @@ async function createTopicFromFormData(body, files, topicDir) {
     }
     
     // Parse form data properly - handle both JSON strings and direct values
-    const learningObjectives = parseFormArray(body.learningObjectives);
+    // Prefer JSON field to avoid mixing with learningObjectives[] flat inputs
+    const learningObjectives = parseFormArray(body.learningObjectivesJson || body.learningObjectives);
     const taskSteps = parseItemsFlexible(body, 'taskStep', 'taskSteps');
     const concepts = parseItemsFlexible(body, 'concept', 'concepts');
     const quizQuestions = parseItemsFlexible(body, 'quizQuestion', 'quizQuestions');

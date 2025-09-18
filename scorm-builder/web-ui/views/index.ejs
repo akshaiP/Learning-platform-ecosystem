@@ -70,7 +70,7 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Topic ID *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Topic ID (No spaces or special characters allowed) *</label>
                         <input type="text" name="topicId" required 
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
                                placeholder="e.g., nlp-text-summarization">
@@ -109,15 +109,9 @@
 
             <!-- Learning Objectives -->
             <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-3">2</div>
-                        <h2 class="text-2xl font-bold text-gray-900">Learning Objectives</h2>
-                    </div>
-                    <button type="button" onclick="addLearningObjective()" 
-                            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Add Objective
-                    </button>
+                <div class="flex items-center mb-6">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-3">2</div>
+                    <h2 class="text-2xl font-bold text-gray-900">Learning Objectives</h2>
                 </div>
                 
                 <div id="learningObjectives" class="space-y-4">
@@ -131,23 +125,31 @@
                         </button>
                     </div>
                 </div>
+                
+                <div class="mt-6">
+                    <button type="button" onclick="addLearningObjective()" 
+                            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Objective
+                    </button>
+                </div>
             </section>
 
             <!-- Task Steps Builder -->
             <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">3</div>
-                        <h2 class="text-2xl font-bold text-gray-900">Task Steps</h2>
-                    </div>
-                    <button type="button" onclick="addTaskStep()" 
-                            class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Add Step
-                    </button>
+                <div class="flex items-center mb-6">
+                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">3</div>
+                    <h2 class="text-2xl font-bold text-gray-900">Task Steps</h2>
                 </div>
                 
                 <div id="taskSteps" class="space-y-8">
                     <!-- Task steps will be dynamically added here -->
+                </div>
+                
+                <div class="mt-6">
+                    <button type="button" onclick="addTaskStep()" 
+                            class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Step
+                    </button>
                 </div>
             </section>
 
@@ -179,30 +181,26 @@
                 
                 <!-- Concepts -->
                 <div>
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="mb-4">
                         <h3 class="text-lg font-semibold text-gray-900">Key Concepts</h3>
+                    </div>
+                    <div id="concepts" class="space-y-6">
+                        <!-- Concepts will be dynamically added here -->
+                    </div>
+                    <div class="mt-6">
                         <button type="button" onclick="addConcept()" 
                                 class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm">
                             <i class="fas fa-plus mr-2"></i>Add Concept
                         </button>
-                    </div>
-                    <div id="concepts" class="space-y-6">
-                        <!-- Concepts will be dynamically added here -->
                     </div>
                 </div>
             </section>
 
             <!-- Quiz Builder -->
             <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold mr-3">5</div>
-                        <h2 class="text-2xl font-bold text-gray-900">Knowledge Check Quiz</h2>
-                    </div>
-                    <button type="button" onclick="addQuizQuestion()" 
-                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Add Question
-                    </button>
+                <div class="flex items-center mb-6">
+                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold mr-3">5</div>
+                    <h2 class="text-2xl font-bold text-gray-900">Knowledge Check Quiz</h2>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -223,6 +221,13 @@
                 <div id="quizQuestions" class="space-y-6">
                     <!-- Quiz questions will be dynamically added here -->
                 </div>
+                
+                <div class="mt-6">
+                    <button type="button" onclick="addQuizQuestion()" 
+                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Question
+                    </button>
+                </div>
             </section>
 
             <!-- Generate Section -->
@@ -237,11 +242,11 @@
                             <i class="fas fa-cogs"></i>
                             <span>Generate SCORM Package</span>
                         </button>
-                        <button type="button" onclick="startPreviewServer()" 
+                        <!-- <button type="button" onclick="startPreviewServer()" 
                                 class="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-nebula-500 transition-colors flex items-center justify-center space-x-3">
                             <i class="fas fa-eye"></i>
                             <span>Preview Content</span>
-                        </button>
+                        </button> -->
                     </div>
                 </div>
             </section>

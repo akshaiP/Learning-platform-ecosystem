@@ -38,6 +38,12 @@ function addLearningObjective() {
         </button>
     `;
     container.appendChild(div);
+    
+    // Focus on the new input and scroll to it
+    const newInput = div.querySelector('input');
+    newInput.focus();
+    newInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
     autoSave();
 }
 
@@ -107,7 +113,9 @@ function addTaskStep() {
 
         <!-- Step Images (Multiple) -->
         <div class="mt-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Step Images</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Step Images <span class="text-gray-500 text-xs">(for multiple images, select them all at once and upload)</span>
+            </label>
             <div class="flex items-center space-x-4">
                 <input type="file" multiple accept="image/*" class="hidden" id="taskStep_${stepId}_images_input" name="taskStep_${stepId}_images">
                 <button type="button" onclick="document.getElementById('taskStep_${stepId}_images_input').click()" 
@@ -150,7 +158,9 @@ function addTaskStep() {
                 </div>
                 <!-- Hint Images (Multiple) -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Hint Images</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Hint Images <span class="text-gray-500 text-xs">(for multiple images, select them all at once and upload)</span>
+                    </label>
                     <div class="flex items-center space-x-4">
                         <input type="file" multiple accept="image/*" class="hidden" id="taskStep_${stepId}_hintImages_input" name="taskStep_${stepId}_hintImages">
                         <button type="button" onclick="document.getElementById('taskStep_${stepId}_hintImages_input').click()" 
@@ -171,6 +181,14 @@ function addTaskStep() {
         setupImagePreview(`taskStep_${stepId}_images_input`, `taskStep_${stepId}_images_preview`, false);
         setupImagePreview(`taskStep_${stepId}_hintImages_input`, `taskStep_${stepId}_hintImages_preview`, false);
     }
+    
+    // Focus on the new step and scroll to it
+    const newStep = div.querySelector('input[name*="_title"]');
+    if (newStep) {
+        newStep.focus();
+        newStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
     autoSave();
 }
 
@@ -244,6 +262,14 @@ function addConcept() {
     if (typeof setupImagePreview === 'function') {
         setupImagePreview(`concept_${conceptId}_image_input`, `concept_${conceptId}_image_preview`, true);
     }
+    
+    // Focus on the new concept and scroll to it
+    const newConcept = div.querySelector('input[name*="_title"]');
+    if (newConcept) {
+        newConcept.focus();
+        newConcept.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
     autoSave();
 }
 
@@ -334,6 +360,14 @@ function addQuizQuestion() {
     if (typeof setupImagePreview === 'function') {
         setupImagePreview(`quizQuestion_${questionId}_explanationImage_input`, `quizQuestion_${questionId}_explanationImage_preview`, true);
     }
+    
+    // Focus on the new question and scroll to it
+    const newQuestion = div.querySelector('textarea[name*="_question"]');
+    if (newQuestion) {
+        newQuestion.focus();
+        newQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
     autoSave();
 }
 
@@ -411,8 +445,8 @@ function collectFormData() {
         quizDescription: form.querySelector('input[name="quizDescription"]')?.value || 'Test your understanding'
     };
     
-    // Learning objectives
-    data.learningObjectives = Array.from(form.querySelectorAll('input[name="learningObjectives[]"]'))
+    // Learning objectives - collect only from the dynamic inputs, not the static one
+    data.learningObjectives = Array.from(form.querySelectorAll('.learning-objective-item input[name="learningObjectives[]"]'))
         .map(input => input.value.trim())
         .filter(value => value !== '');
     
@@ -504,7 +538,8 @@ async function generateSCORM() {
         const formData = new FormData(document.getElementById('scormForm'));
         
         // Add our structured data as JSON strings
-        formData.set('learningObjectives', JSON.stringify(data.learningObjectives));
+        // Use a distinct key to avoid merging with learningObjectives[]
+        formData.set('learningObjectivesJson', JSON.stringify(data.learningObjectives));
         formData.set('taskSteps', JSON.stringify(data.taskSteps));
         formData.set('concepts', JSON.stringify(data.concepts));
         formData.set('quizQuestions', JSON.stringify(data.quizQuestions));
