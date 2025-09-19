@@ -1,0 +1,324 @@
+{
+    "title": "Types of Mobile Robots & Key Components",
+    "description": "Understand mobile robot principles, classifications, and hands-on AGV teleoperation.",
+  
+    "learning_objectives": [
+      "Grasp the fundamental principles of mobile robots and their operations.",
+      "Understand the classification of robots based on mobility and operational modes.",
+      "Learn about environmental classifications for robotic applications.",
+      "Develop basic Python programming skills for robot logic.",
+      "Gain hands-on exposure to AGV (Automated Guided Vehicle) teleoperation in a virtual setup.",
+      "Use if-elif-else to make decisions in machine tending tasks.",
+      "Apply a for loop to repeat actions like loading/unloading parts.",
+      "Use a while loop to wait until the machine gives a ready signal."
+    ],
+  
+    "content": {
+      "company_logo": {
+        "src": "nebula-logo.png",
+        "alt": "Nebula KnowLab Logo"
+      },
+  
+      "task_statement": "Types of Mobile Robots & Key Components",
+  
+      "task_steps": [
+        {
+          "title": "Open VS Code",
+          "description": "Start coding with Python.",
+          "instructions": "Launch VS Code on your system and open a new blank file.",
+          "images": [
+            {
+              "src": "0.1.png",
+              "alt": "Open VS Code"
+            },
+            {
+              "src": "0.2.png",
+              "alt": "Open new file"
+            }
+          ]
+        },
+        {
+          "title": "Program 1: If-Elif-Else for Machine Status",
+          "description": "Decide robot action based on machine status.",
+          "instructions": "Paste this code in the new file:\n\n- if checks machine status\n- elif handles other possible states\n- else is the fallback case\n\nEdit to Try:\n- Change \"finished\" to \"idle\" or \"running\" to see different outputs.\n- Add an \"error\" case → print(\"Robot alerts operator.\")",
+          "code": {
+            "content": "machine_status = \"finished\"   # can be \"idle\", \"running\", \"finished\"\n\nif machine_status == \"idle\":\n    print(\"Machine is idle. Robot waits.\")\nelif machine_status == \"running\":\n    print(\"Machine is processing. Robot holds position.\")\nelif machine_status == \"finished\":\n    print(\"Part is ready. Robot picks it.\")\nelse:\n    print(\"Unknown status.\")",
+            "language": "python"
+          }
+        },
+        {
+          "title": "Save & Run Program 1",
+          "description": "Execute the machine status program.",
+          "instructions": "Save the file as machine_status.py, then in terminal run:\n\npython machine_status.py",
+          "images": [
+            {
+              "src": "0.4.png",
+              "alt": "Run Program 1"
+            },
+            {
+              "src": "0.5.png",
+              "alt": "Run Program 1"
+            },
+            {
+              "src": "0.6.png",
+              "alt": "Run Program 1"
+            }
+          ]
+        },
+        {
+          "title": "Program 2: For Loop for Loading Parts",
+          "description": "Robot loads multiple parts one by one.",
+          "instructions": "Paste and run this code:\n\n- for loop repeats actions a fixed number of times\n\nEdit to Try:\n- Change range(1, 6) → Robot loads 5 parts\n- Replace text with \"Unloading part\" to simulate unloading",
+          "code": {
+            "content": "for part in range(1, 4):\n    print(\"Loading part\", part)\n\nprint(\"All parts loaded.\")",
+            "language": "python"
+          }
+        },
+        {
+          "title": "Program 3: While Loop for Waiting",
+          "description": "Robot waits until machine signals part readiness.",
+          "instructions": "Paste and run this code:\n\n- while keeps checking until condition changes\n\nEdit to Try:\n- Keep signal = 0 and add a timeout after 3 loops\n- Print \"Still waiting...\" before signal changes",
+          "code": {
+            "content": "signal = 0   # 0 = not ready, 1 = ready\n\nwhile signal == 0:\n    print(\"Waiting for machine to finish...\")\n    # In real life: keep checking sensor\n    signal = 1   # simulate machine finishes after some time\n\nprint(\"Machine finished. Robot picks the part.\")",
+            "language": "python"
+          }
+        },
+        {
+          "title": "Close Python Programs",
+          "description": "Finish coding practice.",
+          "instructions": "Close all code editor tabs before starting the AGV task."
+        },
+        {
+          "title": "Open Terminal",
+          "description": "Start AGV teleoperation setup.",
+          "instructions": "Right-click and open a new terminal.",
+          "images": [
+            {
+              "src": "1.png",
+              "alt": "Open terminal"
+            }
+          ]
+        },
+        {
+          "title": "Select Ubuntu",
+          "description": "Switch to Ubuntu environment.",
+          "instructions": "From the dropdown, select Ubuntu.",
+          "images": [
+            {
+              "src": "2.png",
+              "alt": "Select Ubuntu"
+            }
+          ]
+        },
+        {
+          "title": "Launch AGV Teleop",
+          "description": "Start AGV demo in ROS2.",
+          "instructions": "Type this command in terminal:\n\nros2 launch my_agv_examples teleop_demo.launch.py",
+          "code": {
+            "content": "ros2 launch my_agv_examples teleop_demo.launch.py",
+            "language": "bash"
+          },
+          "images": [
+            {
+              "src": "3.png",
+              "alt": "Launch AGV Teleop"
+            }
+          ]
+        },
+        {
+          "title": "RViz Launch",
+          "description": "Check system output.",
+          "instructions": "Ensure no errors appear when launching RViz.",
+          "images": [
+            {
+              "src": "4.png",
+              "alt": "RViz Launch"
+            }
+          ]
+        },
+        {
+          "title": "RViz Visualization",
+          "description": "Verify robot model view.",
+          "instructions": "Confirm RViz shows the AGV without errors.",
+          "images": [
+            {
+              "src": "5.png",
+              "alt": "RViz Visualization"
+            }
+          ]
+        },
+        {
+          "title": "Move the Robot",
+          "description": "Control AGV using teleop panel.",
+          "instructions": "Place mouse pointer in teleop panel and press alphabet shown to move the robot.",
+          "images": [
+            {
+              "src": "6.png",
+              "alt": "Move the Robot"
+            }
+          ]
+        }
+      ],
+  
+      "hero_image": {
+        "src": "mobile-robots-hero.jpg",
+        "alt": "Mobile robots classification and AGV demo"
+      },
+  
+      "concepts": [
+        {
+          "title": "1. Mobile Robot Principles",
+          "summary": "Core design aspects and operations: robots move, sense, navigate, and control their environment.",
+          "image": {
+            "src": "mobile-principles.jpeg",
+            "alt": "Mobile robot design principles"
+          },
+          "learn_more_context": "Explain mobile robots design foundations, how they move, sense, navigate, and control. without explaining locomotion."
+        },
+        {
+          "title": "2. Mobility Classification",
+          "summary": "Mobile robots can be wheeled, tracked, legged, winged, or hybrid.",
+          "image": {
+            "src": "mobility-types.jpeg",
+            "alt": "Wheeled, tracked, legged robot classification"
+          },
+          "learn_more_context": "Explain the classifications of mobile robots based on their movements, such as wheeled, tracked, legged, winged, or hybrid."
+        },
+        {
+          "title": "3. Environmental Classifications",
+          "summary": "Robots operate in terrestrial, aerial, aquatic, or hybrid environments depending on design.",
+          "image": {
+            "src": "environment-class.png",
+            "alt": "Terrestrial, aerial, aquatic robot classifications"
+          },
+          "learn_more_context": "Explain the environmental classifications of mobile robots, such as terrestrial, aerial, aquatic, or hybrid. Mention on which platforms these classifications work."
+        },
+        {
+            "title": "4. Applications",
+            "summary": "Real-time non-industrial uses of mobile robots in delivery, drones, exploration, and swarm systems.",
+            "image": {
+              "src": "applications.jpg",
+              "alt": "Applications of mobile robots"
+            },
+            "learn_more_context": "Explain real-world applications for terrestrial, aerial, aquatic, or swarm robotics, as well as general non-industrial applications."
+          },
+          {
+            "title": "5. Python Applications",
+            "summary": "Key logic structures: If-Elif-Else (decision-making), For Loop (repetition), While Loop (continuous monitoring).",
+            "image": {
+              "src": "python-logic.png",
+              "alt": "Python loops for robotics"
+            },
+            "learn_more_context": "If-Elif-Else: Used for decision-making when robot chooses action based on machine state. For Loop: Used for counting/repeating tasks a fixed number of times. While Loop: Used for continuous monitoring until a condition changes.Prompts for Learners (Search & Compare),“explain use of Python if elif else example in robot machine status without code”,“explain use of Python for loop example robot loading parts without code”,“explain use of Python while loop example robot waiting for signal without code”"
+          }
+      ]
+    },
+  
+    "quiz": {
+      "title": "Knowledge Check: Mobile Robots",
+      "description": "Quick test on mobile robot concepts.",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "If-Elif-Else (Decision Making): A robot needs to choose its action based on a temperature sensor. If temperature < 30 → 'Safe to operate'. If 30 ≤ temperature < 50 → 'Caution: Monitor system'. If temperature ≥ 50 → 'Overheat! Stop robot'. If the temperature is 45, what should the robot display?",
+          "options": [
+            "Safe to operate",
+            "Caution: Monitor system",
+            "Overheat! Stop robot",
+            "No output"
+          ],
+          "correct_answer": 1,
+          "explanation": "Since 30 ≤ 45 < 50, the correct output is 'Caution: Monitor system'."
+        },
+        {
+          "id": "q2",
+          "question": "For Loop (Repeating Tasks): A robot arm stacks boxes on a pallet. It must place boxes in positions 1 through 4. How many times will the robot repeat the stacking action?",
+          "options": [
+            "2",
+            "3",
+            "4",
+            "5"
+          ],
+          "correct_answer": 2,
+          "explanation": "The loop runs from position 1 to 4, so the robot stacks 4 boxes."
+        },
+        {
+          "id": "q3",
+          "question": "While Loop (Waiting for Condition): A robot is waiting for a green light. The loop continues until the light turns green (condition met). If the light turns green immediately on the first check, how many times will the waiting message be shown?",
+          "options": [
+            "0",
+            "1",
+            "2",
+            "Infinite"
+          ],
+          "correct_answer": 0,
+          "explanation": "If the condition is met immediately, the loop body doesn’t execute, so no waiting message is shown."
+        },
+        {
+          "id": "q4",
+          "question": "Robots designed to operate on rough terrains, deserts, or uneven ground belong to which category?",
+          "options": [
+            "Aerial robots",
+            "Ground (land) robots",
+            "Aquatic robots",
+            "Amphibious robots"
+          ],
+          "correct_answer": 1,
+          "explanation": "Robots working on land or rough terrain are classified as ground (land) robots."
+        },
+        {
+          "id": "q5",
+          "question": "Which classification refers to drones?",
+          "options": [
+            "Terrestrial",
+            "Aerial",
+            "Aquatic",
+            "Swarm"
+          ],
+          "correct_answer": 1,
+          "explanation": "Drones are classified as aerial mobile robots."
+        },
+        {
+          "id": "q6",
+          "question": "Which loop would you use if you know the robot must perform a task exactly 10 times?",
+          "options": [
+            "if-else",
+            "for loop",
+            "while loop",
+            "switch-case"
+          ],
+          "correct_answer": 1,
+          "explanation": "A for loop is best suited for repeating tasks a fixed number of times."
+        },
+        {
+          "id": "q7",
+          "question": "Which loop is most suitable when a robot must wait for a sensor signal before continuing?",
+          "options": [
+            "for loop",
+            "if statement",
+            "while loop",
+            "nested loop"
+          ],
+          "correct_answer": 2,
+          "explanation": "A while loop keeps checking the condition until the sensor signal is received."
+        }
+      ],
+      "settings": {
+        "allow_retry": true,
+        "show_progress": true,
+        "randomize_questions": false,
+        "passing_score": 1
+      }
+    },
+  
+    "chat_contexts": {
+      "task_help": "Guide the learner through Python examples and AGV teleoperation setup.",
+      "mobile_principles": "Explain sensing, navigation, and control foundations of mobile robots.",
+      "mobility_classification": "Detail wheeled, tracked, legged, winged, and hybrid robot types.",
+      "environment_class": "Explain terrestrial, aerial, and aquatic robots and their platforms.",
+      "applications": "Describe delivery robots, drones, underwater vehicles, and swarm uses.",
+      "python_logic": "Explain how loops and conditions enable robotic automation.",
+      "quiz_failed": "Review Python loops and mobile robot classifications with simple examples.",
+      "hints_exhausted": "Provide troubleshooting for ROS2 AGV launch, RViz errors, and teleop control."
+    }
+  }  
