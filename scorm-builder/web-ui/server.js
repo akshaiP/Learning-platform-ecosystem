@@ -57,51 +57,45 @@ app.get('/', (req, res) => {
   });
 });
 
+// **NEW: Serve preview content from test-output**
+app.use('/preview', express.static(path.join(__dirname, '../test-output')));
+
+// **NEW: Preview route**
 app.get('/preview', (req, res) => {
-    res.redirect('http://localhost:8080');
+  const testOutputPath = path.join(__dirname, '../test-output/index.html');
+  
+  if (fs.existsSync(testOutputPath)) {
+    res.sendFile(testOutputPath);
+  } else {
+    res.status(404).send(`
+      <h1>No Preview Available</h1>
+      <p>Generate a SCORM package first to see the preview.</p>
+      <a href="/">← Back to Builder</a>
+    `);
+  }
 });
 
+// **UPDATED: Preview endpoint**
 app.post('/start-preview', async (req, res) => {
-    try {
-        const { exec } = require('child_process');
-        const { promisify } = require('util');
-        const execAsync = promisify(exec);
-        
-        console.log('🌐 Starting test server for preview...');
-        
-        // Check if test-output exists
-        const testOutputPath = path.join(__dirname, '../test-output');
-        if (!await fs.pathExists(testOutputPath)) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'No test content found. Generate a SCORM package first.' 
-            });
-        }
-        
-        // Start the serve:test command in the background
-        const serveCommand = 'npm run serve:test';
-        
-        // Use spawn instead of exec to keep it running
-        const { spawn } = require('child_process');
-        const testServer = spawn('npm', ['run', 'serve:test'], {
-            cwd: path.join(__dirname, '..'),
-            detached: false,
-            stdio: 'ignore'
-        });
-        
-        // Don't wait for the server to finish
-        testServer.unref();
-        
-        res.json({ 
-            success: true, 
-            previewUrl: 'http://localhost:8080',
-            message: 'Test server started successfully'
-        });
-        
-    } catch (error) {
-        console.error('Preview start error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
+  try {
+      const testOutputPath = path.join(__dirname, '../test-output');
+      if (!await fs.pathExists(testOutputPath)) {
+          return res.status(400).json({ 
+              success: false, 
+              error: 'No test content found. Generate a SCORM package first.' 
+          });
+      }
+      
+      const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+      
+      res.json({ 
+          success: true, 
+          previewUrl: `${baseUrl}/preview`,
+          message: 'Preview ready'
+      });
+  } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Health check
@@ -110,9 +104,9 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 SCORM Builder Web UI running on http://localhost:${PORT}`);
-  console.log(`📁 Upload directory: ${path.join(__dirname, 'public/uploads')}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 SCORM Builder running on http://0.0.0.0:${PORT}`);
+  console.log(`🌐 Preview available at /preview`);
 });
 
 module.exports = app;

@@ -2,7 +2,7 @@
     "name": "learning-platform-scorm-builder",
     "version": "1.0.0",
     "description": "Production SCORM 2004 package generator for task-based learning with chat integration",
-    "main": "build.js",
+    "main": "web-ui/server.js",
     "scripts": {
         "build": "node build.js",
         "build:all": "node build.js --all",
@@ -17,7 +17,9 @@
         "lint": "eslint .",
         "prestart": "npm run validate",
         "start:ui": "node web-ui/server.js",
-        "dev:ui": "nodemon web-ui/server.js"
+        "dev:ui": "nodemon web-ui/server.js",
+        "start": "node web-ui/server.js",
+        "render-postbuild": "npm run clean && mkdir -p web-ui/public/downloads && mkdir -p output && mkdir -p test-output"
     },
     "dependencies": {
         "archiver": "^6.0.1",

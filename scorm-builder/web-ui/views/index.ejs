@@ -42,9 +42,9 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button onclick="saveDraft()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                    <!-- <button onclick="saveDraft()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
                         <i class="fas fa-save mr-2"></i>Save Draft
-                    </button>
+                    </button> -->
                 </div>
             </div>
         </div>
@@ -238,15 +238,14 @@
                     
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
                         <button type="button" onclick="generateSCORM()" 
-                                class="bg-white text-nebula-500 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors flex items-center justify-center space-x-3 shadow-lg">
-                            <i class="fas fa-cogs"></i>
-                            <span>Generate SCORM Package</span>
+                                class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
+                            <i class="fas fa-download mr-2"></i>Generate SCORM
                         </button>
-                        <!-- <button type="button" onclick="startPreviewServer()" 
-                                class="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-nebula-500 transition-colors flex items-center justify-center space-x-3">
-                            <i class="fas fa-eye"></i>
-                            <span>Preview Content</span>
-                        </button> -->
+
+                        <button type="button" onclick="generateAndPreview()" 
+                                class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">
+                            <i class="fas fa-rocket mr-2"></i>Generate & Preview
+                        </button>
                     </div>
                 </div>
             </section>
@@ -273,9 +272,6 @@
             <div class="space-y-3">
                 <button id="downloadBtn" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors w-full">
                     <i class="fas fa-download mr-2"></i>Download SCORM Package
-                </button>
-                <button id="previewBtn" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors w-full">
-                    <i class="fas fa-eye mr-2"></i>Preview in Test Server
                 </button>
                 <button type="button" onclick="document.getElementById('successModal').classList.add('hidden')" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors w-full">
                     Close
@@ -318,16 +314,10 @@
         function showSuccessModal(downloadUrl, filename) {
             const modal = document.getElementById('successModal');
             const downloadBtn = document.getElementById('downloadBtn');
-            const previewBtn = document.getElementById('previewBtn');
             
             downloadBtn.onclick = () => {
                 window.location.href = downloadUrl;
                 modal.classList.add('hidden');
-            };
-            
-            // Connect preview button to the function
-            previewBtn.onclick = () => {
-                startPreviewServer();
             };
             
             modal.classList.remove('hidden');

@@ -526,8 +526,31 @@ function collectQuizQuestionsData() {
     return questions;
 }
 
+async function openPreview() {
+    try {
+        const response = await fetch('/start-preview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            window.open(result.previewUrl, '_blank');
+        } else {
+            alert('Preview not available: ' + result.error);
+        }
+    } catch (error) {
+        alert('Failed to open preview. Generate a SCORM package first.');
+    }
+}
+
+async function generateAndPreview() {
+    await generateSCORM(true);
+}
+
 // Generate SCORM Package
-async function generateSCORM() {
+async function generateSCORM(showPreview = false) {
     try {
         showLoadingModal();
         
@@ -584,6 +607,11 @@ async function generateSCORM() {
         hideLoadingModal();
         
         if (result.success) {
+            if (showPreview) {
+                setTimeout(() => {
+                    window.open('/preview', '_blank');
+                }, 500);
+            }
             showSuccessModal(result.downloadUrl, result.filename);
         } else {
             throw new Error(result.error || 'Unknown error occurred');
@@ -596,30 +624,6 @@ async function generateSCORM() {
     }
 }
 
-// Preview functionality
-function previewTopic() {
-    const data = collectFormData();
-    if (!data.title || !data.topicId) {
-        alert('Please fill in at least the title and topic ID to preview');
-        return;
-    }
-    
-    // Open preview in new window
-    const preview = window.open('', '_blank', 'width=1200,height=800');
-    preview.document.write(`
-        <html>
-            <head><title>Preview: ${data.title}</title></head>
-            <body style="font-family: Arial, sans-serif; padding: 20px;">
-                <h1>${data.title}</h1>
-                <p><strong>Task:</strong> ${data.taskStatement}</p>
-                <p><strong>Description:</strong> ${data.description}</p>
-                <h3>Learning Objectives:</h3>
-                <ul>${data.learningObjectives.map(obj => `<li>${obj}</li>`).join('')}</ul>
-                <p style="color: #666; margin-top: 40px;"><em>This is a basic preview. The actual SCORM package will have full interactivity.</em></p>
-            </body>
-        </html>
-    `);
-}
 
 // Save draft
 function saveDraft() {

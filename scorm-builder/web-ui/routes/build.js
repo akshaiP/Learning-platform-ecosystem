@@ -53,7 +53,7 @@ router.post('/generate', upload.any(), async (req, res) => {
             filename: buildResult.filename,
             downloadUrl: `/downloads/${buildResult.filename}`,
             size: buildResult.size,
-            previewUrl: 'http://localhost:8080',
+            previewUrl: '/preview', // Changed from localhost:8080
             topicId: topicId
         });
         
