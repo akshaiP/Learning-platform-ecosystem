@@ -1,0 +1,452 @@
+{
+  "title": "Robotics Fundamentals",
+  "description": "Learn the fundamentals of robotic arm control by building a step-by-step project that simulates precise arm movements using code and interactive tasks.",
+  
+  "learning_objectives": [
+    "Understand the fundamental working principles of robots",
+    "Identify different classifications of robots based on their structure",
+    "Explore real-time applications of robotics across industries",
+    "Trace the evolution and generations of robotic systems",
+    "Perform basic robotic jogging tasks",
+    "Gain hands-on experience in robot programming using ROS (Robot Operating System)",
+    "Learn Python to program, control, and automate robotic systems through sensor integration, motion control, and intelligent decision-making algorithms."
+  ],
+
+  "content": {
+    "company_logo": {
+      "src": "nebula-logo.png",
+      "alt": "Nebula KnowLab Logo"
+    },
+
+    "task_statement": "Robot fundamentals",
+
+    "task_steps": [
+      {
+        "title": "Open Code Editor",
+        "description": "Start by opening a code editor to write your first Python programs.",
+        "instructions": "Open Visual Studio Code on your system.",
+        "images": [
+          {
+            "src": "0.png",
+            "alt": "Open VS Code"
+          }
+        ]
+      },
+      {
+        "title": "Create a New Python File",
+        "description": "Get ready to write your first program.",
+        "instructions": "In VS Code, go to File → New File to create a blank file.",
+        "images": [
+          {
+            "src": "0.1.png",
+            "alt": "Create new Python file"
+          }
+        ]
+      },
+      {
+        "title": "Program 1: Print a Message",
+        "description": "Write your first Python program to display a message.",
+        "instructions": "Paste this code into the new file.\n\nHow this works:\n- print() is a command that means 'say something out loud'\n- The text in quotes is exactly what the robot will display\n- Python reads this and shows the message",
+        "code": {
+          "content": "# This is Python code - a way to talk to robots\nprint(\"Hello, I am learning to program robots!\")",
+          "language": "python"
+        },
+        "images": [
+          {
+            "src": "0.2.png",
+            "alt": "Create new Python file"
+          }
+        ]
+      },
+      {
+        "title": "Save the File",
+        "description": "Save your program as a Python file.",
+        "instructions": "Go to File → Save As, and save the file with the name hello_robot.py",
+        "images": [
+          {
+            "src": "0.3.png",
+            "alt": "Save Python file"
+          }
+        ]
+      },
+      {
+        "title": "Run the Program",
+        "description": "Execute your Python program to see the result.",
+        "instructions": "Open the terminal in VS Code and run the program using:\n\npython hello_robot.py",
+        "images": [
+          {
+            "src": "0.4.png",
+            "alt": "Run Python file"
+          }
+        ]
+      },
+      {
+        "title": "Program 2: Use Variables",
+        "description": "Learn how robots can remember information using variables.",
+        "instructions": "Write the following in a new file.\n\nHow this works:\n- robot_name is like a box with a label\n- = means 'put this information in the box'\n- \"Buddy\" is the value stored\n- When we use robot_name, Python looks in the box and finds Buddy",
+        "code": {
+          "content": "# Teaching the robot to remember its name\nrobot_name = \"Buddy\"\nprint(\"My name is\", robot_name)",
+          "language": "python"
+        }
+      },
+      {
+        "title": "Program 3: Decisions with If-Else",
+        "description": "Teach the robot to make decisions by comparing data.",
+        "instructions": "Write the following in a new file.\n\nHow this works:\n- if asks a question: Is battery_level < 30?\n- < means 'less than'\n- If True → first block runs (go charge)\n- If False → else block runs (keep working)\n- The robot decides automatically",
+        "code": {
+          "content": "# Robot checking if it needs to charge\nbattery_level = 25\n\nif battery_level < 30:\n    print(\"🔋 Battery low! Going to charging station\")\nelse:\n    print(\"✅ Battery good! Ready to work\")",
+          "language": "python"
+        }
+      },
+      {
+        "title": "Close Tabs",
+        "description": "Once you have tried all basic programs, close all files and tabs in VS Code.",
+        "instructions": "Go to File → Close All Editors, so you are ready for the ROS task."
+      },
+  {
+    "title": "Access VS Code Terminal",
+    "description": "",
+    "instructions": "If no terminal is visible at the bottom, select 'Terminal' from the options bar.",
+    "images": [
+      {
+        "src": "1.png",
+        "alt": "VS Code terminal access"
+      }
+    ]
+  },
+  {
+    "title": "Add Terminal",
+    "description": "",
+    "instructions": "Go to Terminal -> New Terminal to add a terminal window.",
+    "images": [
+      {
+        "src": "2.png",
+        "alt": "Add new terminal"
+      }
+    ]
+  },
+  {
+    "title": "Verify WSL",
+    "description": "Ensure that the current terminal session is running in WSL.",
+    "instructions": "Check whether the terminal is WSL.",
+    "images": [
+      {
+        "src": "3.png",
+        "alt": "Verify WSL terminal"
+      }
+    ]
+  },
+  {
+    "title": "Select WSL",
+    "description": "",
+    "instructions": "If not already in WSL, select it via the '+' symbol dropdown.",
+    "images": [
+      {
+        "src": "4.png",
+        "alt": "Select WSL in terminal"
+      }
+    ]
+  },
+  {
+    "title": "Split Terminal",
+    "description": "Splitting terminals allows you to run multiple commands side by side.",
+    "instructions": "Split the terminal so you can launch and run files simultaneously.",
+    "images": [
+      {
+        "src": "5.png",
+        "alt": "Split terminal"
+      }
+    ]
+  },
+  {
+    "title": "Launch RViz",
+    "description": "Start the RViz visualization environment using ROS2.",
+    "instructions": "Run the command:",
+    "images": [
+      {
+        "src": "6.png",
+        "alt": "Launch RViz"
+      }
+    ],
+    "code": {
+      "content": "ros2 launch nebula knowlab.launch.py",
+      "language": "bash"
+    }
+  },
+  {
+    "title": "Error Verification",
+    "description": "",
+    "instructions": "Make sure the visualization starts without any errors in the terminal.",
+    "images": [
+      {
+        "src": "7.png",
+        "alt": "Check for errors"
+      }
+    ]
+  },
+  {
+    "title": "RViz Visualization",
+    "description": "",
+    "instructions": "Check that RViz opens without error.",
+    "images": [
+      {
+        "src": "8.png",
+        "alt": "RViz window"
+      }
+    ]
+  },
+  {
+    "title": "Open Python File",
+    "description": "",
+    "instructions": "Go to VS Code and open a Python file using FILE -> OPEN FILE.",
+    "images": [
+      {
+        "src": "9.png",
+        "alt": "Open Python file"
+      }
+    ]
+  },
+  {
+    "title": "Open Program in VS Code",
+    "description": "",
+    "instructions": "Copy and paste the given location in the search bar and press Enter:",
+    "images": [
+      {
+        "src": "10.png",
+        "alt": "Open program folder"
+      }
+    ],
+    "code": {
+      "content": "\\\\wsl.localhost\\Ubuntu-22.04\\home\\nebula_knowlab\\ros2_ws\\src\\nebula\\nebula",
+      "language": "bash"
+    }
+  },
+  {
+    "title": "Program Selection",
+    "description": "",
+    "instructions": "Select the program 'Joint_pub' and open it.",
+    "images": [
+      {
+        "src": "11.png",
+        "alt": "Select program"
+      }
+    ]
+  },
+  {
+    "title": "Save the Program",
+    "description": "Save changes and run the file to check execution.",
+    "instructions": "Press Ctrl+S to save, then in Terminal 2 run:",
+    "images": [
+      {
+        "src": "12.png",
+        "alt": "Save and run program"
+      }
+    ],
+    "code": {
+      "content": "ros2 run nebula joint_pub",
+      "language": "bash"
+    }
+  },
+  {
+    "title": "Terminate the Program",
+    "description": "",
+    "instructions": "Stop the program by pressing Ctrl+C in the terminal. Ensure the command is terminated.",
+    "images": [
+      {
+        "src": "13.png",
+        "alt": "Terminate program"
+      }
+    ]
+  },
+  {
+    "title": "Edit and Run Program",
+    "description": "Modify the joint position values and test updated behavior.",
+    "instructions": "Edit the position values by copy-pasting multiple lines and updating them. Run the program again to observe changes.",
+    "images": [
+      {
+        "src": "14.png",
+        "alt": "Edit and rerun program"
+      }
+    ],
+    "hint": {
+      "text": "If needed, access the code in GitHub using the provided link below, then copy and paste the master code as reference.",
+      "images": [
+        {
+          "src": "11.1.png",
+          "alt": "GitHub code reference"
+        }
+      ],
+      "code": {
+        "content": "https://github.com/efficanebula2025/nebula/blob/nebula/joint_pub.py",
+        "language": "bash"
+      }
+    }
+  }
+],
+
+    "hero_image": {
+      "src": "robot-arm-hero.jpg",
+      "alt": "Robotic arm performing precise movement"
+    },
+
+    "concepts": [
+    {
+      "title": "1. Mechanical Structures of Robots",
+      "summary": "Exploring different structural designs such as articulated arms, SCARA, and mobile bases.",
+      "image": {
+        "src": "mechanical-structure.jpg",
+        "alt": "Different robot structural designs including articulated and SCARA"
+      },
+      "learn_more_context": "robot_structures"
+    },
+    {
+      "title": "2. Collaborative Robots (Cobots)",
+      "summary": "Introduction to robots designed to safely work alongside humans.",
+      "image": {
+        "src": "cobots.jpg",
+        "alt": "Collaborative robot assisting a human worker"
+      },
+      "learn_more_context": "cobots"
+    },
+    {
+      "title": "3. Robot Mobility Mechanisms",
+      "summary": "Examining how robots move using wheels, legs, or tracks for various terrains.",
+      "image": {
+        "src": "mobility.jpg",
+        "alt": "Examples of wheeled, legged, and tracked robots"
+      },
+      "learn_more_context": "robot_mobility"
+    },
+    {
+      "title": "4. Industrial and Real-world Applications",
+      "summary": "Overview of how robots are used in manufacturing, healthcare, logistics, and more.",
+      "image": {
+        "src": "applications.jpg",
+        "alt": "Robots in factories, hospitals, and logistics"
+      },
+      "learn_more_context": "robot_applications"
+    },
+    {
+      "title": "5. Core Robotic Components and Essentials",
+      "summary": "Identifying essential hardware and software components of robotic systems.",
+      "image": {
+        "src": "robot-components.jpg",
+        "alt": "Key components like sensors, actuators, controllers"
+      },
+      "learn_more_context": "robot_components"
+    },
+    {
+      "title": "6. Evolution and Generations of Robots",
+      "summary": "Studying the development stages of robotics from early machines to modern AI-driven robots.",
+      "image": {
+        "src": "evolution.jpg",
+        "alt": "Timeline showing evolution from early robots to AI-driven systems"
+      },
+      "learn_more_context": "robot_evolution"
+    },
+    {
+      "title": "7. Logic in Python Programming",
+      "summary": "Using Python’s if-else logic and loops, robots can make decisions and repeat tasks automatically.",
+      "image": {
+        "src": "python-logic.png",
+        "alt": "Python code logic controlling a robot"
+      },
+      "learn_more_context": "Python helps robots think by storing sensor data and motor speeds in memory. They use conditional statements to choose actions and loops to keep checking surroundings until told to stop."
+    }    
+]
+  },
+
+  "quiz": {
+  "title": "Knowledge Check",
+  "description": "Test your understanding of robotics fundamentals",
+  "questions": [
+    {
+      "id": "q1",
+      "question": "What is the primary function of a robot in an automated system?",
+      "options": [
+        "To entertain users",
+        "To perform repetitive or complex tasks with precision",
+        "To store data",
+        "To monitor human workers"
+      ],
+      "correct_answer": 1,
+      "explanation": "Robots in automated systems are designed to handle repetitive or complex tasks with high accuracy and reliability."
+    },
+    {
+      "id": "q2",
+      "question": "Which of the following best describes a collaborative robot (Cobot)?",
+      "options": [
+        "A robot that functions underwater",
+        "A robot used only in space missions",
+        "A robot that can work safely alongside humans",
+        "A robot that operates entirely autonomously in isolated environments"
+      ],
+      "correct_answer": 2,
+      "explanation": "Collaborative robots (Cobots) are specifically designed with safety features to operate in close proximity with humans."
+    },
+    {
+      "id": "q3",
+      "question": "What determines a robot’s mechanical structure?",
+      "options": [
+        "Its ability to process natural language",
+        "Its battery size",
+        "The design and configuration of its joints, arms, and frames",
+        "Its programming language"
+      ],
+      "correct_answer": 2,
+      "explanation": "A robot’s mechanical structure is based on its physical design, including how joints, arms, and frames are arranged."
+    },
+    {
+      "id": "q4",
+      "question": "What is a key benefit of using robots in industrial applications?",
+      "options": [
+        "Increased manual labor requirements",
+        "Slower production rates",
+        "Higher precision and efficiency",
+        "Reduced technology use"
+      ],
+      "correct_answer": 2,
+      "explanation": "Robots in industry improve precision and efficiency, leading to higher quality and faster production processes."
+    },
+    {
+      "id": "q5",
+      "question": "What does ROS (Robot Operating System) primarily provide?",
+      "options": [
+        "A mechanical structure for robots",
+        "A software framework for writing robot applications",
+        "A platform for hardware manufacturing",
+        "An interface for video streaming"
+      ],
+      "correct_answer": 1,
+      "explanation": "ROS is an open-source software framework that provides tools and libraries for building robot applications."
+    },
+    {
+      "id": "q6",
+      "question": "What distinguishes a mobile robot from other types?",
+      "options": [
+        "It stays fixed in one position",
+        "It can move through its environment",
+        "It only performs calculations",
+        "It requires human assistance for every action"
+      ],
+      "correct_answer": 1,
+      "explanation": "Mobile robots are capable of navigating through their environment rather than staying fixed in one place."
+    }
+  ],
+    "settings": {
+      "allow_retry": true,
+      "show_progress": true,
+      "randomize_questions": false,
+      "passing_score": 2
+    }
+  },
+
+  "chat_contexts": {
+    "task_help": "Guide the learner through robotic arm setup, basic movements, and programming pick-and-place operations.",
+    "robot_arm_dof": "Explain degrees of freedom in robotics with examples of 3 DOF vs 6 DOF arms.",
+    "servo_motors": "Detail how servo motors work, their control signals, and why they are ideal for robotics.",
+    "feedback_control": "Explain closed-loop systems and how sensors provide corrections for precise movements.",
+    "quiz_failed": "Review core concepts of DOF, servo motors, and feedback control with examples.",
+    "hints_exhausted": "Provide troubleshooting guidance for wiring, motor calibration, and code debugging."
+  }
+}
