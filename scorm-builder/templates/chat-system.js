@@ -62,17 +62,33 @@ class ChatSystem {
             case 'quiz_failed':
                 const question = additionalData.question || {};
                 const userAnswer = additionalData.userAnswer;
-                const correctAnswer = question.correct_answer;
                 
-                const userAnswerText = (question.options && Array.isArray(question.options) && typeof userAnswer === 'number' && userAnswer >= 0) 
-                    ? question.options[userAnswer] || 'unknown selection'
-                    : 'unknown selection';
+                let userAnswerText, correctAnswerText, finalMessage;
+                
+                // Check if this is a checkbox question
+                if (question.questionType === 'checkbox' || Array.isArray(userAnswer)) {
+                    // Handle checkbox questions
+                    const selectedOptionsText = question.selectedOptionsText || 'no options selected';
+                    const correctOptionsText = question.correctOptionsText || 'unknown correct answers';
                     
-                const correctAnswerText = (question.options && Array.isArray(question.options) && typeof correctAnswer === 'number' && correctAnswer >= 0) 
-                    ? question.options[correctAnswer] || 'unknown answer'
-                    : 'unknown answer';
-                
-                const finalMessage = `I got a quiz question wrong. The question was: "${question.question || 'the quiz question'}". I selected "${userAnswerText}" but the correct answer is "${correctAnswerText}". Please explain why my answer was wrong and help me understand the correct concept.`;
+                    userAnswerText = selectedOptionsText;
+                    correctAnswerText = correctOptionsText;
+                    
+                    finalMessage = `I got a quiz question wrong. The question was: "${question.question || 'the quiz question'}". I selected "${userAnswerText}" but the correct answers are "${correctAnswerText}". Please explain why my answer was wrong and help me understand the correct concept.`;
+                } else {
+                    // Handle MCQ questions (original logic)
+                    const correctAnswer = question.correct_answer;
+                    
+                    userAnswerText = (question.options && Array.isArray(question.options) && typeof userAnswer === 'number' && userAnswer >= 0) 
+                        ? question.options[userAnswer] || 'unknown selection'
+                        : 'unknown selection';
+                        
+                    correctAnswerText = (question.options && Array.isArray(question.options) && typeof correctAnswer === 'number' && correctAnswer >= 0) 
+                        ? question.options[correctAnswer] || 'unknown answer'
+                        : 'unknown answer';
+                    
+                    finalMessage = `I got a quiz question wrong. The question was: "${question.question || 'the quiz question'}". I selected "${userAnswerText}" but the correct answer is "${correctAnswerText}". Please explain why my answer was wrong and help me understand the correct concept.`;
+                }
                 
                 return {
                     context: 'quiz_failed',
@@ -81,11 +97,12 @@ class ChatSystem {
                         quizQuestion: question.question || 'Unknown question',
                         userAnswer: userAnswer,
                         userAnswerText: userAnswerText,
-                        correctAnswer: correctAnswer,
+                        correctAnswer: question.correct_answer || question.correct_answers,
                         correctAnswerText: correctAnswerText,
                         allOptions: question.options || [],
                         topicTitle: template.title || 'This topic',
-                        taskStatement: template.taskStatement || 'The assigned task'
+                        taskStatement: template.taskStatement || 'The assigned task',
+                        questionType: question.questionType || 'mcq'
                     }
                 };
 

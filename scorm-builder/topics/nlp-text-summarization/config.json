@@ -200,6 +200,27 @@
       "description": "Test your understanding with these comprehensive questions",
       "questions": [
         {
+          "id": "q3",
+          "type": "checkbox",
+          "question": "Which of the following are important considerations when implementing AI text summarization in a web application? (Select all that apply)",
+          "options": [
+            "API rate limiting and cost management",
+            "Error handling and fallback mechanisms", 
+            "User input validation and sanitization",
+            "Response caching for performance",
+            "Security of API keys",
+            "Real-time processing requirements",
+            "Mobile responsiveness",
+            "Accessibility compliance"
+          ],
+          "correct_answers": [0, 1, 2, 3, 4],
+          "explanation": "All of these are crucial considerations for production AI applications. Rate limiting prevents cost overruns, error handling ensures reliability, input validation prevents security issues, caching improves performance, and API key security is essential for protecting your application.",
+          "explanation_image": {
+            "src": "prompt-engineering.jpg",
+            "alt": "AI implementation best practices"
+          }
+        },
+        {
           "id": "q1",
           "question": "What is the primary advantage of using Google's Gemini API for text summarization compared to traditional rule-based approaches?",
           "options": [
@@ -229,22 +250,6 @@
           "explanation_image": {
             "src": "api-integration.jpg",
             "alt": "API integration best practices"
-          }
-        },
-        {
-          "id": "q3",
-          "question": "What is the main purpose of prompt engineering in AI text summarization?",
-          "options": [
-            "To reduce API costs",
-            "To improve the quality and relevance of AI-generated summaries",
-            "To make the API calls faster",
-            "To bypass API rate limits"
-          ],
-          "correct_answer": 1,
-          "explanation": "Prompt engineering helps craft effective instructions that guide the AI to produce more accurate, relevant, and contextually appropriate summaries.",
-          "explanation_image": {
-            "src": "prompt-engineering.jpg",
-            "alt": "Prompt engineering techniques"
           }
         }
       ],

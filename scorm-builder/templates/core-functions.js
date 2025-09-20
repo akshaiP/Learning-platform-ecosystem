@@ -162,7 +162,8 @@ function getCompletionStatus() {
         quizScore: window.quizScore || 0,
         currentQuestionIndex: window.currentQuestionIndex || 0,
         totalQuestions: window.quizQuestions ? window.quizQuestions.length : 0,
-        answers: window.quizAnswers || {}
+        answers: window.quizAnswers || {},
+        questionTypes: window.quizQuestions ? window.quizQuestions.map(q => q.type || 'mcq') : []
     };
     
     return {

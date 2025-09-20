@@ -565,10 +565,32 @@ class TopicGenerator {
             if (!Array.isArray(question.options) || question.options.length < 2) {
               throw new Error(`Quiz question ${index + 1} must have at least 2 options`);
             }
-            if (typeof question.correct_answer !== 'number' || 
-                question.correct_answer < 0 || 
-                question.correct_answer >= question.options.length) {
-              throw new Error(`Quiz question ${index + 1} correct_answer must be a valid option index`);
+            
+            // Validate question type
+            const questionType = question.type || 'mcq'; // Default to MCQ for backward compatibility
+            if (!['mcq', 'checkbox'].includes(questionType)) {
+              throw new Error(`Quiz question ${index + 1}: Invalid question type '${questionType}'. Must be 'mcq' or 'checkbox'`);
+            }
+            
+            // Validate correct answers based on type
+            if (questionType === 'mcq') {
+              if (typeof question.correct_answer !== 'number' || 
+                  question.correct_answer < 0 || 
+                  question.correct_answer >= question.options.length) {
+                throw new Error(`Quiz question ${index + 1} correct_answer must be a valid option index for MCQ`);
+              }
+            } else if (questionType === 'checkbox') {
+              if (!Array.isArray(question.correct_answers) || question.correct_answers.length === 0) {
+                throw new Error(`Quiz question ${index + 1}: Missing or empty correct_answers array for checkbox question`);
+              } else {
+                // Validate that all correct answer indices are valid
+                const invalidIndices = question.correct_answers.filter(
+                  answer => typeof answer !== 'number' || answer < 0 || answer >= question.options.length
+                );
+                if (invalidIndices.length > 0) {
+                  throw new Error(`Quiz question ${index + 1}: Invalid correct_answers indices: ${invalidIndices.join(', ')}`);
+                }
+              }
             }
           });
         }

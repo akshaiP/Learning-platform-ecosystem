@@ -42,16 +42,32 @@ class QuizSystem {
 
         if (!container) return;
 
-        // Build question HTML
-        const questionHTML = `
+        const questionType = question.type || 'mcq'; // Default to MCQ for backward compatibility
+
+        // Build question HTML based on type
+        let questionHTML = `
             <div class="quiz-question-container">
                 <h4 class="text-xl font-bold text-gray-900 mb-8 leading-relaxed">${question.question}</h4>
+                <div class="mb-4">
+                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                        questionType === 'mcq' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-purple-100 text-purple-800'
+                    }">
+                        ${questionType === 'mcq' ? 'Single Choice' : 'Multiple Choice'}
+                    </span>
+                </div>
+        `;
+
+        if (questionType === 'mcq') {
+            // MCQ - Single choice with radio buttons
+            questionHTML += `
                 <div class="space-y-4 mb-8" id="quizOptionsContainer">
                     ${question.options.map((option, index) => `
-                        <button class="w-full text-left p-6 rounded-2xl border-2 border-gray-200 hover:border-nebula-400 hover:bg-nebula-50 transition-all duration-300 quiz-option group shadow-soft hover:shadow-medium" 
+                        <button class="w-full text-left p-6 rounded-2xl border-2 border-gray-200 transition-all duration-300 quiz-option group shadow-soft" 
                                 data-option-index="${index}" onclick="quizSystem.selectOption(this, ${index})">
                             <div class="flex items-center space-x-4">
-                                <div class="w-10 h-10 bg-gray-100 group-hover:bg-nebula-100 rounded-xl flex items-center justify-center font-bold text-gray-600 group-hover:text-nebula-600 transition-colors option-letter">
+                                <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center font-bold text-gray-600 transition-colors option-letter">
                                     ${String.fromCharCode(65 + index)}.
                                 </div>
                                 <span class="option-text text-gray-800 font-medium text-lg">${option}</span>
@@ -59,7 +75,58 @@ class QuizSystem {
                         </button>
                     `).join('')}
                 </div>
-                
+            `;
+        } else if (questionType === 'checkbox') {
+            // Checkbox - Multiple choice with checkboxes
+            const optionsPerColumn = Math.ceil(question.options.length / 2);
+            const leftColumnOptions = question.options.slice(0, optionsPerColumn);
+            const rightColumnOptions = question.options.slice(optionsPerColumn);
+            
+            questionHTML += `
+                <div class="mb-8" id="quizOptionsContainer">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="space-y-3">
+                            ${leftColumnOptions.map((option, index) => `
+                                <label class="flex items-start space-x-3 p-4 rounded-2xl border-2 border-gray-200 transition-all duration-300 cursor-pointer quiz-checkbox-option group shadow-soft" 
+                                       data-option-index="${index}">
+                                    <input type="checkbox" class="mt-1 w-5 h-5 text-nebula-600 bg-gray-100 border-gray-300 rounded focus:ring-nebula-500 focus:ring-2" 
+                                           data-option-index="${index}" onchange="quizSystem.toggleCheckboxOption(this, ${index})">
+                                    <div class="flex items-center space-x-3 flex-1">
+                                        <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-gray-600 transition-colors text-sm">
+                                            ${String.fromCharCode(65 + index)}.
+                                        </div>
+                                        <span class="option-text text-gray-800 font-medium">${option}</span>
+                                    </div>
+                                </label>
+                            `).join('')}
+                        </div>
+                        <div class="space-y-3">
+                            ${rightColumnOptions.map((option, index) => `
+                                <label class="flex items-start space-x-3 p-4 rounded-2xl border-2 border-gray-200 transition-all duration-300 cursor-pointer quiz-checkbox-option group shadow-soft" 
+                                       data-option-index="${index + optionsPerColumn}">
+                                    <input type="checkbox" class="mt-1 w-5 h-5 text-nebula-600 bg-gray-100 border-gray-300 rounded focus:ring-nebula-500 focus:ring-2" 
+                                           data-option-index="${index + optionsPerColumn}" onchange="quizSystem.toggleCheckboxOption(this, ${index + optionsPerColumn})">
+                                    <div class="flex items-center space-x-3 flex-1">
+                                        <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-gray-600 transition-colors text-sm">
+                                            ${String.fromCharCode(65 + index + optionsPerColumn)}.
+                                        </div>
+                                        <span class="option-text text-gray-800 font-medium">${option}</span>
+                                    </div>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button id="submitCheckboxAnswer" onclick="quizSystem.submitCheckboxAnswer()" 
+                                class="bg-gradient-to-r from-nebula-500 to-nebula-purple-500 hover:from-nebula-600 hover:to-nebula-purple-600 text-white px-8 py-3 rounded-2xl font-semibold transition-all duration-300 shadow-medium hover:shadow-strong transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            Submit Answer
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        questionHTML += `
                 <div id="quizResult" class="hidden mb-6 p-6 rounded-2xl shadow-soft"></div>
                 
                 ${question.explanation_image ? `
@@ -79,10 +146,46 @@ class QuizSystem {
 
         // Check if question was already answered
         if (this.answers[questionIndex] !== undefined) {
-            const selectedOption = this.answers[questionIndex];
-            const optionElement = container.querySelector(`[data-option-index="${selectedOption}"]`);
-            if (optionElement) {
-                this.selectOption(optionElement, selectedOption, true);
+            if (questionType === 'mcq') {
+                const selectedOption = this.answers[questionIndex];
+                const optionElement = container.querySelector(`[data-option-index="${selectedOption}"]`);
+                if (optionElement) {
+                    this.selectOption(optionElement, selectedOption, true);
+                }
+            } else if (questionType === 'checkbox') {
+                const selectedOptions = this.answers[questionIndex];
+                if (Array.isArray(selectedOptions)) {
+                    selectedOptions.forEach(optionIndex => {
+                        const checkbox = container.querySelector(`input[data-option-index="${optionIndex}"]`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            this.updateCheckboxVisualState(optionIndex, true);
+                        }
+                    });
+                    
+                    // Disable all checkboxes and labels if already answered
+                    const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
+                    allCheckboxes.forEach(cb => {
+                        cb.disabled = true;
+                        cb.style.pointerEvents = 'none';
+                    });
+                    
+                    const allLabels = container.querySelectorAll('.quiz-checkbox-option');
+                    allLabels.forEach(label => {
+                        label.style.pointerEvents = 'none';
+                        label.style.cursor = 'default';
+                    });
+                    
+                    // Disable submit button
+                    const submitBtn = container.querySelector('#submitCheckboxAnswer');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Answer Submitted';
+                    }
+                    
+                    // Show the result if already answered
+                    this.showCheckboxResult(questionIndex, selectedOptions, true);
+                }
             }
         }
     }
@@ -90,6 +193,10 @@ class QuizSystem {
     selectOption(element, optionIndex, isReview = false) {
         const questionIndex = this.currentQuestionIndex;
         const question = this.questions[questionIndex];
+        const questionType = question.type || 'mcq';
+
+        // Only handle MCQ questions here
+        if (questionType !== 'mcq') return;
 
         // Store answer
         this.answers[questionIndex] = optionIndex;
@@ -136,19 +243,19 @@ class QuizSystem {
                         <span class="font-semibold">Incorrect</span>
                     </div>
                     <p class="mt-2">${question.explanation || 'Let me help you understand the correct answer.'}</p>
+                    ${!isReview ? `
+                        <div class="mt-4 pt-3 border-t border-red-200">
+                            <button onclick="quizSystem.askAIForHelp('mcq', ${optionIndex})" 
+                                    class="group bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center space-x-2">
+                                <i class="fas fa-robot group-hover:animate-pulse"></i>
+                                <span>Ask AI: Why is this answer wrong?</span>
+                            </button>
+                        </div>
+                    ` : ''}
                 `;
             }
 
             if (explanationImage) explanationImage.classList.remove('hidden');
-
-            // Trigger remedial chat for wrong answers (only on first attempt)
-            if (!isReview) {
-                setTimeout(() => {
-                    if (typeof openQuizFailureChat === 'function') {
-                        openQuizFailureChat(question, optionIndex);
-                    }
-                }, 2000);
-            }
         }
 
         if (result) result.classList.remove('hidden');
@@ -166,6 +273,197 @@ class QuizSystem {
         this.updateNavigation();
     }
 
+    // New methods for checkbox questions
+    toggleCheckboxOption(checkbox, optionIndex) {
+        // Check if this question is already answered
+        const questionIndex = this.currentQuestionIndex;
+        if (this.answers[questionIndex] !== undefined) {
+            // Question already answered, prevent changes
+            checkbox.checked = !checkbox.checked; // Revert the change
+            return;
+        }
+        
+        this.updateCheckboxVisualState(optionIndex, checkbox.checked);
+    }
+
+    updateCheckboxVisualState(optionIndex, isSelected) {
+        const label = document.querySelector(`label[data-option-index="${optionIndex}"]`);
+        if (label) {
+            if (isSelected) {
+                label.classList.add('bg-nebula-50', 'border-nebula-400');
+                label.classList.remove('border-gray-200');
+            } else {
+                label.classList.remove('bg-nebula-50', 'border-nebula-400');
+                label.classList.add('border-gray-200');
+            }
+        }
+    }
+
+    submitCheckboxAnswer() {
+        const questionIndex = this.currentQuestionIndex;
+        const question = this.questions[questionIndex];
+        
+        // Get selected options
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+        const selectedOptions = Array.from(checkboxes).map(cb => parseInt(cb.dataset.optionIndex));
+        
+        // Store answer
+        this.answers[questionIndex] = selectedOptions;
+        window.quizAnswers = this.answers;
+        
+        // Show result
+        this.showCheckboxResult(questionIndex, selectedOptions);
+        
+        // Disable submit button and ALL checkboxes (not just checked ones)
+        const submitBtn = document.getElementById('submitCheckboxAnswer');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Answer Submitted';
+        }
+        
+        // Disable ALL checkboxes in the current question
+        const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+        allCheckboxes.forEach(cb => {
+            cb.disabled = true;
+            cb.style.pointerEvents = 'none';
+        });
+        
+        // Also disable the labels to prevent clicking
+        const allLabels = document.querySelectorAll('.quiz-checkbox-option');
+        allLabels.forEach(label => {
+            label.style.pointerEvents = 'none';
+            label.style.cursor = 'default';
+        });
+        
+        this.updateNavigation();
+    }
+
+    showCheckboxResult(questionIndex, selectedOptions, isReview = false) {
+        const question = this.questions[questionIndex];
+        const correctAnswers = question.correct_answers || [];
+        const result = document.getElementById('quizResult');
+        const explanationImage = document.getElementById('quizExplanationImage');
+        
+        // Check if answer is correct
+        const isCorrect = this.arraysEqual(selectedOptions.sort(), correctAnswers.sort());
+        
+        // Update visual states for all options
+        const allOptions = document.querySelectorAll('.quiz-checkbox-option');
+        allOptions.forEach((option, index) => {
+            const isSelected = selectedOptions.includes(index);
+            const isCorrectOption = correctAnswers.includes(index);
+            
+            option.classList.remove('bg-green-100', 'border-green-500', 'text-green-800',
+                                  'bg-red-100', 'border-red-500', 'text-red-800',
+                                  'bg-emerald-100', 'border-emerald-400', 'text-emerald-800');
+            
+            if (isCorrectOption && isSelected) {
+                // Correct option selected - bright green
+                option.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+            } else if (isCorrectOption && !isSelected) {
+                // Correct option not selected - lighter green shade
+                option.classList.add('bg-emerald-100', 'border-emerald-400', 'text-emerald-800');
+            } else if (!isCorrectOption && isSelected) {
+                // Incorrect option selected
+                option.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+            }
+        });
+        
+        // Show result message
+        if (result) {
+            if (isCorrect) {
+                result.className = 'block mb-4 p-4 rounded-xl bg-green-100 text-green-800 border border-green-300';
+                result.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-check-circle text-green-600"></i>
+                        <span class="font-semibold">Correct!</span>
+                    </div>
+                    <p class="mt-2">${question.explanation || 'Great job! You understand this concept well.'}</p>
+                `;
+                
+                if (!isReview) {
+                    this.score++;
+                    window.quizScore = this.score;
+                    this.updateScore();
+                }
+            } else {
+                result.className = 'block mb-4 p-4 rounded-xl bg-red-100 text-red-800 border border-red-300';
+                result.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-times-circle text-red-600"></i>
+                        <span class="font-semibold">Incorrect</span>
+                    </div>
+                    <p class="mt-2">${question.explanation || 'Let me help you understand the correct answer.'}</p>
+                    ${!isReview ? `
+                        <div class="mt-4 pt-3 border-t border-red-200">
+                            <button onclick="quizSystem.askAIForHelp('checkbox', ${JSON.stringify(selectedOptions)})" 
+                                    class="group bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-medium hover:shadow-strong transform hover:-translate-y-1 flex items-center space-x-2">
+                                <i class="fas fa-robot group-hover:animate-pulse"></i>
+                                <span>Ask AI: Why are these answers wrong?</span>
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+            }
+            result.classList.remove('hidden');
+        }
+        
+        if (explanationImage) explanationImage.classList.remove('hidden');
+    }
+
+    arraysEqual(a, b) {
+        return a.length === b.length && a.every((val, index) => val === b[index]);
+    }
+
+    askAIForHelp(questionType, userAnswer) {
+        const questionIndex = this.currentQuestionIndex;
+        const question = this.questions[questionIndex];
+        
+        if (typeof openQuizFailureChat === 'function') {
+            if (questionType === 'checkbox') {
+                // Format selected options text for checkbox questions
+                const selectedOptions = Array.isArray(userAnswer) ? userAnswer : JSON.parse(userAnswer);
+                const selectedOptionsText = selectedOptions.map(index => question.options[index]).join(', ');
+                const correctAnswers = question.correct_answers || [];
+                const correctOptionsText = correctAnswers.map(index => question.options[index]).join(', ');
+                
+                // Create a modified question object with formatted text
+                const formattedQuestion = {
+                    ...question,
+                    selectedOptionsText: selectedOptionsText,
+                    correctOptionsText: correctOptionsText,
+                    questionType: 'checkbox'
+                };
+                
+                openQuizFailureChat(formattedQuestion, selectedOptionsText);
+            } else {
+                // Handle MCQ questions
+                openQuizFailureChat(question, userAnswer);
+            }
+        }
+    }
+
+    scrollToQuizTop() {
+        // Find the quiz question container and scroll to it smoothly
+        const quizContainer = document.getElementById('quizQuestionContainer');
+        if (quizContainer) {
+            quizContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start',
+                inline: 'nearest'
+            });
+        } else {
+            // Fallback: find quiz section
+            const quizSection = document.querySelector('section.bg-gradient-to-br.from-gray-50.to-white');
+            if (quizSection) {
+                quizSection.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+        }
+    }
+
     nextQuestion() {
         if (this.currentQuestionIndex < this.questions.length - 1) {
             this.currentQuestionIndex++;
@@ -173,6 +471,9 @@ class QuizSystem {
             this.loadQuestion(this.currentQuestionIndex);
             this.updateProgress();
             this.updateNavigation();
+            
+            // Scroll to top of quiz section
+            this.scrollToQuizTop();
         } else {
             this.completeQuiz();
         }
@@ -185,6 +486,9 @@ class QuizSystem {
             this.loadQuestion(this.currentQuestionIndex);
             this.updateProgress();
             this.updateNavigation();
+            
+            // Scroll to top of quiz section
+            this.scrollToQuizTop();
         }
     }
 
@@ -283,6 +587,19 @@ class QuizSystem {
         }
 
         if (nextBtn) {
+            // Check if current question is answered
+            const currentQuestion = this.questions[this.currentQuestionIndex];
+            const questionType = currentQuestion?.type || 'mcq';
+            const isAnswered = this.answers[this.currentQuestionIndex] !== undefined;
+            
+            // For checkbox questions, check if answer is submitted
+            const isCheckboxSubmitted = questionType === 'checkbox' ? 
+                document.getElementById('submitCheckboxAnswer')?.disabled : true;
+            
+            const canProceed = isAnswered && (questionType === 'mcq' || isCheckboxSubmitted);
+            
+            nextBtn.disabled = !canProceed;
+            
             if (this.currentQuestionIndex === this.questions.length - 1) {
                 nextBtn.innerHTML = '<span>Finish Quiz</span><i class="fas fa-check group-hover:translate-x-1 transition-transform duration-200"></i>';
             } else {
