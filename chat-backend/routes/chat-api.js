@@ -3,6 +3,7 @@ const router = express.Router();
 const Joi = require('joi');
 const aiService = require('../services/ai-service');
 const promptService = require('../services/prompt-service');
+const { contextPolicies } = require('../config/llm-config');
 const sessionService = require('../services/session-service');
 const logger = require('../services/logger');
 
@@ -85,12 +86,39 @@ router.post('/', async (req, res) => {
     // Get AI response
     logger.aiRequest(fullPrompt, { topic, context, sessionId: currentSessionId });
     
-    const aiResponse = await aiService.generateResponse(fullPrompt, {
+    const policy = contextPolicies[context] || contextPolicies.general;
+    let aiResponse = await aiService.generateResponse(fullPrompt, {
       generationConfig: {
-        temperature: context === 'quiz_failed' ? 0.5 : 0.7, // More focused for quiz explanations
-        maxOutputTokens: context === 'summary' ? 1500 : 1000 // More tokens for summaries
+        temperature: policy.temperature,
+        maxOutputTokens: policy.maxOutputTokens
       }
     });
+
+    // Auto-continue if truncated and context expects long-form content (single combined response)
+    if (policy.autoContinue?.enabled) {
+      let guard = 0;
+      const maxRounds = policy.autoContinue.maxRounds || 0;
+      while (aiResponse?.metadata?.finishReason === 'MAX_TOKENS' && guard < maxRounds) {
+        const continuePrompt = `${aiResponse.text}\n\nContinue from where you stopped. Do not repeat earlier content. Stay strictly within the topic: ${topic}.`;
+        const continuation = await aiService.generateResponse(continuePrompt, {
+          generationConfig: {
+            temperature: policy.temperature,
+            maxOutputTokens: policy.autoContinue.continuationMaxTokens || policy.maxOutputTokens
+          }
+        });
+        if (continuation?.error || !continuation?.text) {
+          break;
+        }
+        aiResponse.text = `${aiResponse.text}\n\n${continuation.text}`;
+        aiResponse.metadata.tokensEstimate += Math.ceil(continuation.text.length / 4);
+        aiResponse.metadata.finishReason = continuation.metadata?.finishReason || aiResponse.metadata.finishReason;
+        guard++;
+        // Continue loop if still truncated
+        if (continuation.metadata?.finishReason !== 'MAX_TOKENS') {
+          break;
+        }
+      }
+    }
 
     if (aiResponse.error) {
       logger.error('AI Service returned error', {

@@ -1,5 +1,6 @@
 const config = require('../config/llm-config');
 const logger = require('./logger');
+const { normalizeMarkdown } = require('./markdown-service');
 
 class AIService {
   constructor() {
@@ -15,10 +16,13 @@ class AIService {
       
       const requestBody = {
         contents: [{
+          role: 'user',
           parts: [{ text: prompt }]
         }],
         generationConfig: {
           ...config.gemini.generationConfig,
+          // Force plain text to avoid tool/function-call structures with 2.5 models
+          responseMimeType: 'text/plain',
           ...options.generationConfig
         }
       };
@@ -28,8 +32,10 @@ class AIService {
         model: config.gemini.model
       });
 
+      // Use the configured model if provided, otherwise default to 2.5 flash
+      const modelName = config.gemini.model || 'gemini-1.5-flash-latest';
       const response = await fetch(
-        `${config.gemini.apiUrl}/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`,
+        `${config.gemini.apiUrl}/${modelName}:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: {
@@ -60,23 +66,60 @@ class AIService {
         responseLength: JSON.stringify(data).length
       });
 
-      // Extract response text
+      // Extract response text robustly for Gemini 2.5
       let responseText = '';
-      if (data.candidates && data.candidates.length > 0 &&
-          data.candidates[0].content && data.candidates[0].content.parts &&
-          data.candidates[0].content.parts.length > 0) {
-        responseText = data.candidates[0].content.parts[0].text;
-      } else {
-        logger.warn('Unexpected Gemini response structure', { data });
-        responseText = "I apologize, but I'm having trouble generating a response right now. Could you please rephrase your question?";
+      const candidates = Array.isArray(data?.candidates) ? data.candidates : [];
+      const firstCandidate = candidates[0];
+
+      // Prefer concatenating all text parts from the first candidate
+      const parts = firstCandidate?.content?.parts;
+      if (Array.isArray(parts) && parts.length > 0) {
+        responseText = parts
+          .map(p => (typeof p.text === 'string' ? p.text : ''))
+          .filter(Boolean)
+          .join('');
       }
 
+      // If empty, try any candidate with parts/text
+      if (!responseText && candidates.length > 0) {
+        for (const c of candidates) {
+          const cParts = c?.content?.parts;
+          if (Array.isArray(cParts) && cParts.length > 0) {
+            responseText = cParts
+              .map(p => (typeof p.text === 'string' ? p.text : ''))
+              .filter(Boolean)
+              .join('');
+            if (responseText) break;
+          }
+        }
+      }
+
+      // As a last resort, check for top-level text fields some responses may include
+      if (!responseText) {
+        responseText = firstCandidate?.text || data?.text || '';
+      }
+
+      // Log finish reason and prompt feedback for diagnostics
+      const finishReason = firstCandidate?.finishReason || data?.finishReason;
+      const promptFeedback = data?.promptFeedback;
+      if (!responseText) {
+        logger.warn('Unexpected Gemini response structure', { finishReason, promptFeedback, data });
+        responseText = "I apologize, but I'm having trouble generating a response right now. Could you please rephrase your question?";
+      } else if (finishReason === 'MAX_TOKENS') {
+        // Note partial completion due to token cap
+        logger.warn('Gemini response truncated due to MAX_TOKENS', { finishReason });
+      }
+
+      // Normalize Markdown for consistent rendering across models
+      const normalizedText = normalizeMarkdown(responseText);
+
       return {
-        text: responseText,
+        text: normalizedText,
         metadata: {
           responseTime,
-          model: 'gemini-1.5-flash-latest',
-          tokensEstimate: Math.ceil(responseText.length / 4) // Rough estimate
+          model: modelName,
+          tokensEstimate: Math.ceil(responseText.length / 4), // Rough estimate
+          finishReason
         }
       };
 

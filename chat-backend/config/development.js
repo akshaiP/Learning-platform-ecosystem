@@ -20,10 +20,12 @@ module.exports = {
     // AI Configuration
     ai: {
       provider: 'gemini',
-      model: 'gemini-1.5-flash-latest',
-      temperature: 0.7,
-      maxTokens: 2048,
-      timeout: 30000
+      // MODEL CHANGE: Switch between versions by changing this line
+      // For 2.5 Flash: 'gemini-2.5-flash-latest'
+      // For 1.5 Flash: 'gemini-1.5-flash-latest' 
+      // For 2.5 Pro: 'gemini-2.5-pro-latest'
+      model: 'gemini-1.5-flash-latest', // ✅ CHANGED: Updated from 1.5 to 2.5 Flash
+      // ... rest of config
     },
   
     // Session management

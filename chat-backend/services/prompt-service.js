@@ -28,7 +28,7 @@ class PromptService {
       // Build conversation context for follow-ups
       const conversationContext = this.buildConversationContext(conversationHistory, isFirstMessage);
       
-      // Build topic boundary enforcement
+      // Build topic boundary enforcement (optional, generic)
       const topicBoundary = this.buildTopicBoundary(topic);
       
       // Assemble final prompt
@@ -69,8 +69,7 @@ class PromptService {
    */
   getSystemPrompt(context, topic) {
     const basePrompt = this.systemPrompts[context] || this.systemPrompts.general;
-    return basePrompt.replace(/\[CURRENT_TOPIC\]/g, topic)
-                   .replace(/\[TOPIC_SPECIFIC_CONCEPT\]/g, this.getTopicConcepts(topic));
+    return `${basePrompt}\n\nCURRENT TOPIC: ${topic}`;
   }
 
   /**
@@ -122,44 +121,35 @@ class PromptService {
    */
   buildTopicBoundary(topic) {
     const keywords = this.topicKeywords[topic] || [];
-    
-    return `TOPIC BOUNDARY: Stay focused on "${topic}". 
-Key concepts to emphasize: ${keywords.join(', ')}.
-If the question goes outside this scope, politely redirect to relevant aspects of ${topic}.`;
+    if (!keywords.length) {
+      return `TOPIC BOUNDARY: Stay focused on "${topic}". If the question goes outside this scope, briefly redirect back to relevant aspects of the topic.`;
+    }
+    return `TOPIC BOUNDARY: Stay focused on "${topic}". \nKey concepts to emphasize: ${keywords.join(', ')}.\nIf the question goes outside this scope, politely redirect to relevant aspects of ${topic}.`;
   }
 
   /**
    * Get topic-specific concepts for prompt replacement
    */
   getTopicConcepts(topic) {
-    const conceptMap = {
-      'robot-arm-movement': 'coordinate systems and arm positioning',
-      'sensor-integration': 'sensor data collection and processing',
-      'control-systems': 'feedback loops and system stability'
-    };
-    
-    return conceptMap[topic] || 'the current topic concepts';
+    // Course-agnostic placeholder
+    return 'the current topic concepts';
   }
 
   /**
    * Validate if response stays within topic boundaries
    */
   validateTopicBoundary(response, topic) {
-    if (!topic || !this.topicKeywords[topic]) {
-      return { valid: true, confidence: 0.5 };
+    // If no keywords configured (default), consider valid
+    if (!topic || !this.topicKeywords[topic] || this.topicKeywords[topic].length === 0) {
+      return { valid: true, confidence: 1.0 };
     }
 
     const keywords = this.topicKeywords[topic];
     const responseText = response.toLowerCase();
-    
-    // Count keyword matches
-    const matches = keywords.filter(keyword => 
-      responseText.includes(keyword.toLowerCase())
-    );
-    
+    const matches = keywords.filter(keyword => responseText.includes(keyword.toLowerCase()));
     const confidence = matches.length / keywords.length;
-    const valid = confidence > 0.2; // At least 20% keyword coverage
-    
+    const valid = confidence > 0.2;
+
     logger.debug('Topic boundary validation', {
       topic,
       confidence,
