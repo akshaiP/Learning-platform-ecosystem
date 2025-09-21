@@ -1,0 +1,10 @@
+test-output/
+output/
+temp/
+web-ui/public/downloads/
+web-ui/public/uploads/
+node_modules/
+.git/
+*.log
+.env
+.DS_Store

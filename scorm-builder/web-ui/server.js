@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const { buildTopic } = require('../build.js');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8080;
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
