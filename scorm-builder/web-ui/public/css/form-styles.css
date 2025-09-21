@@ -199,6 +199,60 @@ button:active {
     background-color: #f8fafc;
 }
 
+/* Checkbox question styling */
+.checkbox-option {
+    accent-color: #4A9B8E;
+    transform: scale(1.2);
+    margin-right: 8px;
+}
+
+.checkbox-option:checked {
+    background-color: #4A9B8E;
+    border-color: #4A9B8E;
+}
+
+/* Question type indicator */
+.question-type-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.question-type-mcq {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.question-type-checkbox {
+    background-color: #f3e8ff;
+    color: #7c3aed;
+}
+
+/* Help text styling */
+.quiz-help-text {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Enhanced form validation for quiz questions */
+.quiz-question-item.invalid {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+.quiz-question-item.valid {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .form-section {

@@ -309,11 +309,21 @@ function processQuiz(quizQuestions, body, imageMap) {
     const questions = quizQuestions.map((question, index) => {
         const q = {
             id: `q${index + 1}`,
+            type: question.type || 'mcq', // Default to MCQ for backward compatibility
             question: question.question || '',
             options: parseOptions(question.options) || [],
-            correct_answer: parseInt(question.correctAnswer) || 0,
             explanation: question.explanation || ''
         };
+        
+        // Handle different question types
+        if (question.type === 'checkbox') {
+            // Multiple choice question
+            q.correct_answers = question.correctAnswers || [];
+        } else {
+            // Single choice question (MCQ)
+            q.correct_answer = parseInt(question.correctAnswer) || 0;
+        }
+        
         if (question._id) {
             const imageKey = `quizQuestion_${question._id}_explanationImage`;
             if (imageMap[imageKey] && imageMap[imageKey][0]) {

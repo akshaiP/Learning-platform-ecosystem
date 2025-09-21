@@ -125,13 +125,38 @@ function validateFormData(data) {
                     message: `Quiz question ${index + 1} must have at least 2 options` 
                 });
             }
-            if (typeof question.correctAnswer !== 'number' || 
-                question.correctAnswer < 0 || 
-                question.correctAnswer >= question.options.length) {
-                errors.push({ 
-                    field: `quizQuestions[${index}].correctAnswer`, 
-                    message: `Quiz question ${index + 1} must have a valid correct answer selected` 
-                });
+            
+            // Validate question type
+            const questionType = question.type || 'mcq';
+            if (questionType === 'mcq') {
+                // Single choice validation
+                if (typeof question.correctAnswer !== 'number' || 
+                    question.correctAnswer < 0 || 
+                    question.correctAnswer >= question.options.length) {
+                    errors.push({ 
+                        field: `quizQuestions[${index}].correctAnswer`, 
+                        message: `Quiz question ${index + 1} must have a valid correct answer selected` 
+                    });
+                }
+            } else if (questionType === 'checkbox') {
+                // Multiple choice validation
+                if (!Array.isArray(question.correctAnswers) || question.correctAnswers.length === 0) {
+                    errors.push({ 
+                        field: `quizQuestions[${index}].correctAnswers`, 
+                        message: `Quiz question ${index + 1} must have at least one correct answer selected` 
+                    });
+                } else {
+                    // Validate that all selected answers are within valid range
+                    const invalidAnswers = question.correctAnswers.filter(answer => 
+                        typeof answer !== 'number' || answer < 0 || answer >= question.options.length
+                    );
+                    if (invalidAnswers.length > 0) {
+                        errors.push({ 
+                            field: `quizQuestions[${index}].correctAnswers`, 
+                            message: `Quiz question ${index + 1} has invalid correct answer selections` 
+                        });
+                    }
+                }
             }
         });
     }

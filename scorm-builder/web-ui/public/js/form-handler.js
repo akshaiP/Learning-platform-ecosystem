@@ -296,6 +296,19 @@ function addQuizQuestion() {
         </div>
         
         <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Question Type *</label>
+            <select name="quizQuestion_${questionId}_type" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    onchange="toggleQuestionType('${questionId}', this.value)">
+                <option value="mcq">Single Choice (MCQ)</option>
+                <option value="checkbox">Multiple Choice (Checkbox)</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">
+                Choose the question type based on how many correct answers you want
+            </p>
+        </div>
+        
+        <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">Question Text *</label>
             <textarea name="quizQuestion_${questionId}_question" required rows="2"
                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
@@ -312,7 +325,8 @@ function addQuizQuestion() {
             </div>
             <div id="quizOptions_${questionId}" class="space-y-2">
                 <div class="flex items-center space-x-4 quiz-option-item">
-                    <input type="radio" name="quizQuestion_${questionId}_correctAnswer" value="0" class="text-red-500">
+                    <input type="radio" name="quizQuestion_${questionId}_correctAnswer" value="0" class="text-red-500 mcq-option">
+                    <input type="checkbox" name="quizQuestion_${questionId}_correctAnswers" value="0" class="text-red-500 checkbox-option hidden">
                     <input type="text" name="quizQuestion_${questionId}_options" required
                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                            placeholder="Option 1">
@@ -322,7 +336,8 @@ function addQuizQuestion() {
                     </button>
                 </div>
                 <div class="flex items-center space-x-4 quiz-option-item">
-                    <input type="radio" name="quizQuestion_${questionId}_correctAnswer" value="1" class="text-red-500">
+                    <input type="radio" name="quizQuestion_${questionId}_correctAnswer" value="1" class="text-red-500 mcq-option">
+                    <input type="checkbox" name="quizQuestion_${questionId}_correctAnswers" value="1" class="text-red-500 checkbox-option hidden">
                     <input type="text" name="quizQuestion_${questionId}_options" required
                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                            placeholder="Option 2">
@@ -332,7 +347,9 @@ function addQuizQuestion() {
                     </button>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mt-2">Select the radio button next to the correct answer</p>
+            <p class="text-xs text-gray-500 mt-2">
+                Select the button next to the correct answer(s)
+            </p>
         </div>
         
         <div class="mb-4">
@@ -388,10 +405,30 @@ function addQuizOption(questionId) {
     const container = document.getElementById(`quizOptions_${questionId}`);
     const optionIndex = container.children.length;
     
+    // Get the current question type from the select dropdown
+    const questionItem = container.closest('.quiz-question-item');
+    const questionTypeSelect = questionItem.querySelector(`select[name*="_type"]`);
+    const currentQuestionType = questionTypeSelect ? questionTypeSelect.value : 'mcq';
+    
     const div = document.createElement('div');
     div.className = 'flex items-center space-x-4 quiz-option-item';
+    
+    // Create the appropriate input based on question type
+    let inputHTML = '';
+    if (currentQuestionType === 'checkbox') {
+        inputHTML = `
+            <input type="radio" name="quizQuestion_${questionId}_correctAnswer" value="${optionIndex}" class="text-red-500 mcq-option hidden">
+            <input type="checkbox" name="quizQuestion_${questionId}_correctAnswers" value="${optionIndex}" class="text-red-500 checkbox-option">
+        `;
+    } else {
+        inputHTML = `
+            <input type="radio" name="quizQuestion_${questionId}_correctAnswer" value="${optionIndex}" class="text-red-500 mcq-option">
+            <input type="checkbox" name="quizQuestion_${questionId}_correctAnswers" value="${optionIndex}" class="text-red-500 checkbox-option hidden">
+        `;
+    }
+    
     div.innerHTML = `
-        <input type="radio" name="quizQuestion_${questionId}_correctAnswer" value="${optionIndex}" class="text-red-500">
+        ${inputHTML}
         <input type="text" name="quizQuestion_${questionId}_options" required
                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                placeholder="Option ${optionIndex + 1}">
@@ -424,10 +461,39 @@ function updateOptionIndices(container) {
     const options = container.querySelectorAll('.quiz-option-item');
     options.forEach((option, index) => {
         const radio = option.querySelector('input[type="radio"][name*="_correctAnswer"]');
+        const checkbox = option.querySelector('input[type="checkbox"][name*="_correctAnswers"]');
         const input = option.querySelector('input[type="text"][name*="_options"]');
-        radio.value = index;
+        if (radio) radio.value = index;
+        if (checkbox) checkbox.value = index;
         input.placeholder = `Option ${index + 1}`;
     });
+}
+
+// Toggle between MCQ and Checkbox question types
+function toggleQuestionType(questionId, questionType) {
+    // Find the question item by looking for the select element that triggered this function
+    const selectElement = event.target;
+    const questionItem = selectElement.closest('.quiz-question-item');
+    
+    if (!questionItem) {
+        console.error('Could not find question item for questionId:', questionId);
+        return;
+    }
+    
+    const mcqOptions = questionItem.querySelectorAll('.mcq-option');
+    const checkboxOptions = questionItem.querySelectorAll('.checkbox-option');
+    
+    if (questionType === 'mcq') {
+        // Show radio buttons, hide checkboxes
+        mcqOptions.forEach(option => option.classList.remove('hidden'));
+        checkboxOptions.forEach(option => option.classList.add('hidden'));
+    } else if (questionType === 'checkbox') {
+        // Show checkboxes, hide radio buttons
+        mcqOptions.forEach(option => option.classList.add('hidden'));
+        checkboxOptions.forEach(option => option.classList.remove('hidden'));
+    }
+    
+    autoSave();
 }
 
 // Form Data Collection
@@ -513,14 +579,33 @@ function collectQuizQuestionsData() {
         const base = `quizQuestion_question_${qIndex}_`;
 
         const questionText = element.querySelector(`textarea[name="${base}question"]`)?.value || '';
+        const questionType = element.querySelector(`select[name="${base}type"]`)?.value || 'mcq';
         const optionInputs = Array.from(element.querySelectorAll(`input[name="${base}options"]`));
         const options = optionInputs.map(input => input.value.trim()).filter(Boolean);
         const explanation = element.querySelector(`textarea[name="${base}explanation"]`)?.value || '';
-        const selectedRadio = element.querySelector(`input[type="radio"][name="${base}correctAnswer"]:checked`);
-        const correctAnswer = selectedRadio ? parseInt(selectedRadio.value) : 0;
 
-        const questionData = { question: questionText, options, explanation, correctAnswer };
-        if (questionData.question && questionData.options.length >= 2) questions.push(questionData);
+        let questionData = { 
+            question: questionText, 
+            type: questionType,
+            options, 
+            explanation 
+        };
+
+        if (questionType === 'mcq') {
+            // Single choice question
+            const selectedRadio = element.querySelector(`input[type="radio"][name="${base}correctAnswer"]:checked`);
+            const correctAnswer = selectedRadio ? parseInt(selectedRadio.value) : 0;
+            questionData.correctAnswer = correctAnswer;
+        } else if (questionType === 'checkbox') {
+            // Multiple choice question
+            const selectedCheckboxes = Array.from(element.querySelectorAll(`input[type="checkbox"][name="${base}correctAnswers"]:checked`));
+            const correctAnswers = selectedCheckboxes.map(cb => parseInt(cb.value));
+            questionData.correctAnswers = correctAnswers;
+        }
+
+        if (questionData.question && questionData.options.length >= 2) {
+            questions.push(questionData);
+        }
     });
     
     return questions;
