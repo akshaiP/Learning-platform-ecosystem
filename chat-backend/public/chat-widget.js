@@ -158,12 +158,99 @@ class ChatWidget {
   }
 
   formatMessage(text) {
-    // Basic formatting for better readability
-    return text
+    const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // 1) Code fences to HTML blocks first
+    const renderCodeFences = (s) => s.replace(/```([\s\S]*?)```/g, (m, code) => `<pre><code>${escapeHtml(code.trim())}</code></pre>`);
+
+    // 2) Markdown tables to HTML blocks
+    const renderTables = (s) => {
+      const lines = s.split('\n');
+      const out = [];
+      let i = 0;
+      while (i < lines.length) {
+        const header = lines[i] || '';
+        const sep = lines[i + 1] || '';
+        const isHeader = /\|/.test(header) && /^\s*\|?\s*(:?-{3,}:?\s*\|\s*)+(:?-{3,}:?)?\s*\|?\s*$/.test(sep);
+        if (isHeader) {
+          const headerCells = header.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+          i += 2;
+          const rows = [];
+          while (i < lines.length && /\|/.test(lines[i])) {
+            const rowCells = lines[i].trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+            rows.push(rowCells);
+            i++;
+          }
+          let html = '<div class="table-wrapper"><table class="md-table"><thead><tr>';
+          headerCells.forEach(h => { html += `<th>${escapeHtml(h)}</th>`; });
+          html += '</tr></thead><tbody>';
+          rows.forEach(r => { html += '<tr>' + r.map(c => `<td>${escapeHtml(c)}</td>`).join('') + '</tr>'; });
+          html += '</tbody></table></div>';
+          out.push(html);
+          continue;
+        }
+        out.push(lines[i]);
+        i++;
+      }
+      return out.join('\n');
+    };
+
+    const renderInline = (s) => s
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code>$1</code>')
-      .replace(/\n/g, '<br>');
+      .replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\[(.*?)\]\((https?:[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1<\/a>');
+
+    // 3) Block renderer that preserves previously generated HTML blocks
+    const renderBlocks = (s) => {
+      const blocks = s.split(/\n\n+/);
+      const out = [];
+      for (let b of blocks) {
+        const trimmed = b.trim();
+        if (!trimmed) continue;
+        if (trimmed.startsWith('<pre') || trimmed.startsWith('<div class="table-wrapper"')) {
+          out.push(trimmed);
+          continue;
+        }
+        // Handle lists: allow optional blank lines inside the block
+        const lines = trimmed.split('\n');
+        const listLines = lines.filter(l => /^\s*[-*•]\s+\S/.test(l));
+        if (listLines.length > 0 && listLines.length >= lines.length - 1) {
+          const items = lines
+            .filter(l => /^\s*[-*•]\s+\S/.test(l))
+            .map(l => l.replace(/^\s*[-*•]\s+/, ''));
+          out.push('<ul>' + items.map(it => `<li>${renderInline(escapeHtml(it))}</li>`).join('') + '</ul>');
+          continue;
+        }
+        // Heuristic: convert multiple "Term: description" lines into a bullet list
+        const termDescMatches = lines
+          .map(l => l.match(/^\s*([^:]{2,80}):\s+(.+)$/))
+          .filter(m => !!m);
+        if (termDescMatches.length >= 3 && termDescMatches.length >= Math.floor(lines.length * 0.6)) {
+          const items = lines
+            .map(l => l.match(/^\s*([^:]{2,80}):\s+(.+)$/))
+            .filter(m => !!m)
+            .map(m => `<li><strong>${renderInline(escapeHtml(m[1]))}:</strong> ${renderInline(escapeHtml(m[2]))}</li>`);
+          out.push('<ul>' + items.join('') + '</ul>');
+          continue;
+        }
+        // Headings (single-line)
+        if (/^#{1,6} \S/.test(trimmed)) {
+          const level = (trimmed.match(/^#+/)[0] || '#').length;
+          out.push(`<h${level}>${renderInline(escapeHtml(trimmed.replace(/^#+\s*/, '')))}</h${level}>`);
+          continue;
+        }
+        // Paragraph: join lines with a space to avoid large gaps
+        out.push(`<p>${renderInline(escapeHtml(lines.join(' ')))}</p>`);
+      }
+      return out.join('');
+    };
+
+    let processed = String(text || '');
+    processed = renderCodeFences(processed);
+    processed = renderTables(processed);
+    processed = renderBlocks(processed);
+    return processed;
   }
 
   showTyping() {

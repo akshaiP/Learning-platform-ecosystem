@@ -1,0 +1,194 @@
+{
+    "title": "Types of Mobile Robots & Key Components",
+    "description": "Understand mobile robot principles, classifications, and hands-on AGV teleoperation.",
+    
+    "learning_objectives": [
+      "Grasp the fundamental principles of mobile robots and their operations.",
+      "Understand the classification of robots based on mobility and operational modes.",
+      "Learn about environmental classifications for robotic applications.",
+      "Develop basic Python programming skills for robot logic.",
+      "Gain hands-on exposure to AGV (Automated Guided Vehicle) teleoperation in a virtual setup.",
+      "Write, run, and modify Python programs to simulate robot movements.",
+      "Visualize robot actions in RViz.",
+      "Apply sequence editing to control robot paths."
+    ],
+  
+    "content": {
+      "company_logo": {
+        "src": "nebula-logo.png",
+        "alt": "Nebula KnowLab Logo"
+      },
+  
+      "task_statement": "Types of Mobile Robots & Key Components - Part 2",
+  
+      "task_steps": [
+        {
+          "title": "Open VS Code & Ubuntu Terminal",
+          "description": "Open VS Code and launch Ubuntu terminal.",
+          "instructions": "Start VS Code on your system and from VS Code open a new Ubuntu terminal.",
+          "images": [
+            {
+              "src": "1.png",
+              "alt": "Open VS Code and Ubuntu terminal"
+            }
+          ]
+        },
+        {
+          "title": "Launch RViz",
+          "description": "Start RViz visualization.",
+          "instructions": "Type the launch command in terminal:\n\nros2 launch my_agv_examples teleop_demo.launch.py",
+          "code": {
+            "content": "ros2 launch my_agv_examples teleop_demo.launch.py",
+            "language": "bash"
+          },
+          "images": [
+            {
+              "src": "2.png",
+              "alt": "Launch RViz"
+            }
+          ]
+        },
+        {
+          "title": "Check Command Terminal",
+          "description": "Verify no errors appear.",
+          "instructions": "Ensure the terminal output does not show errors after launching.",
+          "images": [
+            {
+              "src": "3.png",
+              "alt": "Check terminal output"
+            }
+          ]
+        },
+        {
+          "title": "RViz Visualization",
+          "description": "Verify robot view in RViz.",
+          "instructions": "Confirm RViz displays the AGV model without errors.",
+          "images": [
+            {
+              "src": "4.png",
+              "alt": "RViz Visualization"
+            }
+          ]
+        },
+        {
+          "title": "Open Python File",
+          "description": "Access the Python file for programming.",
+          "instructions": "In VS Code, open the Python program file for robot movement.",
+          "images": [
+            {
+              "src": "5.png",
+              "alt": "Open Python program file"
+            }
+          ]
+        },
+        {
+          "title": "Select Program File",
+          "description": "Copy-paste the given path and open the Python program.",
+          "instructions": "Use the file explorer or paste the provided path to open the robot program file.",
+          "images": [
+            {
+              "src": "6.png",
+              "alt": "Select Python file"
+            }
+          ]
+        },
+        {
+          "title": "Launch & Run Program",
+          "description": "Execute the Python file.",
+          "instructions": "Run the Python file from terminal and check it executes without error.",
+          "images": [
+            {
+              "src": "7.png",
+              "alt": "Run Python program"
+            }
+          ]
+        },
+        {
+          "title": "Visualize Movements",
+          "description": "Observe robot actions in RViz.",
+          "instructions": "Check RViz to see the robot movements executed from the Python program.",
+          "images": [
+            {
+              "src": "8.png",
+              "alt": "Visualize robot movements"
+            }
+          ]
+        },
+        {
+        "title": "Edit Program for Custom Sequence",
+        "description": "Modify robot steps to follow a chosen sequence.",
+        "instructions": "Edit the program by modifying the movement steps. Choose any sequence option and create the action path.\n\nAvailable sequence options:\n1) O → A → B → C → D → E → O\n2) O → C → A → O → E → D → O\n3) O → A → C → B → D → E → O\n4) O → B → D → A → E → C → O\n5) O → A → C → E → B → A → O",
+        "code": {
+            "content": "# Step-by-step sequence (students can edit here)\n# type = \"forward\", \"backward\", \"left\", \"right\", \"rotate_left\", \"rotate_right\"\nself.steps = [\n    {\"type\": \"forward\",      \"distance\": 1.0, \"speed\": 0.2},   # Step 1\n    {\"type\": \"right\",        \"distance\": 1.0, \"speed\": 0.2},   # Step 2\n    {\"type\": \"backward\",     \"distance\": 1.0, \"speed\": 0.2},   # Step 3\n    {\"type\": \"left\",         \"distance\": 1.0, \"speed\": 0.2},   # Step 4\n    {\"type\": \"rotate_left\",  \"angle\": 90.0,   \"speed\": 0.3},   # Step 5\n    {\"type\": \"rotate_right\", \"angle\": 90.0,   \"speed\": 0.3},   # Step 6\n]",
+            "language": "python"
+        },
+        "images": [
+            {
+            "src": "9.png",
+            "alt": "Edit Python program for sequence"
+            }
+        ]
+        }
+      ],
+  
+      "hero_image": {
+        "src": "mobile-robots-hero.jpg",
+        "alt": "Mobile robots classification and AGV demo"
+      }
+    },
+  
+    "quiz": {
+      "title": "Knowledge Check: Robot Movements",
+      "description": "Quick test on robot programming and sequence execution.",
+      "questions": [
+        {
+            "id": "q1",
+            "type": "checkbox",
+            "question": "Choose the basic components needed to construct an AGV (Select all that apply)",
+            "options": [
+              "Motor",
+              "Driver / Motor Driver",
+              "Charger",
+              "Industrial PC (IPC)",
+              "Controller (PLC / microcontroller)",
+              "Wheels",
+              "Light (indicator)",
+              "Steering Wheel",
+              "Propeller",
+              "LIDAR Sensor",
+              "Ultrasonic / IR Sensors",
+              "Conveyor Belt",
+              "Battery",
+              "Frame / Chassis",
+              "GPS Module",
+              "Speakers",
+              "Fan",
+              "Hydraulic Pump",
+              "Emergency Stop Button",
+              "Wi-Fi / Communication Module",
+              "Seat",
+              "Safety Bumpers",
+              "Air Conditioner",
+              "Solar Panel"
+            ],
+            "correct_answers": [0, 1, 2, 3, 4, 5, 9, 10, 12, 13, 14, 18, 19, 21],
+            "explanation": "Core AGV components include motors, motor drivers, charger, industrial PC, controller, wheels, LIDAR and ultrasonic/IR sensors, battery, frame/chassis, GPS module (for outdoor AGVs), emergency stop button, communication module, and safety bumpers. Optional items like lights, conveyor belts, or solar panels depend on the AGV design, while items such as seats, propellers, or hydraulic pumps are not used."
+          }
+      ],
+      "settings": {
+        "allow_retry": true,
+        "show_progress": true,
+        "randomize_questions": false,
+        "passing_score": 1
+      }
+    },
+  
+    "chat_contexts": {
+      "task_help": "Guide the learner through RViz launch, running Python files, and editing movement sequences.",
+      "movement_sequence": "Explain how step dictionaries define robot actions and how sequences can be modified.",
+      "rviz_visualization": "Troubleshoot RViz errors and ensure robot visualization matches the Python program.",
+      "python_editing": "Guide learners in editing Python movement steps and creating sequences.",
+      "quiz_failed": "Review step definitions, sequence logic, and RViz verification with examples.",
+      "hints_exhausted": "Provide support for terminal errors, Python syntax fixes, and RViz troubleshooting."
+    }
+  }  

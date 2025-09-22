@@ -19,7 +19,7 @@ module.exports = {
   // Per-context policies used by the chat route
   contextPolicies: {
     help: { temperature: 0.6, maxOutputTokens: 1200, autoContinue: { enabled: true, maxRounds: 1, continuationMaxTokens: 1200 } },
-    learn_more: { temperature: 0.7, maxOutputTokens: 2400, autoContinue: { enabled: true, maxRounds: 2, continuationMaxTokens: 2000 } },
+    learn_more: { temperature: 0.7, maxOutputTokens: 3200, autoContinue: { enabled: true, maxRounds: 3, continuationMaxTokens: 2800 } },
     practice: { temperature: 0.6, maxOutputTokens: 1400, autoContinue: { enabled: false, maxRounds: 0, continuationMaxTokens: 0 } },
     quiz_failed: { temperature: 0.5, maxOutputTokens: 1000, autoContinue: { enabled: false, maxRounds: 0, continuationMaxTokens: 0 } },
     summary: { temperature: 0.6, maxOutputTokens: 2800, autoContinue: { enabled: true, maxRounds: 2, continuationMaxTokens: 1800 } },
