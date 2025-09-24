@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs-extra');
 const path = require('path');
+const topicService = require('../../services/topic-service');
 
 // Load draft data
 router.get('/load-draft', async (req, res) => {
@@ -165,3 +166,72 @@ function validateFormData(data) {
 }
 
 module.exports = router;
+ 
+// Cloud topic management routes
+router.get('/topics', async (req, res) => {
+    try {
+        const result = await topicService.listTopics('default', 200);
+        res.json({ success: true, topics: result.topics });
+    } catch (error) {
+        console.error('Error listing topics:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.get('/topics/:id', async (req, res) => {
+    try {
+        const topicId = req.params.id;
+        const result = await topicService.loadTopic(topicId, 'default');
+        // Build image URL map from Cloud Storage
+        const prefix = `topics/default/${topicId}/images/`;
+        const cloudServices = require('../../services/cloud-services');
+        const files = await cloudServices.listFiles(prefix);
+        const imageUrls = {};
+        for (const f of files) {
+            const filename = require('path').basename(f.name);
+            try {
+                const signed = await cloudServices.getSignedUrl(f.name, 3600);
+                imageUrls[filename] = signed;
+            } catch (_) {
+                imageUrls[filename] = f.url; // fallback (may be 403 if bucket is private)
+            }
+        }
+        res.json({ success: true, data: result.data, imageUrls });
+    } catch (error) {
+        console.error('Error loading topic:', error);
+        res.status(404).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/topics', async (req, res) => {
+    try {
+        const body = req.body || {};
+        const topicId = (body.topicId || '').trim() || null;
+        const saveResult = await topicService.saveTopic(body, 'default', topicId);
+        res.json({ success: true, topicId: saveResult.topicId, data: saveResult.data });
+    } catch (error) {
+        console.error('Error saving topic:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.put('/topics/:id', async (req, res) => {
+    try {
+        const updateData = req.body || {};
+        const result = await topicService.updateTopic(req.params.id, updateData, 'default');
+        res.json({ success: true, topicId: result.topicId, data: result.data });
+    } catch (error) {
+        console.error('Error updating topic:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.delete('/topics/:id', async (req, res) => {
+    try {
+        const result = await topicService.deleteTopic(req.params.id, 'default');
+        res.json({ success: true, topicId: result.topicId, deletedImages: result.deletedImages });
+    } catch (error) {
+        console.error('Error deleting topic:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});

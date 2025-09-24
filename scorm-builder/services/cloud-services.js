@@ -209,6 +209,22 @@ class CloudServices {
         }
     }
 
+    async getSignedUrl(cloudPath, expiresInSeconds = 3600) {
+        try {
+            if (!this.initialized) {
+                await this.initialize();
+            }
+
+            const file = this.bucket.file(cloudPath);
+            const expires = Date.now() + expiresInSeconds * 1000;
+            const [url] = await file.getSignedUrl({ action: 'read', expires });
+            return url;
+        } catch (error) {
+            console.error(`❌ Failed to get signed URL for ${cloudPath}:`, error);
+            throw error;
+        }
+    }
+
     /**
      * Get a public URL for a file
      * @param {string} cloudPath - Cloud storage path

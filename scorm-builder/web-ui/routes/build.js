@@ -7,6 +7,8 @@ const { exec } = require('child_process');
 const { promisify } = require('util');
 
 const execAsync = promisify(exec);
+const cloudServices = require('../../services/cloud-services');
+const topicService = require('../../services/topic-service');
 
 // Configure multer for file uploads
 const upload = multer({
@@ -14,158 +16,178 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-// Generate SCORM package using existing build system
+// Generate SCORM package using cloud-backed topics
 router.post('/generate', upload.any(), async (req, res) => {
     let topicId = null;
-    let tempTopicDir = null;
-    
+    const userId = 'default';
     try {
-        console.log('🚀 Starting SCORM generation using existing build system...');
+        console.log('🚀 Starting SCORM generation (cloud-backed)...');
         console.log('Raw form data keys:', Object.keys(req.body));
         console.log('Files received:', req.files?.length || 0);
         if (req.files && req.files.length) {
             console.log('File fieldnames:', req.files.map(f => f.fieldname));
         }
-        
-        // Generate unique topic ID
-        topicId = req.body.topicId || `topic_${Date.now()}`;
-        // Save topics under scorm-builder/topics so the existing builder can find them
-        tempTopicDir = path.join(__dirname, '../../topics', topicId);
-        
-        // Process form data and create proper config.json
-        await createTopicFromFormData(req.body, req.files, tempTopicDir);
-        
-        console.log(`✅ Topic created: ${topicId}`);
-        
-        // Use your existing build system with correct working directory
-        const buildResult = await buildUsingExistingSystem(topicId);
-        
-        // Extract to test-output for preview
-        await extractForPreview();
-        
-        // Clean up temp topic (but keep it until response is sent)
-        setTimeout(() => {
-            fs.remove(tempTopicDir).catch(() => {});
-        }, 5000);
-        
-        res.json({
-            success: true,
-            filename: buildResult.filename,
-            downloadUrl: `/downloads/${buildResult.filename}`,
-            size: buildResult.size,
-            previewUrl: '/preview', // Changed from localhost:8080
-            topicId: topicId
-        });
-        
-    } catch (error) {
-        console.error('❌ SCORM generation failed:', error);
-        
-        // Clean up on error
-        if (tempTopicDir) await fs.remove(tempTopicDir).catch(() => {});
+
+        if (!cloudServices.initialized) {
+            await cloudServices.initialize();
+        }
+
+        // Determine topic ID
+        topicId = (req.body.topicId || '').trim() || `topic_${Date.now()}`;
+
+        // Build config and plan uploads
+        // Load existing topic config (if any) to preserve image references when not re-uploaded
+        let existingConfig = null;
+        try {
+            const existing = await topicService.loadTopic(topicId, userId);
+            existingConfig = existing.data || null;
+        } catch (_) {
+            existingConfig = null;
+        }
+
+        const { config, uploads } = await buildConfigFromFormDataCloud(req.body, req.files, existingConfig);
+
+        // Save topic to Firestore
+        await topicService.saveTopic(config, userId, topicId);
+
+        // Upload images to Cloud Storage
+        for (const uploadItem of uploads) {
+            const { localPath, targetFileName } = uploadItem;
+            const cloudPath = `topics/${userId}/${topicId}/images/${targetFileName}`;
+            await cloudServices.uploadFile(localPath, cloudPath, {
+                metadata: { topicId, userId, uploadedAt: new Date().toISOString() }
+            });
+        }
+
+        // Clean temp uploads
         if (req.files) {
             for (const file of req.files) {
                 await fs.remove(file.path).catch(() => {});
             }
         }
-        
-        res.status(500).json({
-            success: false,
-            error: error.message
+
+        console.log(`✅ Topic saved to cloud: ${topicId}`);
+
+        // Build using existing system (will load from cloud)
+        const buildResult = await buildUsingExistingSystem(topicId);
+        await extractForPreview();
+
+        res.json({
+            success: true,
+            filename: buildResult.filename,
+            downloadUrl: `/downloads/${buildResult.filename}`,
+            size: buildResult.size,
+            previewUrl: '/preview',
+            topicId: topicId
         });
+    } catch (error) {
+        console.error('❌ SCORM generation failed:', error);
+        if (req.files) {
+            for (const file of req.files) {
+                await fs.remove(file.path).catch(() => {});
+            }
+        }
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
-// Create topic using your existing structure
-async function createTopicFromFormData(body, files, topicDir) {
-    console.log('📁 Creating topic directory and config...');
-    console.log('Form body keys:', Object.keys(body));
-    
-    const imagesDir = path.join(topicDir, 'images');
-    await fs.ensureDir(imagesDir);
-    
-    // Copy nebula logo
-    // Look for a default logo inside scorm-builder/topics
-    const nebulaLogoSource = path.join(__dirname, '../../topics/nlp-text-summarization/images/nebula-logo.png');
-    if (await fs.pathExists(nebulaLogoSource)) {
-        await fs.copy(nebulaLogoSource, path.join(imagesDir, 'nebula-logo.png'));
-    }
-    
-    // Process uploaded images
+// Build config and prepare uploads for cloud storage
+async function buildConfigFromFormDataCloud(body, files, existingConfig) {
+    console.log('🧩 Building topic config for cloud...');
     const imageMap = {};
+    const uploads = [];
     if (files && files.length > 0) {
         console.log(`📸 Processing ${files.length} uploaded images...`);
-        
         for (const file of files) {
-            const ext = path.extname(file.originalname);
+            const ext = path.extname(file.originalname || '') || path.extname(file.filename || '');
             const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-            const newFilename = `${file.fieldname.replace(/[\[\]]/g, '_')}-${unique}${ext}`;
-            const destination = path.join(imagesDir, newFilename);
-            
-            await fs.move(file.path, destination);
+            const safeField = (file.fieldname || 'image').replace(/\[|\]/g, '_');
+            const newFilename = `${safeField}-${unique}${ext}`;
             if (!imageMap[file.fieldname]) imageMap[file.fieldname] = [];
             imageMap[file.fieldname].push(newFilename);
-            console.log(`✅ Processed: ${file.originalname} (${file.fieldname}) → ${newFilename}`);
+            uploads.push({ localPath: file.path, targetFileName: newFilename });
         }
     }
-    
-    // Parse form data properly - handle both JSON strings and direct values
-    // Prefer JSON field to avoid mixing with learningObjectives[] flat inputs
+
     const learningObjectives = parseFormArray(body.learningObjectivesJson || body.learningObjectives);
     const taskSteps = parseItemsFlexible(body, 'taskStep', 'taskSteps');
     const concepts = parseItemsFlexible(body, 'concept', 'concepts');
     const quizQuestions = parseItemsFlexible(body, 'quizQuestion', 'quizQuestions');
-    
-    console.log('📊 Form data parsed:', {
-        learningObjectives: learningObjectives.length,
-        taskSteps: taskSteps.length,
-        concepts: concepts.length,
-        quizQuestions: quizQuestions.length
-    });
-    
-    // Debug: Log imageMap and parsed items
-    console.log('🔍 ImageMap keys:', Object.keys(imageMap));
-    console.log('🔍 TaskSteps with _id:', taskSteps.map(s => ({ _id: s._id, title: s.title })));
-    console.log('🔍 Concepts with _id:', concepts.map(c => ({ _id: c._id, title: c.title })));
-    console.log('🔍 QuizQuestions with _id:', quizQuestions.map(q => ({ _id: q._id, question: q.question })));
-    
-    // Create config.json in your existing format
+
     const config = {
         title: body.title || 'Untitled Topic',
         description: body.description || 'No description provided',
         learning_objectives: learningObjectives,
-        
         content: {
-            company_logo: imageMap.companyLogo && imageMap.companyLogo.length > 0 ? {
-                src: imageMap.companyLogo[0],
-                alt: body.title || 'Company Logo'
-            } : {
-                src: 'nebula-logo.png',
-                alt: 'Nebula KnowLab Logo'
-            },
+            company_logo: (imageMap.companyLogo && imageMap.companyLogo.length > 0)
+                ? { src: imageMap.companyLogo[0], alt: body.title || 'Company Logo' }
+                : (existingConfig && existingConfig.content && existingConfig.content.company_logo)
+                    ? existingConfig.content.company_logo
+                    : { src: 'nebula-logo.png', alt: 'Nebula KnowLab Logo' },
             task_statement: body.taskStatement || 'Complete the learning task',
             task_steps: processTaskSteps(taskSteps, imageMap),
-            hero_image: imageMap.heroImage ? {
-                src: Array.isArray(imageMap.heroImage) ? imageMap.heroImage[0] : imageMap.heroImage,
-                alt: body.title || 'Hero Image',
-                caption: body.heroImageCaption || ''
-            } : null,
+            hero_image: imageMap.heroImage
+                ? { src: Array.isArray(imageMap.heroImage) ? imageMap.heroImage[0] : imageMap.heroImage, alt: body.title || 'Hero Image', caption: body.heroImageCaption || '' }
+                : (existingConfig && existingConfig.content && existingConfig.content.hero_image) || null,
             concepts: processConcepts(concepts, imageMap)
         },
-        
         quiz: processQuiz(quizQuestions, body, imageMap),
-        
         chat_contexts: {
             task_help: `Guide the learner through ${body.taskStatement || 'the learning task'} step-by-step`,
             quiz_failed: `Provide detailed explanation and additional context for ${body.title || 'this topic'}`,
             hints_exhausted: `Offer advanced troubleshooting and additional resources for ${body.title || 'this topic'}`
         }
     };
-    
-    // Write config.json
-    await fs.writeJson(path.join(topicDir, 'config.json'), config, { spaces: 2 });
-    console.log('✅ Config.json created');
-    
-    return config;
+
+    // Merge existing images for steps, concepts, quiz where no new uploads were provided
+    try {
+        if (existingConfig && existingConfig.content) {
+            const oldContent = existingConfig.content;
+            const newContent = config.content;
+
+            // Task steps images merge by index
+            if (Array.isArray(newContent.task_steps) && Array.isArray(oldContent.task_steps)) {
+                newContent.task_steps = newContent.task_steps.map((step, idx) => {
+                    const prev = oldContent.task_steps[idx] || {};
+                    const merged = { ...step };
+                    if (!merged.images && Array.isArray(prev.images)) merged.images = prev.images;
+                    if (merged.hint || prev.hint) {
+                        merged.hint = merged.hint || {};
+                        if (!merged.hint.images && prev.hint && Array.isArray(prev.hint.images)) {
+                            merged.hint.images = prev.hint.images;
+                        }
+                    }
+                    return merged;
+                });
+            }
+
+            // Concepts image merge by index
+            if (Array.isArray(newContent.concepts) && Array.isArray(oldContent.concepts)) {
+                newContent.concepts = newContent.concepts.map((c, idx) => {
+                    const prev = oldContent.concepts[idx] || {};
+                    if (!c.image && prev.image) c.image = prev.image;
+                    return c;
+                });
+            }
+        }
+
+        // Quiz explanation images merge by index
+        if (config.quiz && existingConfig && existingConfig.quiz) {
+            const nq = config.quiz;
+            const oq = existingConfig.quiz;
+            if (Array.isArray(nq.questions) && Array.isArray(oq.questions)) {
+                nq.questions = nq.questions.map((q, idx) => {
+                    const pq = oq.questions[idx] || {};
+                    if (!q.explanation_image && pq.explanation_image) q.explanation_image = pq.explanation_image;
+                    return q;
+                });
+            }
+        }
+    } catch (_) {
+        // best-effort merge; ignore errors
+    }
+
+    return { config, uploads };
 }
 
 // Parse form array data (learning objectives)

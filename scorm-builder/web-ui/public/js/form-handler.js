@@ -710,20 +710,261 @@ async function generateSCORM(showPreview = false) {
 }
 
 
-// Save draft
-function saveDraft() {
-    autoSave();
-    
-    // Show temporary success message
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-check mr-2"></i>Saved!';
-    button.style.backgroundColor = '#10B981';
-    
-    setTimeout(() => {
-        button.innerHTML = originalText;
-        button.style.backgroundColor = '';
-    }, 2000);
+// Cloud-backed topic management
+async function listTopics() {
+    const res = await fetch('/form/topics');
+    const data = await res.json();
+    if (data.success) {
+        const select = document.getElementById('topicSelect');
+        if (select) {
+            select.innerHTML = '<option value="">Select a topic...</option>';
+            data.topics.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.title ? `${t.title} (${t.id})` : t.id;
+                select.appendChild(opt);
+            });
+        }
+    }
+}
+
+async function saveTopicToCloud() {
+    try {
+        const payload = collectFormData();
+        // Require valid topicId from the main form field
+        const topicId = (payload.topicId || '').trim();
+        // Enforce format: coursename-Module-topic (e.g., robotics-M1-T1, robotics-M1-T1.1)
+        const topicIdPattern = /^[a-z]+-M\d+-T\d+(?:\.\d+)?$/;
+        if (!topicId || !topicIdPattern.test(topicId)) {
+            showToast('Provide a valid Topic ID like robotics-M1-T1 or robotics-M1-T1.1', 'error');
+            return;
+        }
+        // Normalize payload to cloud config keys where possible
+        payload.learning_objectives = payload.learningObjectives;
+        payload.content = payload.content || {};
+        payload.quiz = null; // let server rebuild during generate; drafts save structure as-is
+        payload.topicId = topicId;
+
+        const res = await fetch('/form/topics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Save failed');
+        showToast('Draft saved to cloud', 'success');
+        await listTopics();
+    } catch (e) {
+        showToast(`Save failed: ${e.message}`, 'error');
+    }
+}
+
+async function loadTopicFromCloud() {
+    const select = document.getElementById('topicSelect');
+    const topicId = select ? select.value : '';
+    if (!topicId) return;
+    try {
+        const res = await fetch(`/form/topics/${encodeURIComponent(topicId)}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Load failed');
+        populateFormFromCloudConfig(data.data, data.imageUrls || {});
+        showToast('Topic loaded', 'success');
+    } catch (e) {
+        showToast(`Load failed: ${e.message}`, 'error');
+    }
+}
+
+async function deleteTopicFromCloud() {
+    const select = document.getElementById('topicSelect');
+    const topicId = select ? select.value : '';
+    if (!topicId) return;
+    if (!confirm('Delete this topic permanently?')) return;
+    try {
+        const res = await fetch(`/form/topics/${encodeURIComponent(topicId)}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Delete failed');
+        showToast('Topic deleted', 'success');
+        await listTopics();
+    } catch (e) {
+        showToast(`Delete failed: ${e.message}`, 'error');
+    }
+}
+
+function populateFormFromCloudConfig(config, imageUrls) {
+    const form = document.getElementById('scormForm');
+    form.querySelector('input[name="title"]').value = config.title || '';
+    form.querySelector('input[name="topicId"]').value = config.id || '';
+    form.querySelector('textarea[name="description"]').value = config.description || '';
+    form.querySelector('input[name="taskStatement"]').value = (config.content && config.content.task_statement) || '';
+    form.querySelector('input[name="heroImageCaption"]').value = (config.content && config.content.hero_image && config.content.hero_image.caption) || '';
+
+    // Learning objectives
+    document.getElementById('learningObjectives').innerHTML = '';
+    (config.learning_objectives || []).forEach(obj => {
+        addLearningObjective();
+        const items = document.querySelectorAll('.learning-objective-item input[name="learningObjectives[]"]');
+        items[items.length - 1].value = obj;
+    });
+
+    // Company logo preview
+    if (config.content && config.content.company_logo && config.content.company_logo.src) {
+        const logoFile = config.content.company_logo.src;
+        const logoUrl = imageUrls[logoFile] || '';
+        if (logoUrl) {
+            const preview = document.getElementById('companyLogoPreview');
+            if (preview) {
+                preview.classList.remove('hidden');
+                const img = preview.querySelector('img');
+                if (img) {
+                    img.src = logoUrl;
+                    img.alt = config.content.company_logo.alt || 'Company Logo';
+                }
+            }
+        }
+    }
+
+    // Hero image preview
+    if (config.content && config.content.hero_image && config.content.hero_image.src) {
+        const heroUrl = imageUrls[config.content.hero_image.src] || '';
+        if (heroUrl) {
+            const preview = document.getElementById('heroImagePreview');
+            if (preview) {
+                preview.classList.remove('hidden');
+                const img = preview.querySelector('img');
+                if (img) {
+                    img.src = heroUrl;
+                    img.alt = config.title || 'Hero Image';
+                }
+            }
+        }
+    }
+
+    // Task steps
+    document.getElementById('taskSteps').innerHTML = '';
+    (config.content && Array.isArray(config.content.task_steps) ? config.content.task_steps : []).forEach((step, idx) => {
+        addTaskStep();
+        const i = idx + 1;
+        document.querySelector(`input[name="taskStep_step_${i}_title"]`).value = step.title || '';
+        document.querySelector(`input[name="taskStep_step_${i}_description"]`).value = step.description || '';
+        document.querySelector(`textarea[name="taskStep_step_${i}_instructions"]`).value = step.instructions || '';
+        document.querySelector(`textarea[name="taskStep_step_${i}_code"]`).value = (step.code && step.code.content) || '';
+        document.querySelector(`select[name="taskStep_step_${i}_codeLanguage"]`).value = (step.code && step.code.language) || '';
+        if (step.hint) {
+            document.querySelector(`textarea[name="taskStep_step_${i}_hintText"]`).value = step.hint.text || '';
+            document.querySelector(`textarea[name="taskStep_step_${i}_hintCode"]`).value = (step.hint.code && step.hint.code.content) || '';
+            document.querySelector(`select[name="taskStep_step_${i}_hintCodeLanguage"]`).value = (step.hint.code && step.hint.code.language) || '';
+        }
+        // Step images preview
+        const stepImages = Array.isArray(step.images) ? step.images : [];
+        if (stepImages.length) {
+            const preview = document.getElementById(`taskStep_step_${i}_images_preview`);
+            if (preview) {
+                preview.innerHTML = '';
+                stepImages.forEach(imgObj => {
+                    const url = imageUrls[imgObj.src] || '';
+                    if (url) {
+                        const imgEl = document.createElement('img');
+                        imgEl.src = url;
+                        imgEl.alt = imgObj.alt || 'Step image';
+                        imgEl.className = 'h-20 w-auto rounded shadow';
+                        preview.appendChild(imgEl);
+                    }
+                });
+            }
+        }
+        // Hint images preview
+        if (step.hint && Array.isArray(step.hint.images)) {
+            const preview = document.getElementById(`taskStep_step_${i}_hintImages_preview`);
+            if (preview) {
+                preview.innerHTML = '';
+                step.hint.images.forEach(imgObj => {
+                    const url = imageUrls[imgObj.src] || '';
+                    if (url) {
+                        const imgEl = document.createElement('img');
+                        imgEl.src = url;
+                        imgEl.alt = 'Hint image';
+                        imgEl.className = 'h-20 w-auto rounded shadow';
+                        preview.appendChild(imgEl);
+                    }
+                });
+            }
+        }
+    });
+
+    // Concepts
+    document.getElementById('concepts').innerHTML = '';
+    (config.content && Array.isArray(config.content.concepts) ? config.content.concepts : []).forEach((c, idx) => {
+        addConcept();
+        const i = idx + 1;
+        document.querySelector(`input[name="concept_concept_${i}_title"]`).value = c.title || '';
+        document.querySelector(`textarea[name="concept_concept_${i}_summary"]`).value = c.summary || '';
+        document.querySelector(`input[name="concept_concept_${i}_learnMoreContext"]`).value = c.learn_more_context || '';
+        if (c.image && c.image.src) {
+            const url = imageUrls[c.image.src] || '';
+            if (url) {
+                const preview = document.getElementById(`concept_concept_${i}_image_preview`);
+                if (preview) {
+                    preview.innerHTML = '';
+                    const imgEl = document.createElement('img');
+                    imgEl.src = url;
+                    imgEl.alt = c.title || 'Concept image';
+                    imgEl.className = 'h-20 w-auto rounded shadow';
+                    preview.appendChild(imgEl);
+                }
+            }
+        }
+    });
+
+    // Quiz
+    document.getElementById('quizQuestions').innerHTML = '';
+    const quiz = config.quiz || {};
+    form.querySelector('input[name="quizTitle"]').value = quiz.title || 'Knowledge Check';
+    form.querySelector('input[name="quizDescription"]').value = quiz.description || '';
+    (Array.isArray(quiz.questions) ? quiz.questions : []).forEach((q, idx) => {
+        addQuizQuestion();
+        const i = idx + 1;
+        const base = `quizQuestion_question_${i}_`;
+        form.querySelector(`textarea[name="${base}question"]`).value = q.question || '';
+        form.querySelector(`select[name="${base}type"]`).value = q.type || 'mcq';
+        const optionsContainer = document.getElementById(`quizOptions_question_${i}`);
+        optionsContainer.innerHTML = '';
+        (q.options || []).forEach((opt, oi) => {
+            addQuizOption(`question_${i}`);
+            const rows = optionsContainer.querySelectorAll('.quiz-option-item');
+            const row = rows[rows.length - 1];
+            row.querySelector('input[type="text"]').value = opt;
+            if (q.type === 'mcq' && oi === (q.correct_answer || 0)) {
+                row.querySelector('input[type="radio"]').checked = true;
+            }
+            if (q.type === 'checkbox' && Array.isArray(q.correct_answers) && q.correct_answers.includes(oi)) {
+                row.querySelector('input[type="checkbox"]').checked = true;
+            }
+        });
+        toggleQuestionType(`question_${i}`, q.type || 'mcq');
+        if (q.explanation_image && q.explanation_image.src) {
+            const url = imageUrls[q.explanation_image.src] || '';
+            if (url) {
+                const preview = document.getElementById(`quizQuestion_question_${i}_explanationImage_preview`);
+                if (preview) {
+                    preview.innerHTML = '';
+                    const imgEl = document.createElement('img');
+                    imgEl.src = url;
+                    imgEl.alt = 'Explanation image';
+                    imgEl.className = 'h-20 w-auto rounded shadow';
+                    preview.appendChild(imgEl);
+                }
+            }
+        }
+    });
+}
+
+function showToast(message, type) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = message;
+    el.className = `fixed top-4 right-4 px-4 py-2 rounded shadow text-white ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 2500);
 }
 
 // Modal functions
@@ -773,6 +1014,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     console.log('SCORM Builder form initialized');
+    // Always refresh topic list on page load
+    listTopics().catch(() => {});
 });
 
 // Debounce utility

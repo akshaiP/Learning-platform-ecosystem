@@ -42,9 +42,9 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <!-- <button onclick="saveDraft()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
-                        <i class="fas fa-save mr-2"></i>Save Draft
-                    </button> -->
+                    <button type="button" onclick="saveTopicToCloud()" class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i>Save Draft
+                    </button>
                 </div>
             </div>
         </div>
@@ -52,6 +52,26 @@
 
     <!-- Main Content -->
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Cloud Topics Section -->
+        <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Manage Topics</h2>
+                <button type="button" onclick="listTopics()" class="text-sm px-3 py-2 bg-gray-100 rounded hover:bg-gray-200">
+                    <i class="fas fa-rotate mr-1"></i>Refresh
+                </button>
+            </div>
+            <div class="flex items-center gap-3">
+                <select id="topicSelect" class="px-3 py-2 border border-gray-300 rounded-lg">
+                    <option value="">Select a topic...</option>
+                </select>
+                <button type="button" onclick="loadTopicFromCloud()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-cloud-download-alt mr-2"></i>Load Topic
+                </button>
+                <button type="button" onclick="deleteTopicFromCloud()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </button>
+            </div>
+        </section>
         <form id="scormForm" class="space-y-8">
             
             <!-- Topic Basic Information -->
@@ -323,5 +343,6 @@
             modal.classList.remove('hidden');
         }
     </script>        
+    <div id="toast" class="hidden"></div>
 </body>
 </html>
