@@ -807,6 +807,21 @@
         <i class="fas fa-comments group-hover:animate-bounce"></i>
     </button>
 
+    <!-- Floating Voice Assistant Trigger (above chat trigger) -->
+    <button id="voiceAssistTrigger" onclick="toggleVoiceWidget()"
+            class="fixed bottom-28 right-8 w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl shadow-strong hover:scale-110 transition-all duration-300 flex items-center justify-center text-xl z-50 group hover:shadow-xl">
+        <i class="fas fa-microphone group-hover:animate-bounce"></i>
+    </button>
+
+    <!-- Voice Assistant Iframe Panel -->
+    <div id="voiceWidgetPanel" class="fixed bottom-28 right-28 w-[380px] h-[560px] bg-white rounded-2xl shadow-strong overflow-hidden z-50 border border-gray-200 hidden flex flex-col">
+        <div class="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+            <span class="text-sm font-semibold">Voice Assistant</span>
+            <button onclick="toggleVoiceWidget()" class="text-white hover:text-gray-100"><i class="fas fa-times"></i></button>
+        </div>
+        <iframe src="https://voice-bot-production-d096.up.railway.app/widget.html?topics=Robotics,Types of Mobile Robots & Key Components&widget=true" allow="microphone" title="Voice Assistant" class="flex-1 w-full border-0"></iframe>
+    </div>
+
     <!-- Code View Modal -->
     <div id="codeModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-strong max-w-4xl w-full max-h-[80vh] overflow-hidden m-4">
@@ -1064,5 +1079,23 @@
         window.openImageModal = openImageModal;
         window.closeImageModal = closeImageModal;
 </script>
+
+    <!-- Voice Assistant Toggle Script -->
+    <script>
+        function toggleVoiceWidget() {
+            try {
+                var panel = document.getElementById('voiceWidgetPanel');
+                if (!panel) return;
+                if (panel.classList.contains('hidden')) {
+                    panel.classList.remove('hidden');
+                } else {
+                    panel.classList.add('hidden');
+                }
+            } catch (e) {
+                console.warn('Unable to toggle voice widget:', e);
+            }
+        }
+        window.toggleVoiceWidget = toggleVoiceWidget;
+    </script>
 </body>
 </html>
