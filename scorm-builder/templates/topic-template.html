@@ -819,7 +819,7 @@
             <span class="text-sm font-semibold">Voice Assistant</span>
             <button onclick="toggleVoiceWidget()" class="text-white hover:text-gray-100"><i class="fas fa-times"></i></button>
         </div>
-        <iframe src="https://voice-bot-production-d096.up.railway.app/widget.html?topics=Robotics,Types of Mobile Robots & Key Components&widget=true" allow="microphone" title="Voice Assistant" class="flex-1 w-full border-0"></iframe>
+        <iframe id="voiceWidgetIframe" src="" allow="microphone" title="Voice Assistant" class="flex-1 w-full border-0"></iframe>
     </div>
 
     <!-- Code View Modal -->
@@ -998,6 +998,20 @@
                 window.carouselSystem.initializeCarousels();
             }
             
+            // Set Voice Assistant iframe src using dynamic topic and task statement
+            try {
+                var iframe = document.getElementById('voiceWidgetIframe');
+                if (iframe && window.templateData) {
+                    var title = (window.templateData.title || '').toString();
+                    // var task = (window.templateData.taskStatement || '').toString();
+                    var topicsParam = encodeURIComponent([title].filter(Boolean).join(', '));
+                    var baseUrl = 'https://voice-bot-production-d096.up.railway.app/widget.html';
+                    iframe.src = baseUrl + '?topics=' + topicsParam + '&widget=true';
+                }
+            } catch (e) {
+                console.warn('Unable to set voice widget iframe src:', e);
+            }
+
             console.log('✅ Template fully initialized');
             console.log('📊 Context data available:', {
                 topic: window.templateData.title,
