@@ -129,6 +129,7 @@ class CloudServices {
                     cacheControl: 'public, max-age=31536000',
                     ...restOptions.metadata
                 },
+                destination: cloudPath,
                 ...restOptions
             };
     

@@ -19,7 +19,7 @@ class TopicGenerator {
       await this.copyJSFiles(tempDir);
     
       // Process assets first
-      const topicDir = path.join(__dirname, '../topics', topicConfig.id);
+      const topicDir = topicConfig._tempTopicDir || path.join(__dirname, '../topics', topicConfig.id);
       if (await fs.pathExists(topicDir)) {
         const processedImages = await this.assetProcessor.processTopicAssets(topicConfig, topicDir, tempDir);
         

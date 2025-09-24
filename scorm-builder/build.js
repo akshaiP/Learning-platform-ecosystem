@@ -7,6 +7,8 @@ const chalk = require('chalk');
 const generateTopic = require('./scripts/generate-topic');
 const createManifest = require('./scripts/create-manifest');
 const packageScorm = require('./scripts/package-scorm');
+const topicService = require('./services/topic-service');
+const cloudServices = require('./services/cloud-services');
 
 const program = new Command();
 
@@ -151,6 +153,7 @@ async function main() {
 
 async function buildTopic(topicId, config) {
   const startTime = Date.now();
+  let topicConfig = null;
   
   // Create temporary directory for this build
   const tempDir = path.join(__dirname, 'temp', `${topicId}-${Date.now()}`);
@@ -159,7 +162,7 @@ async function buildTopic(topicId, config) {
   try {
     // 1. Load topic configuration
     log.verbose(`Loading topic configuration: ${topicId}`);
-    const topicConfig = await loadTopicConfig(topicId, config);
+    topicConfig = await loadTopicConfig(topicId, config);
     
     // 2. Generate HTML from template (pass tempDir!)
     log.verbose('Generating HTML content');
@@ -184,6 +187,12 @@ async function buildTopic(topicId, config) {
     // Clean up temp directory
     await fs.remove(tempDir);
     
+    // Clean up temporary topic/images directory if it exists
+    if (topicConfig._tempTopicDir && await fs.pathExists(topicConfig._tempTopicDir)) {
+      log.verbose(`Cleaning up temporary topic dir: ${topicConfig._tempTopicDir}`);
+      await fs.remove(topicConfig._tempTopicDir);
+    }
+    
     return {
       topicId,
       success: true,
@@ -195,42 +204,157 @@ async function buildTopic(topicId, config) {
   } catch (error) {
     // Clean up temp directory on error
     await fs.remove(tempDir);
+    
+    // Clean up temporary topic/images directory on error
+    if (topicConfig && topicConfig._tempTopicDir && await fs.pathExists(topicConfig._tempTopicDir)) {
+      log.verbose(`Cleaning up temporary topic dir on error: ${topicConfig._tempTopicDir}`);
+      await fs.remove(topicConfig._tempTopicDir);
+    }
+    
     throw error;
   }
 }
 
+// Helper function to safely initialize cloud services
+async function initializeCloudServices() {
+  try {
+    if (!cloudServices.initialized) {
+      await cloudServices.initialize();
+    }
+    return true;
+  } catch (error) {
+    log.warn(`⚠️  Cloud services initialization failed: ${error.message}`);
+    return false;
+  }
+}
+
 async function loadTopicConfig(topicId, config) {
-  const folderConfigPath = path.join(config.topicsDir, topicId, 'config.json');
-  
-  if (await fs.pathExists(folderConfigPath)) {
-    log.verbose(`Loading topic from folder: ${topicId}`);
-    const configData = await fs.readJson(folderConfigPath);
+  // Try to load from cloud storage first
+  try {
+    log.verbose(`Attempting to load topic from cloud: ${topicId}`);
+    
+    // Initialize cloud services if not already done
+    const cloudInitialized = await initializeCloudServices();
+    if (!cloudInitialized) {
+      throw new Error('Cloud services not available');
+    }
+    
+    // Load topic from Firestore
+    const topicResult = await topicService.loadTopic(topicId, 'default');
+    const topicData = topicResult.data;
+    
+    log.success(`✅ Loaded topic from cloud: ${topicId}`);
+    
+    // Prepare a temporary topic directory with images subfolder for processing
+    const tempTopicDir = path.join(__dirname, 'temp', `${topicId}-topic-${Date.now()}`);
+    const tempImagesDir = path.join(tempTopicDir, 'images');
+    await fs.ensureDir(tempImagesDir);
+
+    try {
+      // Try to download images from the expected prefix
+      const downloadResult = await topicService.downloadTopicImages(topicId, tempImagesDir, 'default');
+      log.verbose(`Downloaded ${downloadResult.downloadedFiles.length} images to temp topic directory`);
+
+      // If nothing downloaded (legacy migration placed files at bucket root), try by filenames from config
+      if (!downloadResult.downloadedFiles || downloadResult.downloadedFiles.length === 0) {
+        log.warn('⚠️  No images under topics/<user>/<topic>/images/. Attempting root filename fallback...');
+
+        const filenamesToFetch = collectImageFilenamesFromConfig(topicData);
+        for (const fileName of filenamesToFetch) {
+          try {
+            await cloudServices.downloadFile(fileName, path.join(tempImagesDir, fileName));
+            log.verbose(`Fetched from root: ${fileName}`);
+          } catch (e) {
+            // Best-effort; continue
+            log.verbose(`Skip missing root image: ${fileName} (${e.message})`);
+          }
+        }
+      }
+
+      // Store temp topic directory path for downstream processing and cleanup
+      topicData._tempTopicDir = tempTopicDir;
+
+    } catch (imageError) {
+      log.warn(`⚠️  Failed to prepare images for ${topicId}: ${imageError.message}`);
+      // Continue without images - the build can still proceed
+    }
     
     return {
       id: topicId,
       backendUrl: config.backendUrl,
       buildTime: new Date().toISOString(),
       isDev: config.isDev,
-      ...configData
+      ...topicData
     };
-  }
-  
-  const fileConfigPath = path.join(config.topicsDir, `${topicId}.json`);
-  
-  if (await fs.pathExists(fileConfigPath)) {
-    log.verbose(`Loading topic from file: ${topicId}.json`);
-    const configData = await fs.readJson(fileConfigPath);
     
-    return {
-      id: topicId,
-      backendUrl: config.backendUrl,
-      buildTime: new Date().toISOString(),
-      isDev: config.isDev,
-      ...configData
-    };
+  } catch (cloudError) {
+    log.warn(`⚠️  Cloud loading failed for ${topicId}: ${cloudError.message}`);
+    log.verbose(`Falling back to local storage for: ${topicId}`);
+    
+    // Fallback to local storage
+    const folderConfigPath = path.join(config.topicsDir, topicId, 'config.json');
+    
+    if (await fs.pathExists(folderConfigPath)) {
+      log.info(`📁 Loading topic from local folder: ${topicId}`);
+      const configData = await fs.readJson(folderConfigPath);
+      
+      return {
+        id: topicId,
+        backendUrl: config.backendUrl,
+        buildTime: new Date().toISOString(),
+        isDev: config.isDev,
+        ...configData
+      };
+    }
+    
+    const fileConfigPath = path.join(config.topicsDir, `${topicId}.json`);
+    
+    if (await fs.pathExists(fileConfigPath)) {
+      log.info(`📄 Loading topic from local file: ${topicId}.json`);
+      const configData = await fs.readJson(fileConfigPath);
+      
+      return {
+        id: topicId,
+        backendUrl: config.backendUrl,
+        buildTime: new Date().toISOString(),
+        isDev: config.isDev,
+        ...configData
+      };
+    }
+    
+    throw new Error(`Topic configuration not found in cloud or local storage: ${topicId}`);
   }
-  
-  throw new Error(`Topic configuration not found: ${topicId}`);
+}
+
+// Collect image filenames referenced in topic data to help root fallback download
+function collectImageFilenamesFromConfig(topicData) {
+  const filenames = new Set();
+  const add = (src) => {
+    if (!src) return;
+    const base = path.basename(src);
+    if (base) filenames.add(base);
+  };
+
+  const c = topicData.content || {};
+  if (c.company_logo?.src) add(c.company_logo.src);
+  if (c.hero_image?.src) add(c.hero_image.src);
+  if (Array.isArray(c.task_images)) c.task_images.forEach(img => add(img?.src));
+  if (Array.isArray(c.concepts)) c.concepts.forEach(con => add(con?.image?.src));
+  if (Array.isArray(c.hints)) c.hints.forEach(h => add(h?.step_image?.src));
+  if (Array.isArray(c.task_steps)) {
+    c.task_steps.forEach(step => {
+      add(step?.image?.src);
+      if (Array.isArray(step?.images)) step.images.forEach(img => add(img?.src));
+      if (step?.hint) {
+        add(step.hint?.image?.src);
+        if (Array.isArray(step.hint?.images)) step.hint.images.forEach(img => add(img?.src));
+      }
+    });
+  }
+  const q = topicData.quiz || {};
+  if (q.explanation_image?.src) add(q.explanation_image.src);
+  if (Array.isArray(q.questions)) q.questions.forEach(qn => add(qn?.explanation_image?.src));
+  return Array.from(filenames);
 }
 
 // Run if called directly

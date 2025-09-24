@@ -251,22 +251,21 @@ class TopicService {
             }
 
             const imagePrefix = `topics/${userId}/${topicId}/images/`;
-            const files = await cloudServices.listFiles(imagePrefix);
+            let files = await cloudServices.listFiles(imagePrefix);
             
             await fs.ensureDir(localImagesPath);
             
             const downloadedFiles = [];
             
+            if (files.length === 0) {
+                console.warn(`⚠️  No files found with prefix ${imagePrefix}. Falling back to root filenames if referenced.`);
+            }
+
             for (const file of files) {
                 const fileName = path.basename(file.name);
                 const localFilePath = path.join(localImagesPath, fileName);
-                
                 await cloudServices.downloadFile(file.name, localFilePath);
-                downloadedFiles.push({
-                    fileName: fileName,
-                    localPath: localFilePath,
-                    cloudPath: file.name
-                });
+                downloadedFiles.push({ fileName, localPath: localFilePath, cloudPath: file.name });
             }
 
             console.log(`✅ Downloaded ${downloadedFiles.length} images for topic: ${topicId}`);
