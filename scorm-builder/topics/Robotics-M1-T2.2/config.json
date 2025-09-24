@@ -3,16 +3,14 @@
     "description": "Understand mobile robot principles, classifications, and hands-on AGV teleoperation.",
     
     "learning_objectives": [
-      "Grasp the fundamental principles of mobile robots and their operations.",
-      "Understand the classification of robots based on mobility and operational modes.",
-      "Learn about environmental classifications for robotic applications.",
-      "Develop basic Python programming skills for robot logic.",
-      "Gain hands-on exposure to AGV (Automated Guided Vehicle) teleoperation in a virtual setup.",
-      "Write, run, and modify Python programs to simulate robot movements.",
-      "Visualize robot actions in RViz.",
-      "Apply sequence editing to control robot paths."
+      "Analyze real-world applications and use cases across industries.",
+      "Learn path planning strategies for navigating different positions and environments.",
+      "Understand core hardware and software components of mobile robots.",
+      "Explore fleet management strategies for coordinating multiple robots.",
+      "Understand safety and sensor integration.",
+      "Communication for mobile robots."
     ],
-  
+
     "content": {
       "company_logo": {
         "src": "nebula-logo.png",
@@ -134,7 +132,63 @@
       "hero_image": {
         "src": "mobile-robots-hero.jpg",
         "alt": "Mobile robots classification and AGV demo"
-      }
+      },
+      "concepts": [
+        {
+          "title": "1. Wheeled Drive Concepts",
+          "summary": "Mechanisms enabling precise and efficient navigation.",
+          "image": {
+            "src": "wheeled-drive.jpeg",
+            "alt": "Wheeled drive concepts in mobile robots"
+          },
+          "learn_more_context": "Explain the types of wheel concepts used in mobile robots like mono wheel, 2-wheel, 4-wheel, mecanum, tracked, support wheels, with short examples for each."
+        },
+        {
+          "title": "2. Mobile Robot BOM (Bill of Materials)",
+          "summary": "Essential hardware and software parts that make up a robot.",
+          "image": {
+            "src": "robot-bom.jpeg",
+            "alt": "Bill of Materials for mobile robot"
+          },
+          "learn_more_context": "List out the basic components in the construction of an autonomous mobile robot, with a short description for each component."
+        },
+        {
+          "title": "3. Fleet Management",
+          "summary": "Tools and systems for coordinating multiple robots effectively.",
+          "image": {
+            "src": "fleet-management.jpeg",
+            "alt": "Fleet management of mobile robots"
+          },
+          "learn_more_context": "Explain the basics of fleet management, its need and use in real-time industry, including advantages, with a short description."
+        },
+        {
+          "title": "4. Applications",
+          "summary": "Real-world uses across industries and service domains.",
+          "image": {
+            "src": "robot-applications.png",
+            "alt": "Applications of mobile robots in industry"
+          },
+          "learn_more_context": "Give a few examples explaining the role of mobile robots in industry and service domains, not exceeding 5 examples for each, and their impact."
+        },
+        {
+          "title": "5. Safety & Sensors",
+          "summary": "Integration of emergency stops, obstacle detection, and navigation sensors.",
+          "image": {
+            "src": "safety-sensors.png",
+            "alt": "Safety and sensors in mobile robots"
+          },
+          "learn_more_context": "Explain the importance of sensors and safety sensors in mobile robots, and their role in making robots safer and more reliable, with a short description."
+        },
+        {
+          "title": "6. Communication",
+          "summary": "For data exchange and coordination.",
+          "image": {
+            "src": "communication.png",
+            "alt": "Communication in mobile robots"
+          },
+          "learn_more_context": "Explain why communication is critical in mobile robots for coordination, data exchange, and seamless operation, in a concise description."
+        }
+      ]
     },
   
     "quiz": {
@@ -142,38 +196,130 @@
       "description": "Quick test on robot programming and sequence execution.",
       "questions": [
         {
-            "id": "q1",
-            "type": "checkbox",
-            "question": "Choose the basic components needed to construct an AGV (Select all that apply)",
-            "options": [
-              "Motor",
-              "Driver / Motor Driver",
-              "Charger",
-              "Industrial PC (IPC)",
-              "Controller (PLC / microcontroller)",
-              "Wheels",
-              "Light (indicator)",
-              "Steering Wheel",
-              "Propeller",
-              "LIDAR Sensor",
-              "Ultrasonic / IR Sensors",
-              "Conveyor Belt",
-              "Battery",
-              "Frame / Chassis",
-              "GPS Module",
-              "Speakers",
-              "Fan",
-              "Hydraulic Pump",
-              "Emergency Stop Button",
-              "Wi-Fi / Communication Module",
-              "Seat",
-              "Safety Bumpers",
-              "Air Conditioner",
-              "Solar Panel"
-            ],
-            "correct_answers": [0, 1, 2, 3, 4, 5, 9, 10, 12, 13, 14, 18, 19, 21],
-            "explanation": "Core AGV components include motors, motor drivers, charger, industrial PC, controller, wheels, LIDAR and ultrasonic/IR sensors, battery, frame/chassis, GPS module (for outdoor AGVs), emergency stop button, communication module, and safety bumpers. Optional items like lights, conveyor belts, or solar panels depend on the AGV design, while items such as seats, propellers, or hydraulic pumps are not used."
-          }
+          "id": "q1",
+          "question": "Wheeled Drive Concepts: Which of the following is an example of an omnidirectional wheel used in mobile robots?",
+          "options": [
+            "Two-wheel differential drive",
+            "Mecanum wheel",
+            "Monowheel",
+            "Tracked wheel"
+          ],
+          "correct_answer": 1,
+          "explanation": "The Mecanum wheel allows omnidirectional movement, enabling the robot to move sideways and rotate independently."
+        },
+        {
+          "id": "q2",
+          "question": "Mobile Robot BOM: Which component acts as the 'brain' of an autonomous mobile robot?",
+          "options": [
+            "Chassis",
+            "Controller / Microcontroller",
+            "Battery",
+            "Wheels"
+          ],
+          "correct_answer": 1,
+          "explanation": "The controller or microcontroller processes inputs and commands, acting as the robot's brain."
+        },
+        {
+          "id": "q3",
+          "question": "Path Planning: Why is path planning important for mobile robots?",
+          "options": [
+            "To reduce battery usage",
+            "To avoid obstacles and navigate efficiently",
+            "To increase the robot’s weight",
+            "To improve aesthetics"
+          ],
+          "correct_answer": 1,
+          "explanation": "Path planning ensures the robot navigates efficiently and avoids collisions or obstacles."
+        },
+        {
+          "id": "q4",
+          "question": "Fleet Management: What is a primary purpose of fleet management in mobile robotics?",
+          "options": [
+            "Designing the robot’s chassis",
+            "Coordinating multiple robots to optimize tasks",
+            "Installing batteries",
+            "Programming a single robot"
+          ],
+          "correct_answer": 1,
+          "explanation": "Fleet management coordinates multiple robots to optimize task assignment and improve operational efficiency."
+        },
+        {
+          "id": "q5",
+          "question": "Industry Applications: Which of the following is an example of a mobile robot in industrial settings?",
+          "options": [
+            "Hospital delivery robot",
+            "Amazon Kiva warehouse robot",
+            "Restaurant service robot",
+            "Airport cleaning robot"
+          ],
+          "correct_answer": 1,
+          "explanation": "Amazon Kiva robots are widely used in warehouses for automating inventory transport."
+        },
+        {
+          "id": "q6",
+          "question": "Service Applications: How do service robots improve efficiency in hospitals?",
+          "options": [
+            "By performing surgery",
+            "By delivering medicines and samples",
+            "By replacing doctors",
+            "By controlling the HVAC system"
+          ],
+          "correct_answer": 1,
+          "explanation": "Service robots transport medicines, samples, and supplies, reducing manual labor and improving workflow."
+        },
+        {
+          "id": "q7",
+          "question": "Safety & Sensors: Do safety sensors in mobile robots help prevent collisions with humans?",
+          "options": [
+            "Yes",
+            "No"
+          ],
+          "correct_answer": 0,
+          "explanation": "Safety sensors detect obstacles or humans to prevent collisions, ensuring safe operation."
+        },
+        {
+          "id": "q8",
+          "question": "Communication: Is communication important for mobile robots when multiple robots are working together?",
+          "options": [
+            "Yes",
+            "No"
+          ],
+          "correct_answer": 0,
+          "explanation": "Communication enables coordination and data sharing between robots, which is essential in multi-robot systems."
+        },
+        {
+          "id": "q9",
+          "type": "checkbox",
+          "question": "Choose the basic components needed to construct an AGV (Select all that apply)",
+          "options": [
+            "Motor",
+            "Driver / Motor Driver",
+            "Charger",
+            "Industrial PC (IPC)",
+            "Controller (PLC / microcontroller)",
+            "Wheels",
+            "Light (indicator)",
+            "Steering Wheel",
+            "Propeller",
+            "LIDAR Sensor",
+            "Ultrasonic / IR Sensors",
+            "Conveyor Belt",
+            "Battery",
+            "Frame / Chassis",
+            "GPS Module",
+            "Speakers",
+            "Fan",
+            "Hydraulic Pump",
+            "Emergency Stop Button",
+            "Wi-Fi / Communication Module",
+            "Seat",
+            "Safety Bumpers",
+            "Air Conditioner",
+            "Solar Panel"
+          ],
+          "correct_answers": [0, 1, 2, 3, 4, 5, 9, 10, 12, 13, 14, 18, 19, 21],
+          "explanation": "Core AGV components include motors, motor drivers, charger, industrial PC, controller, wheels, LIDAR and ultrasonic/IR sensors, battery, frame/chassis, GPS module (for outdoor AGVs), emergency stop button, communication module, and safety bumpers. Optional items like lights, conveyor belts, or solar panels depend on the AGV design, while items such as seats, propellers, or hydraulic pumps are not used."
+        }
       ],
       "settings": {
         "allow_retry": true,

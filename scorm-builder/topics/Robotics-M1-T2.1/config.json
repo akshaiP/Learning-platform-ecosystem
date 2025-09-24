@@ -150,7 +150,7 @@
         {
           "title": "Move the Robot",
           "description": "Control AGV using teleop panel.",
-          "instructions": "Place mouse pointer in teleop panel and press alphabet shown to move the robot.",
+          "instructions": "Place mouse pointer in teleop panel and press the alphabet keys shown to move the robot.\n\nTry This:\n- Drive the AGV from point A to point B in the environment.\n- Practice making turns smoothly.\n- Set your own target (like going from point B to point C) and navigate the robot there.",
           "images": [
             {
               "src": "6.png",
