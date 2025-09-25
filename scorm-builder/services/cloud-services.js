@@ -22,51 +22,77 @@ class CloudServices {
                 return;
             }
 
-            // Initialize Firebase Admin SDK
-            if (!admin.apps.length) {
-                // Check if we have individual credentials or service account file
-                if (process.env.FIREBASE_PRIVATE_KEY) {
-                    // Use individual environment variables
-                    const serviceAccount = {
-                        type: "service_account",
-                        project_id: process.env.FIREBASE_PROJECT_ID || this.projectId,
-                        private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-                        private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-                        client_email: process.env.FIREBASE_CLIENT_EMAIL,
-                        client_id: process.env.FIREBASE_CLIENT_ID,
-                        auth_uri: process.env.FIREBASE_AUTH_URI || "https://accounts.google.com/o/oauth2/auth",
-                        token_uri: process.env.FIREBASE_TOKEN_URI || "https://oauth2.googleapis.com/token",
-                        auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL || "https://www.googleapis.com/oauth2/v1/certs",
-                        client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL
-                    };
+			const isProduction = process.env.NODE_ENV === 'production';
 
-                    admin.initializeApp({
-                        credential: admin.credential.cert(serviceAccount),
-                        projectId: this.projectId
-                    });
-                } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-                    // Use service account key file
-                    admin.initializeApp({
-                        credential: admin.credential.applicationDefault(),
-                        projectId: this.projectId
-                    });
-                } else {
-                    // Try default credentials (for Google Cloud environments)
-                    admin.initializeApp({
-                        projectId: this.projectId
-                    });
-                }
-            }
+			// Initialize Firebase Admin SDK based on environment
+			if (!admin.apps.length) {
+				if (isProduction) {
+					// Cloud Run / GCP: use Application Default Credentials (ADC)
+					admin.initializeApp();
+					console.log('🔐 Using Application Default Credentials (production)');
+				} else {
+					// Local development: prefer key file or explicit env service account
+					let keyFilePath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+					const defaultKeyPath = path.resolve(__dirname, '..', 'key.json');
 
-            // Initialize Firestore
-            this.db = admin.firestore();
-            
-            // Initialize Cloud Storage
-            this.storage = new Storage({
-                projectId: this.projectId
-            });
-            
-            this.bucket = this.storage.bucket(this.bucketName);
+					// Support FIREBASE_* env block as an alternative
+					if (process.env.FIREBASE_PRIVATE_KEY) {
+						const serviceAccount = {
+							type: 'service_account',
+							project_id: process.env.FIREBASE_PROJECT_ID || this.projectId,
+							private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+							private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+							client_email: process.env.FIREBASE_CLIENT_EMAIL,
+							client_id: process.env.FIREBASE_CLIENT_ID,
+							auth_uri: process.env.FIREBASE_AUTH_URI || 'https://accounts.google.com/o/oauth2/auth',
+							token_uri: process.env.FIREBASE_TOKEN_URI || 'https://oauth2.googleapis.com/token',
+							auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL || 'https://www.googleapis.com/oauth2/v1/certs',
+							client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL
+						};
+						admin.initializeApp({ credential: admin.credential.cert(serviceAccount), projectId: this.projectId });
+						console.log('🔑 Using FIREBASE_* environment credentials (development)');
+					} else {
+						if (!keyFilePath) {
+							keyFilePath = defaultKeyPath;
+						} else {
+							// Resolve env-provided path to absolute so require() does not treat it as module-relative
+							keyFilePath = path.isAbsolute(keyFilePath) ? keyFilePath : path.resolve(process.cwd(), keyFilePath);
+						}
+						if (!fs.existsSync(keyFilePath)) {
+							throw new Error(`GOOGLE_APPLICATION_CREDENTIALS key file not found at ${keyFilePath}. Set env var or place key.json in project root.`);
+						}
+						const serviceAccount = require(keyFilePath);
+						admin.initializeApp({ credential: admin.credential.cert(serviceAccount), projectId: this.projectId });
+						console.log(`🔑 Using key file credentials (development): ${keyFilePath}`);
+					}
+				}
+			}
+
+			// Initialize Firestore
+			this.db = admin.firestore();
+
+			// Initialize Cloud Storage based on environment
+			if (isProduction) {
+				this.storage = new Storage(); // ADC on Cloud Run
+			} else {
+				let keyFilePath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+				const defaultKeyPath = path.resolve(__dirname, '..', 'key.json');
+				if (!process.env.FIREBASE_PRIVATE_KEY) {
+					if (!keyFilePath) {
+						keyFilePath = defaultKeyPath;
+					} else {
+						keyFilePath = path.isAbsolute(keyFilePath) ? keyFilePath : path.resolve(process.cwd(), keyFilePath);
+					}
+					if (!fs.existsSync(keyFilePath)) {
+						throw new Error(`GOOGLE_APPLICATION_CREDENTIALS key file not found at ${keyFilePath} for Storage client.`);
+					}
+				}
+				this.storage = process.env.FIREBASE_PRIVATE_KEY
+					? new Storage({ projectId: this.projectId })
+					: new Storage({ projectId: this.projectId, keyFilename: keyFilePath });
+			}
+
+			this.bucket = this.storage.bucket(this.bucketName);
             
             // Ensure bucket exists
             await this.ensureBucketExists();
@@ -77,7 +103,11 @@ class CloudServices {
             console.log(`🗄️  Storage bucket: ${this.bucketName}`);
             
         } catch (error) {
-            console.error('❌ Failed to initialize cloud services:', error);
+			console.error(`❌ Failed to initialize cloud services (${process.env.NODE_ENV || 'unknown env'}):`, error.message || error);
+			// Surface a clean error with guidance
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('ℹ️ For local development, set GOOGLE_APPLICATION_CREDENTIALS=./key.json or provide FIREBASE_* env vars.');
+			}
             throw error;
         }
     }
@@ -96,7 +126,12 @@ class CloudServices {
                 console.log(`✅ Bucket ${this.bucketName} already exists`);
             }
         } catch (error) {
-            console.error('❌ Error ensuring bucket exists:', error);
+			// On some environments (e.g., Cloud Run) the service account may not have bucket-create permissions
+			if (error && (error.code === 403 || error.code === 409)) {
+				console.warn(`⚠️ Bucket existence check/create encountered ${error.code}. Proceeding assuming bucket is managed externally.`);
+				return;
+			}
+			console.error('❌ Error ensuring bucket exists:', error.message || error);
             throw error;
         }
     }
@@ -225,10 +260,6 @@ class CloudServices {
         }
     }
 
-    /**
-     * Get a public URL for a file
-     * @param {string} cloudPath - Cloud storage path
-     */
     getPublicUrl(cloudPath) {
         return `https://storage.googleapis.com/${this.bucketName}/${cloudPath}`;
     }

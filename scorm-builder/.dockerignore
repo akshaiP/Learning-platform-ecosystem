@@ -1,10 +1,18 @@
+# Exclude local data that's now in cloud
+topics/
 test-output/
 output/
 temp/
 web-ui/public/downloads/
 web-ui/public/uploads/
+
+# Exclude sensitive files
+key.json
+.env
+.env.*
+
+# Exclude development files
 node_modules/
 .git/
 *.log
-.env
 .DS_Store

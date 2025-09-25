@@ -1012,7 +1012,7 @@ function showToast(message, type) {
     const el = document.getElementById('toast');
     if (!el) return;
     el.textContent = message;
-    el.className = `fixed top-4 right-4 px-4 py-2 rounded shadow text-white ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+    el.className = `fixed z-50 bottom-4 right-4 px-4 py-2 rounded shadow text-white ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
     el.classList.remove('hidden');
     setTimeout(() => el.classList.add('hidden'), 2500);
 }
