@@ -1,0 +1,336 @@
+{
+    "title": "AI in Robotics and Future Trends",
+    "description": "Explore the evolution of AI in robotics, key technologies, real-world applications, and hands-on object detection and gesture recognition.",
+  
+    "learning_objectives": [
+      "Understand the evolution from traditional robots to AI-enabled robots.",
+      "Explore key AI technologies in robotics.",
+      "Examine real-world applications and future trends.",
+      "Practice real-time programming for object detection.",
+      "Experiment with real-time hand gesture identification."
+    ],
+  
+    "content": {
+      "company_logo": {
+        "src": "nebula-logo.png",
+        "alt": "Nebula KnowLab Logo"
+      },
+  
+      "task_statement": "Vision using AI",
+  
+      "task_steps": [
+        {
+            "title": "Open VS Code",
+            "description": "Start coding with Python.",
+            "instructions": "Open VS Code on your system and create a new workspace.",
+            "images": [
+            {
+                "src": "1.png",
+                "alt": "Open VS Code"
+            }
+            ]
+        },
+        {
+            "title": "Open GitHub",
+            "description": "Access the AI vision program.",
+            "instructions": "Open this link in your browser.",
+            "code": {
+            "content": "https://github.com/efficanebula2025/vision/blob/main/ai_det.py",
+            "language": "url"
+            },
+            "images": [
+            {
+                "src": "2.png",
+                "alt": "Open GitHub repository"
+            }
+            ]
+        },
+        {
+            "title": "Download Code",
+            "description": "Download the object detection code.",
+            "instructions": "Click on the **Download raw file** button on GitHub to save the file.",
+            "images": [
+            {
+                "src": "3.png",
+                "alt": "Download raw Python file"
+            }
+            ]
+        },
+        {
+            "title": "Open File in VS Code",
+            "description": "Access the downloaded code in VS Code.",
+            "instructions": "Go to **File → Open File** in VS Code and select the Python file.",
+            "images": [
+            {
+                "src": "4.png",
+                "alt": "Open Python file in VS Code"
+            }
+            ]
+        },
+        {
+            "title": "Check Model",
+            "description": "Verify model setup.",
+            "instructions": "Ensure the correct AI model is downloaded and linked to the program.",
+            "images": [
+            {
+                "src": "4.2.png",
+                "alt": "Verify AI model setup"
+            }
+            ]
+        },
+        {
+            "title": "Setup Vision",
+            "description": "Prepare video input.",
+            "instructions": "Open **Camo Studio** on your system."
+        },
+        {
+            "title": "Connect Vision",
+            "description": "Enable phone as a camera.",
+            "instructions": "Open **Camo Studio** on your phone.",
+            "images": [
+            {
+                "src": "5.png",
+                "alt": "Open Camo Studio on phone"
+            }
+            ]
+        },
+        {
+            "title": "Connect Mobile to System",
+            "description": "Establish video feed connection.",
+            "instructions": "Use a USB cable to connect your mobile phone to the system.",
+            "images": [
+            {
+                "src": "7.png",
+                "alt": "Connect mobile via USB"
+            }
+            ]
+        },
+        {
+            "title": "Run Object Detection Program",
+            "description": "Start AI detection.",
+            "instructions": "Open a dedicated terminal in VS Code and run the Python file.",
+            "images": [
+            {
+                "src": "8.png",
+                "alt": "Run object detection program"
+            }
+            ]
+        },
+        {
+            "title": "Object Detection",
+            "description": "Test the program.",
+            "instructions": "Use your mobile camera to detect real-world objects in front of it.",
+            "images": [
+            {
+                "src": "9.png",
+                "alt": "Object detection test"
+            }
+            ]
+        },
+        {
+            "title": "Hand Gesture Program",
+            "description": "Run gesture recognition.",
+            "instructions": "Repeat the same process with the hand gesture program.",
+            "code": {
+            "content": "https://github.com/efficanebula2025/vision/blob/main/hand_gesture.py",
+            "language": "url"
+            }
+        }
+    ],
+  
+      "hero_image": {
+        "src": "ai-vision-hero.jpg",
+        "alt": "AI-enabled robotics and vision demo"
+      },
+  
+      "concepts": [
+        {
+          "title": "1. Evolution",
+          "summary": "From Traditional Robots to AI-enabled Robots",
+          "image": {
+            "src": "evolution.png",
+            "alt": "Evolution of robotics"
+          },
+          "learn_more_context": "Explain how traditional robots differ from AI-enabled robots in terms of adaptability, perception, and decision-making."
+        },
+        {
+          "title": "2. Core AI Components",
+          "summary": "Controllers, AI Software Architecture, Machine Learning, Computer Vision",
+          "image": {
+            "src": "core-ai-components.png",
+            "alt": "Core AI components in robotics"
+          },
+          "learn_more_context": "List and briefly describe the four main Controllers, AI software architecture, Machine Learning, AI components in robotics, highlighting their individual functions"
+        },
+        {
+          "title": "3. Computer Vision & Perception in Robotics",
+          "summary": "How robots see and interpret their world.",
+          "image": {
+            "src": "computer-vision.png",
+            "alt": "Computer vision in robotics"
+          },
+          "learn_more_context": "Discuss how computer vision helps robots understand their environment. Give some examples of perception in real-world industrial robotics"
+        },
+        {
+          "title": "4. Natural Language Processing (NLP) for Human–Robot Integration",
+          "summary": "Enabling speech and text interaction with robots.",
+          "image": {
+            "src": "nlp.jpeg",
+            "alt": "NLP in robotics"
+          },
+          "learn_more_context": "Explain how NLP enables human–robot communication. Provide one use case where NLP is essential in robotics"
+        },
+        {
+          "title": "5. Autonomous Systems & Navigation",
+          "summary": "Path planning and autonomy for safe robot movement.",
+          "image": {
+            "src": "autonomous-systems.png",
+            "alt": "Autonomous systems in robotics"
+          },
+          "learn_more_context": "Describe how autonomy and navigation work in AI-enabled robots. What technologies support safe path planning?"
+        },
+        {
+          "title": "6. Industry Applications & Future Trends",
+          "summary": "How AI robotics shape industries.",
+          "image": {
+            "src": "industry-applications.jpeg",
+            "alt": "Industry applications in robotics"
+          },
+          "learn_more_context": "Identify two industries using AI robotics and describe one future trend that could shape their applications"
+        }
+      ]
+    },
+  
+    "quiz": {
+      "title": "Knowledge Check: AI in Robotics",
+      "description": "Test your understanding of AI technologies and applications in robotics.",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Which of the following best describes the shift from traditional robots to AI-enabled robots?",
+          "options": [
+            "Increased speed and reduced weight",
+            "Ability to perform repetitive tasks only",
+            "Incorporation of perception, learning, and decision-making",
+            "Use of mechanical actuators only"
+          ],
+          "correct_answer": 2,
+          "explanation": "AI-enabled robots incorporate perception, learning, and decision-making abilities."
+        },
+        {
+          "id": "q2",
+          "question": "Which core AI component enables robots to interpret sensory data and recognize objects?",
+          "options": [
+            "Controllers",
+            "Computer Vision",
+            "NLP",
+            "Mechanical Design"
+          ],
+          "correct_answer": 1,
+          "explanation": "Computer vision interprets visual and sensory data for object recognition."
+        },
+        {
+          "id": "q3",
+          "question": "What is the primary role of a controller in an AI robotic system?",
+          "options": [
+            "Storing large datasets",
+            "Managing hardware operations and executing AI algorithms",
+            "Predicting market trends",
+            "Generating natural speech"
+          ],
+          "correct_answer": 1,
+          "explanation": "Controllers bridge hardware and AI algorithms, ensuring correct execution."
+        },
+        {
+          "id": "q4",
+          "question": "Natural Language Processing (NLP) in robotics is mainly used for:",
+          "options": [
+            "Image recognition",
+            "Interaction through speech and text",
+            "Path planning and navigation",
+            "Energy optimization"
+          ],
+          "correct_answer": 1,
+          "explanation": "NLP enables robots to communicate with humans via speech and text."
+        },
+        {
+          "id": "q5",
+          "question": "Which of the following is an example of an autonomous robotic system?",
+          "options": [
+            "CNC machine",
+            "Industrial welding arm",
+            "Bin picking robot",
+            "Pick-and-place robot"
+          ],
+          "correct_answer": 2,
+          "explanation": "A bin picking robot makes decisions based on perception, classifying it as autonomous."
+        },
+        {
+          "id": "q6",
+          "question": "Machine Learning in robotics allows robots to:",
+          "options": [
+            "Repeat tasks exactly as programmed without change",
+            "Improve performance based on data and experience",
+            "Reduce the number of sensors required",
+            "Operate without software"
+          ],
+          "correct_answer": 1,
+          "explanation": "Machine learning enables robots to learn from data and enhance performance."
+        },
+        {
+          "id": "q7",
+          "question": "Which AI technology is most critical for enabling robots to navigate dynamic environments safely?",
+          "options": [
+            "Computer Vision and Perception",
+            "NLP",
+            "Cloud Storage",
+            "Hardware system"
+          ],
+          "correct_answer": 0,
+          "explanation": "Computer vision and perception guide robots in obstacle detection and safe movement."
+        },
+        {
+          "id": "q8",
+          "question": "In healthcare, AI-enabled robots are being used for:",
+          "options": [
+            "Report publishing",
+            "Surgical assistance and patient monitoring",
+            "Patient transfer system",
+            "Inventory management"
+          ],
+          "correct_answer": 1,
+          "explanation": "AI-enabled robots assist in surgeries and monitor patients in hospitals."
+        },
+        {
+          "id": "q9",
+          "question": "What is a major future trend in AI robotics across industries?",
+          "options": [
+            "Fully manual programming of robots",
+            "Decreased use of sensors",
+            "Increased autonomy and adaptability in unstructured environments",
+            "Exclusive use in manufacturing only"
+          ],
+          "correct_answer": 2,
+          "explanation": "Future AI robots will adapt better to dynamic and unstructured environments."
+        },
+        {
+          "id": "q10",
+          "question": "Which of the following is NOT a key AI component in robotics?",
+          "options": [
+            "Controllers",
+            "AI Software Architecture",
+            "Machine Learning",
+            "Drivers"
+          ],
+          "correct_answer": 3,
+          "explanation": "Drivers are not considered a core AI component in robotics."
+        }
+      ],
+      "settings": {
+        "allow_retry": true,
+        "show_progress": true,
+        "randomize_questions": false,
+        "passing_score": 1
+      }
+    }
+  }  
