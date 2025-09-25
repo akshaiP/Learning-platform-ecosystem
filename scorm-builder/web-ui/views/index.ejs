@@ -29,7 +29,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center space-x-4">
@@ -51,13 +51,13 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16">
         <!-- Cloud Topics Section -->
         <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-gray-900">Manage Topics</h2>
-                <button type="button" onclick="listTopics()" class="text-sm px-3 py-2 bg-gray-100 rounded hover:bg-gray-200">
-                    <i class="fas fa-rotate mr-1"></i>Refresh
+                <button type="button" onclick="listTopics()" class="text-sm px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
+                    <i class="fas fa-rotate mr-1 text-gray-700"></i>Refresh
                 </button>
             </div>
             <div class="flex items-center gap-3">
@@ -81,6 +81,24 @@
                     <h2 class="text-2xl font-bold text-gray-900">Topic Information</h2>
                 </div>
                 
+                <!-- Topic ID naming guidance (collapsible, full-width for clean layout) -->
+                <details class="mb-6 bg-blue-50 border border-blue-200 rounded-xl">
+                    <summary class="cursor-pointer select-none px-4 py-3 text-sm text-blue-900 font-medium flex items-center justify-between">
+                        <span><i class="fas fa-circle-info mr-2 text-blue-600"></i>Topic ID naming guide</span>
+                        <span class="text-blue-700 text-xs">Click to expand</span>
+                    </summary>
+                    <div class="px-4 pb-4">
+                        <ul class="list-disc pl-5 space-y-1 text-sm text-blue-900">
+                            <li><span class="font-semibold">Format</span>: <span class="font-mono">CourseName-Mx-Ty(.z)</span></li>
+                            <li><span class="font-semibold">CourseName</span>: letters only (A–Z, a–z). <span class="font-semibold">No spaces or special characters</span>. Use CamelCase if you like (e.g., <span class="font-mono">RoboticsAI</span>).</li>
+                            <li><span class="font-semibold">Mx</span>: module number, digits only. Example: <span class="font-mono">M1</span>, <span class="font-mono">M12</span>.</li>
+                            <li><span class="font-semibold">Ty</span>: topic number, digits only. Optional subtopic: <span class="font-mono">.z</span> (e.g., <span class="font-mono">T3.1</span>).</li>
+                            <li><span class="font-semibold">Examples</span>: <span class="font-mono">Robotics-M1-T1</span>, <span class="font-mono">RoboticsAI-M2-T3.1</span>.</li>
+                            <li>Maintain a consistent <span class="font-semibold">CourseName</span> across related topics to enable filtering later.</li>
+                        </ul>
+                    </div>
+                </details>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Topic Title *</label>
@@ -90,10 +108,11 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Topic ID (No spaces or special characters allowed) *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Topic ID *</label>
                         <input type="text" name="topicId" required 
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
-                               placeholder="e.g., nlp-text-summarization">
+                               placeholder="e.g., Robotics-M1-T1 or RoboticsAI-M2-T3.1">
+                        <p class="text-xs text-gray-500 mt-2">Format: <span class="font-mono">CourseName-Mx-Ty(.z)</span>. CourseName: letters only, no spaces.</p>
                     </div>
                 </div>
                 

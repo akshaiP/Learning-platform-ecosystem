@@ -470,11 +470,19 @@ function updateOptionIndices(container) {
 }
 
 // Toggle between MCQ and Checkbox question types
-function toggleQuestionType(questionId, questionType) {
-    // Find the question item by looking for the select element that triggered this function
-    const selectElement = event.target;
-    const questionItem = selectElement.closest('.quiz-question-item');
-    
+function toggleQuestionType(questionId, questionType, triggerEl) {
+    // Works when called from onchange (event present), with explicit triggerEl, or programmatically
+    let questionItem = null;
+    if (triggerEl && triggerEl.closest) {
+        questionItem = triggerEl.closest('.quiz-question-item');
+    }
+    if (!questionItem && typeof event !== 'undefined' && event && event.target) {
+        questionItem = event.target.closest('.quiz-question-item');
+    }
+    if (!questionItem) {
+        const selectEl = document.querySelector(`select[name="quizQuestion_${questionId}_type"]`);
+        if (selectEl) questionItem = selectEl.closest('.quiz-question-item');
+    }
     if (!questionItem) {
         console.error('Could not find question item for questionId:', questionId);
         return;
@@ -484,11 +492,9 @@ function toggleQuestionType(questionId, questionType) {
     const checkboxOptions = questionItem.querySelectorAll('.checkbox-option');
     
     if (questionType === 'mcq') {
-        // Show radio buttons, hide checkboxes
         mcqOptions.forEach(option => option.classList.remove('hidden'));
         checkboxOptions.forEach(option => option.classList.add('hidden'));
     } else if (questionType === 'checkbox') {
-        // Show checkboxes, hide radio buttons
         mcqOptions.forEach(option => option.classList.add('hidden'));
         checkboxOptions.forEach(option => option.classList.remove('hidden'));
     }
@@ -712,46 +718,66 @@ async function generateSCORM(showPreview = false) {
 
 // Cloud-backed topic management
 async function listTopics() {
-    const res = await fetch('/form/topics');
-    const data = await res.json();
-    if (data.success) {
+    try {
         const select = document.getElementById('topicSelect');
         if (select) {
-            select.innerHTML = '<option value="">Select a topic...</option>';
-            data.topics.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t.id;
-                opt.textContent = t.title ? `${t.title} (${t.id})` : t.id;
-                select.appendChild(opt);
-            });
+            select.innerHTML = '<option value="">Loading topics...</option>';
         }
+        const res = await fetch('/form/topics');
+        const data = await res.json();
+        if (data.success) {
+            if (select) {
+                select.innerHTML = '<option value="">Select a topic...</option>';
+                (data.topics || []).forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.title ? `${t.title} (${t.id})` : t.id;
+                    select.appendChild(opt);
+                });
+            }
+        } else {
+            if (select) {
+                select.innerHTML = '<option value="">No topics found</option>';
+            }
+        }
+    } catch (err) {
+        const select = document.getElementById('topicSelect');
+        if (select) {
+            select.innerHTML = '<option value="">Failed to load topics</option>';
+        }
+        showToast('Could not load topics. Click Refresh to retry.', 'error');
     }
 }
 
 async function saveTopicToCloud() {
     try {
-        const payload = collectFormData();
-        // Require valid topicId from the main form field
-        const topicId = (payload.topicId || '').trim();
-        // Enforce format: coursename-Module-topic (e.g., robotics-M1-T1, robotics-M1-T1.1)
-        const topicIdPattern = /^[a-z]+-M\d+-T\d+(?:\.\d+)?$/;
-        if (!topicId || !topicIdPattern.test(topicId)) {
-            showToast('Provide a valid Topic ID like robotics-M1-T1 or robotics-M1-T1.1', 'error');
-            return;
-        }
-        // Normalize payload to cloud config keys where possible
-        payload.learning_objectives = payload.learningObjectives;
-        payload.content = payload.content || {};
-        payload.quiz = null; // let server rebuild during generate; drafts save structure as-is
-        payload.topicId = topicId;
+    const data = collectFormData();
+    const topicId = (data.topicId || '').trim();
+    // Allow uppercase letters in CourseName, no spaces/special chars in that segment
+    // Full format: CourseName-Mx-Ty(.z)
+    const topicIdPattern = /^[A-Za-z]+-M\d+-T\d+(?:\.\d+)?$/;
+    if (!topicId || !topicIdPattern.test(topicId)) {
+        showToast('Provide Topic ID as CourseName-Mx-Ty (e.g., Robotics-M1-T1 or RoboticsAI-M2-T3.1). CourseName: letters only, no spaces.', 'error');
+        return;
+    }
 
-        const res = await fetch('/form/topics', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error || 'Save failed');
+        const formEl = document.getElementById('scormForm');
+        const formData = new FormData(formEl);
+        formData.set('learningObjectivesJson', JSON.stringify(data.learningObjectives));
+        formData.set('taskSteps', JSON.stringify(data.taskSteps));
+        formData.set('concepts', JSON.stringify(data.concepts));
+        formData.set('quizQuestions', JSON.stringify(data.quizQuestions));
+        formData.set('title', data.title);
+        formData.set('topicId', data.topicId);
+        formData.set('description', data.description);
+        formData.set('taskStatement', data.taskStatement);
+        formData.set('heroImageCaption', data.heroImageCaption);
+        formData.set('quizTitle', data.quizTitle);
+        formData.set('quizDescription', data.quizDescription);
+
+        const res = await fetch('/build/save', { method: 'POST', body: formData });
+        const resData = await res.json();
+        if (!resData.success) throw new Error(resData.error || 'Save failed');
         showToast('Draft saved to cloud', 'success');
         await listTopics();
     } catch (e) {
@@ -933,14 +959,38 @@ function populateFormFromCloudConfig(config, imageUrls) {
             const rows = optionsContainer.querySelectorAll('.quiz-option-item');
             const row = rows[rows.length - 1];
             row.querySelector('input[type="text"]').value = opt;
-            if (q.type === 'mcq' && oi === (q.correct_answer || 0)) {
-                row.querySelector('input[type="radio"]').checked = true;
+            // Robust selection of correct answers (supports legacy and new keys, coerces to numbers)
+            const correctAnswerIdx = Number(q.correct_answer != null ? q.correct_answer : q.correctAnswer);
+            const correctAnswersArr = Array.isArray(q.correct_answers) ? q.correct_answers : (Array.isArray(q.correctAnswers) ? q.correctAnswers : []);
+            const correctAnswersNums = correctAnswersArr.map(v => Number(v)).filter(v => !Number.isNaN(v));
+            if (q.type === 'mcq' && !Number.isNaN(correctAnswerIdx) && oi === correctAnswerIdx) {
+                const radio = row.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
             }
-            if (q.type === 'checkbox' && Array.isArray(q.correct_answers) && q.correct_answers.includes(oi)) {
-                row.querySelector('input[type="checkbox"]').checked = true;
+            if (q.type === 'checkbox' && correctAnswersNums.includes(oi)) {
+                const cb = row.querySelector('input[type="checkbox"]');
+                if (cb) cb.checked = true;
             }
         });
-        toggleQuestionType(`question_${i}`, q.type || 'mcq');
+        // Extra fallback selection by explicit input query (covers any order/visibility issues)
+        const caIdxNum = Number(q.correct_answer != null ? q.correct_answer : q.correctAnswer);
+        if (q.type === 'mcq' && !Number.isNaN(caIdxNum)) {
+            const radio = form.querySelector(`input[type="radio"][name="${base}correctAnswer"][value="${caIdxNum}"]`);
+            if (radio) radio.checked = true;
+        }
+        if (q.type === 'checkbox') {
+            const caArr = Array.isArray(q.correct_answers) ? q.correct_answers : (Array.isArray(q.correctAnswers) ? q.correctAnswers : []);
+            caArr.map(v => Number(v)).filter(v => !Number.isNaN(v)).forEach(v => {
+                const cb = form.querySelector(`input[type="checkbox"][name="${base}correctAnswers"][value="${v}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
+        // Set explanation text
+        const explanationText = q.explanation != null ? q.explanation : (q.explanation_text || '');
+        const expEl = form.querySelector(`textarea[name="${base}explanation"]`);
+        if (expEl) expEl.value = explanationText;
+        const selectEl = document.querySelector(`select[name="${base}type"]`);
+        toggleQuestionType(`question_${i}`, q.type || 'mcq', selectEl);
         if (q.explanation_image && q.explanation_image.src) {
             const url = imageUrls[q.explanation_image.src] || '';
             if (url) {
@@ -1014,7 +1064,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     console.log('SCORM Builder form initialized');
-    // Always refresh topic list on page load
+    // Always refresh topic list on DOM ready
+    listTopics().catch(() => {});
+});
+
+// Extra safeguard: also try once when window fully loads (images, etc.)
+window.addEventListener('load', function() {
     listTopics().catch(() => {});
 });
 

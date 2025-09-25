@@ -15,6 +15,55 @@ const upload = multer({
     dest: path.join(__dirname, '../public/uploads/temp'),
     limits: { fileSize: 5 * 1024 * 1024 }
 });
+// Save topic draft to cloud (with images), no build
+router.post('/save', upload.any(), async (req, res) => {
+    let topicId = null;
+    const userId = 'default';
+    try {
+        console.log('💾 Saving topic draft to cloud...');
+        if (!cloudServices.initialized) {
+            await cloudServices.initialize();
+        }
+
+        topicId = (req.body.topicId || '').trim() || `topic_${Date.now()}`;
+
+        let existingConfig = null;
+        try {
+            const existing = await topicService.loadTopic(topicId, userId);
+            existingConfig = existing.data || null;
+        } catch (_) {
+            existingConfig = null;
+        }
+
+        const { config, uploads } = await buildConfigFromFormDataCloud(req.body, req.files, existingConfig);
+
+        await topicService.saveTopic(config, userId, topicId);
+
+        for (const uploadItem of uploads) {
+            const { localPath, targetFileName } = uploadItem;
+            const cloudPath = `topics/${userId}/${topicId}/images/${targetFileName}`;
+            await cloudServices.uploadFile(localPath, cloudPath, {
+                metadata: { topicId, userId, uploadedAt: new Date().toISOString() }
+            });
+        }
+
+        if (req.files) {
+            for (const file of req.files) {
+                await fs.remove(file.path).catch(() => {});
+            }
+        }
+
+        res.json({ success: true, topicId });
+    } catch (error) {
+        console.error('❌ Draft save failed:', error);
+        if (req.files) {
+            for (const file of req.files) {
+                await fs.remove(file.path).catch(() => {});
+            }
+        }
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // Generate SCORM package using cloud-backed topics
 router.post('/generate', upload.any(), async (req, res) => {
@@ -100,9 +149,10 @@ async function buildConfigFromFormDataCloud(body, files, existingConfig) {
         console.log(`📸 Processing ${files.length} uploaded images...`);
         for (const file of files) {
             const ext = path.extname(file.originalname || '') || path.extname(file.filename || '');
-            const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-            const safeField = (file.fieldname || 'image').replace(/\[|\]/g, '_');
-            const newFilename = `${safeField}-${unique}${ext}`;
+            // Use original filename (sanitized) to preserve names expected by templates
+            const base = path.basename(file.originalname || file.filename || `image${Date.now()}${ext}`);
+            const safeName = base.replace(/[^A-Za-z0-9._-]/g, '_');
+            const newFilename = safeName;
             if (!imageMap[file.fieldname]) imageMap[file.fieldname] = [];
             imageMap[file.fieldname].push(newFilename);
             uploads.push({ localPath: file.path, targetFileName: newFilename });

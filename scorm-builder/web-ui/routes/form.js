@@ -78,11 +78,14 @@ function validateFormData(data) {
         errors.push({ field: 'taskStatement', message: 'Task statement is required' });
     }
     
-    // Topic ID format validation
-    if (data.topicId && !/^[a-z0-9-]+$/.test(data.topicId)) {
+    // Topic ID format validation: CourseName-Mx-Ty(.z)
+    // CourseName: letters only (A-Z, a-z), no spaces or special chars
+    // Module (M) and Topic (T) numbers: digits, optional .z subtopic
+    const topicIdRegex = /^[A-Za-z]+-M\d+-T\d+(?:\.\d+)?$/;
+    if (data.topicId && !topicIdRegex.test(data.topicId)) {
         errors.push({ 
             field: 'topicId', 
-            message: 'Topic ID can only contain lowercase letters, numbers, and hyphens' 
+            message: 'Topic ID must be CourseName-Mx-Ty(.z). Example: Robotics-M1-T1 or RoboticsAI-M2-T3.1' 
         });
     }
     
