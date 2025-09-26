@@ -314,7 +314,60 @@ class TopicGenerator {
         .replace(/\u2029/g, '&#x2029;'); // Unicode paragraph separator
     }
 
-    // NEW: Apply escaping and add isLongCode boolean for condition
+    // Lightweight markdown converter for instructions text
+    const convertMarkdownToHtml = (text) => {
+      if (!text || typeof text !== 'string') return '';
+      let html = text;
+      // Escape basic HTML to avoid injection, then re-enable simple formatting we add below
+      html = html
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Bold: **text**
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // Italic: *text*
+      html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+
+      // Convert simple markdown lists (- item) per line into <ul><li>
+      const lines = html.split(/\r?\n/);
+      const out = [];
+      let inUl = false;
+      let inOl = false;
+      for (const line of lines) {
+        const ulMatch = line.match(/^\s*[-•]\s+(.*)$/);
+        const olMatch = line.match(/^\s*(\d+)\.\s+(.*)$/);
+
+        if (ulMatch) {
+          if (inOl) { out.push('</ol>'); inOl = false; }
+          if (!inUl) { out.push('<ul class="list-disc ml-6">'); inUl = true; }
+          out.push(`<li>${ulMatch[1]}</li>`);
+          continue;
+        }
+
+        if (olMatch) {
+          if (inUl) { out.push('</ul>'); inUl = false; }
+          if (!inOl) { out.push('<ol class="list-decimal ml-6">'); inOl = true; }
+          out.push(`<li>${olMatch[2]}</li>`);
+          continue;
+        }
+
+        // Close any open lists when encountering a normal line
+        if (inUl) { out.push('</ul>'); inUl = false; }
+        if (inOl) { out.push('</ol>'); inOl = false; }
+
+        // Preserve blank lines as paragraph breaks, non-empty as line breaks
+        if (line.trim().length === 0) {
+          out.push('<br>');
+        } else {
+          out.push(`${line}<br>`);
+        }
+      }
+      if (inUl) out.push('</ul>');
+      if (inOl) out.push('</ol>');
+      return out.join('\n');
+    };
+
     if (Array.isArray(data.content.task_steps)) {
       data.content.task_steps = data.content.task_steps.map(step => {
         if (step.code && step.code.content) {
@@ -329,6 +382,10 @@ class TopicGenerator {
         step.hasMultipleImages = Array.isArray(step.images) && step.images.length > 1;
         if (step.hint && typeof step.hint === 'object') {
           step.hintHasMultipleImages = Array.isArray(step.hint.images) && step.hint.images.length > 1;
+        }
+        // Pre-render markdown for instructions into safe HTML
+        if (step.instructions) {
+          step.instructionsHtml = convertMarkdownToHtml(step.instructions);
         }
         return step;
       });
