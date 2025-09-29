@@ -88,7 +88,7 @@ class ImageUploadHandler {
             
             if (singleImage) {
                 container.innerHTML = '';
-                container.appendChild(previewElement.querySelector('img'));
+                container.appendChild(previewElement);
                 container.classList.remove('hidden');
             } else {
                 container.appendChild(previewElement);
@@ -100,10 +100,19 @@ class ImageUploadHandler {
 
     createPreviewElement(fileId, file, dataUrl, singleImage) {
         const div = document.createElement('div');
-        div.className = singleImage ? '' : 'relative group';
+        div.className = singleImage ? 'relative group' : 'relative group';
         
         if (singleImage) {
-            div.innerHTML = `<img src="${dataUrl}" alt="Preview" class="h-20 w-auto rounded-lg shadow-sm">`;
+            div.innerHTML = `
+                <div class="relative">
+                    <img src="${dataUrl}" alt="Preview" class="h-20 w-auto rounded-lg shadow-sm">
+                    <div class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer" 
+                         onclick="imageUploadHandler.removeSingleImagePreview('${fileId}', this)" 
+                         title="Remove image">
+                        <i class="fas fa-times text-xs"></i>
+                    </div>
+                </div>
+            `;
         } else {
             div.innerHTML = `
                 <div class="relative overflow-hidden rounded-lg shadow-sm bg-white border border-gray-200">
@@ -134,6 +143,40 @@ class ImageUploadHandler {
         const previewElement = button.closest(`[data-file-id="${fileId}"]`);
         if (previewElement) {
             previewElement.remove();
+        }
+
+        // Auto-save after removal
+        if (typeof autoSave === 'function') {
+            autoSave();
+        }
+    }
+
+    removeSingleImagePreview(fileId, button) {
+        // Remove from uploaded files
+        this.uploadedFiles.delete(fileId);
+        
+        // Find the preview container and hide it
+        const previewElement = button.closest(`[data-file-id="${fileId}"]`);
+        let previewContainerEl = null;
+        if (previewElement) {
+            previewContainerEl = previewElement.closest('[id$="_preview"]');
+            if (previewContainerEl) {
+                previewContainerEl.classList.add('hidden');
+                previewContainerEl.innerHTML = '';
+            } else {
+                // Fallback: remove just the preview element
+                previewElement.remove();
+            }
+        }
+
+        // Clear the file input - find it by looking for the input that corresponds to this preview
+        if (previewContainerEl) {
+            const previewId = previewContainerEl.id;
+            const inputId = previewId.replace('_preview', '_input');
+            const inputElement = document.getElementById(inputId);
+            if (inputElement) {
+                inputElement.value = '';
+            }
         }
 
         // Auto-save after removal

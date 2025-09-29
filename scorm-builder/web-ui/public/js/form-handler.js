@@ -837,15 +837,7 @@ function populateFormFromCloudConfig(config, imageUrls) {
         const logoFile = config.content.company_logo.src;
         const logoUrl = imageUrls[logoFile] || '';
         if (logoUrl) {
-            const preview = document.getElementById('companyLogoPreview');
-            if (preview) {
-                preview.classList.remove('hidden');
-                const img = preview.querySelector('img');
-                if (img) {
-                    img.src = logoUrl;
-                    img.alt = config.content.company_logo.alt || 'Company Logo';
-                }
-            }
+            renderSingleLoadedImagePreview('companyLogoPreview', 'companyLogoInput', logoUrl, logoFile, config.content.company_logo.alt || 'Company Logo');
         }
     }
 
@@ -853,15 +845,7 @@ function populateFormFromCloudConfig(config, imageUrls) {
     if (config.content && config.content.hero_image && config.content.hero_image.src) {
         const heroUrl = imageUrls[config.content.hero_image.src] || '';
         if (heroUrl) {
-            const preview = document.getElementById('heroImagePreview');
-            if (preview) {
-                preview.classList.remove('hidden');
-                const img = preview.querySelector('img');
-                if (img) {
-                    img.src = heroUrl;
-                    img.alt = config.title || 'Hero Image';
-                }
-            }
+            renderSingleLoadedImagePreview('heroImagePreview', 'heroImageInput', heroUrl, config.content.hero_image.src, config.title || 'Hero Image');
         }
     }
 
@@ -889,11 +873,7 @@ function populateFormFromCloudConfig(config, imageUrls) {
                 stepImages.forEach(imgObj => {
                     const url = imageUrls[imgObj.src] || '';
                     if (url) {
-                        const imgEl = document.createElement('img');
-                        imgEl.src = url;
-                        imgEl.alt = imgObj.alt || 'Step image';
-                        imgEl.className = 'h-20 w-auto rounded shadow';
-                        preview.appendChild(imgEl);
+                        renderMultiLoadedImageThumb(preview, url, imgObj.src, 'Step image');
                     }
                 });
             }
@@ -906,11 +886,7 @@ function populateFormFromCloudConfig(config, imageUrls) {
                 step.hint.images.forEach(imgObj => {
                     const url = imageUrls[imgObj.src] || '';
                     if (url) {
-                        const imgEl = document.createElement('img');
-                        imgEl.src = url;
-                        imgEl.alt = 'Hint image';
-                        imgEl.className = 'h-20 w-auto rounded shadow';
-                        preview.appendChild(imgEl);
+                        renderMultiLoadedImageThumb(preview, url, imgObj.src, 'Hint image');
                     }
                 });
             }
@@ -928,15 +904,7 @@ function populateFormFromCloudConfig(config, imageUrls) {
         if (c.image && c.image.src) {
             const url = imageUrls[c.image.src] || '';
             if (url) {
-                const preview = document.getElementById(`concept_concept_${i}_image_preview`);
-                if (preview) {
-                    preview.innerHTML = '';
-                    const imgEl = document.createElement('img');
-                    imgEl.src = url;
-                    imgEl.alt = c.title || 'Concept image';
-                    imgEl.className = 'h-20 w-auto rounded shadow';
-                    preview.appendChild(imgEl);
-                }
+                renderSingleLoadedImagePreview(`concept_concept_${i}_image_preview`, `concept_concept_${i}_image_input`, url, c.image.src, c.title || 'Concept image');
             }
         }
     });
@@ -994,18 +962,86 @@ function populateFormFromCloudConfig(config, imageUrls) {
         if (q.explanation_image && q.explanation_image.src) {
             const url = imageUrls[q.explanation_image.src] || '';
             if (url) {
-                const preview = document.getElementById(`quizQuestion_question_${i}_explanationImage_preview`);
-                if (preview) {
-                    preview.innerHTML = '';
-                    const imgEl = document.createElement('img');
-                    imgEl.src = url;
-                    imgEl.alt = 'Explanation image';
-                    imgEl.className = 'h-20 w-auto rounded shadow';
-                    preview.appendChild(imgEl);
-                }
+                renderSingleLoadedImagePreview(`quizQuestion_question_${i}_explanationImage_preview`, `quizQuestion_question_${i}_explanationImage_input`, url, q.explanation_image.src, 'Explanation image');
             }
         }
     });
+}
+
+// Helpers to manage loaded image previews and deletions
+function ensureDeleteImagesContainer() {
+    let container = document.getElementById('deleteImagesContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'deleteImagesContainer';
+        container.className = 'hidden';
+        const form = document.getElementById('scormForm');
+        form.appendChild(container);
+    }
+    return container;
+}
+
+function markImageForDeletion(filename) {
+    const container = ensureDeleteImagesContainer();
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'deleteImages';
+    input.value = filename;
+    container.appendChild(input);
+}
+
+function renderSingleLoadedImagePreview(previewId, inputId, url, filename, altText) {
+    const preview = document.getElementById(previewId);
+    if (!preview) return;
+    preview.classList.remove('hidden');
+    preview.innerHTML = '';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'relative inline-block';
+    wrapper.innerHTML = `
+        <img src="${url}" alt="${altText || 'Image'}" class="h-20 w-auto rounded-lg shadow-sm">
+        <button type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+            title="Remove image"
+            onclick="removeLoadedSingleImage('${previewId}', '${inputId}', '${filename}')">
+            <i class="fas fa-times text-xs"></i>
+        </button>
+    `;
+    preview.appendChild(wrapper);
+}
+
+function renderMultiLoadedImageThumb(previewContainer, url, filename, altText) {
+    const item = document.createElement('div');
+    item.className = 'relative';
+    item.innerHTML = `
+        <img src="${url}" alt="${altText || 'Image'}" class="w-full h-32 object-cover rounded shadow">
+        <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+            title="Remove image"
+            onclick="removeLoadedMultiImage(this, '${filename}')">
+            <i class="fas fa-times text-xs"></i>
+        </button>
+    `;
+    previewContainer.appendChild(item);
+}
+
+// Global functions for onclick
+function removeLoadedSingleImage(previewId, inputId, filename) {
+    const preview = document.getElementById(previewId);
+    if (preview) {
+        preview.innerHTML = '';
+        preview.classList.add('hidden');
+    }
+    const input = document.getElementById(inputId);
+    if (input) {
+        input.value = '';
+    }
+    if (filename) markImageForDeletion(filename);
+    autoSave();
+}
+
+function removeLoadedMultiImage(button, filename) {
+    const item = button.closest('.relative');
+    if (item) item.remove();
+    if (filename) markImageForDeletion(filename);
+    autoSave();
 }
 
 function showToast(message, type) {

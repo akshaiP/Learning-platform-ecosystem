@@ -35,7 +35,12 @@ router.post('/save', upload.any(), async (req, res) => {
             existingConfig = null;
         }
 
+        const deleteList = collectDeleteList(req.body);
         const { config, uploads } = await buildConfigFromFormDataCloud(req.body, req.files, existingConfig);
+        if (deleteList.length) {
+            applyDeletionsToConfig(config, deleteList);
+            await deleteImagesFromCloud(deleteList, userId, topicId);
+        }
 
         await topicService.saveTopic(config, userId, topicId);
 
@@ -94,7 +99,12 @@ router.post('/generate', upload.any(), async (req, res) => {
             existingConfig = null;
         }
 
+        const deleteList = collectDeleteList(req.body);
         const { config, uploads } = await buildConfigFromFormDataCloud(req.body, req.files, existingConfig);
+        if (deleteList.length) {
+            applyDeletionsToConfig(config, deleteList);
+            await deleteImagesFromCloud(deleteList, userId, topicId);
+        }
 
         // Save topic to Firestore
         await topicService.saveTopic(config, userId, topicId);
@@ -497,3 +507,73 @@ async function extractForPreview() {
 }
 
 module.exports = router;
+
+// Helpers for deletions
+function collectDeleteList(body) {
+    // deleteImages may come as string or array of strings
+    const raw = body.deleteImages;
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw.filter(Boolean);
+    return [raw].filter(Boolean);
+}
+
+async function deleteImagesFromCloud(deleteList, userId, topicId) {
+    for (const filename of deleteList) {
+        const cloudPath = `topics/${userId}/${topicId}/images/${filename}`;
+        try {
+            await cloudServices.deleteFile(cloudPath);
+        } catch (e) {
+            // Log and continue
+            console.warn('Delete failed (continuing):', cloudPath, e.message);
+        }
+    }
+}
+
+function applyDeletionsToConfig(config, deleteList) {
+    if (!config || !config.content) return;
+    const shouldDelete = (src) => src && deleteList.includes(src);
+
+    // Company logo
+    if (config.content.company_logo && shouldDelete(config.content.company_logo.src)) {
+        config.content.company_logo = null;
+    }
+
+    // Hero image
+    if (config.content.hero_image && shouldDelete(config.content.hero_image.src)) {
+        config.content.hero_image = null;
+    }
+
+    // Concepts
+    if (Array.isArray(config.content.concepts)) {
+        config.content.concepts = config.content.concepts.map(c => {
+            if (c && c.image && shouldDelete(c.image.src)) {
+                return { ...c, image: null };
+            }
+            return c;
+        });
+    }
+
+    // Task steps and hints
+    if (Array.isArray(config.content.task_steps)) {
+        config.content.task_steps = config.content.task_steps.map(s => {
+            const next = { ...s };
+            if (Array.isArray(next.images)) {
+                next.images = next.images.filter(img => !(img && shouldDelete(img.src)));
+            }
+            if (next.hint && Array.isArray(next.hint.images)) {
+                next.hint = { ...next.hint, images: next.hint.images.filter(img => !(img && shouldDelete(img.src))) };
+            }
+            return next;
+        });
+    }
+
+    // Quiz explanation images
+    if (config.quiz && Array.isArray(config.quiz.questions)) {
+        config.quiz.questions = config.quiz.questions.map(q => {
+            if (q && q.explanation_image && shouldDelete(q.explanation_image.src)) {
+                return { ...q, explanation_image: null };
+            }
+            return q;
+        });
+    }
+}
