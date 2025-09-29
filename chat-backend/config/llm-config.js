@@ -6,7 +6,7 @@ module.exports = {
   gemini: {
     apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
     // Prefer env model -> runtime config -> default
-    model: process.env.GEMINI_MODEL || runtimeConfig?.ai?.model || 'gemini-1.5-flash-latest',
+    model: process.env.GEMINI_MODEL || runtimeConfig?.ai?.model || 'gemini-2.0-flash',
     generationConfig: {
       temperature: runtimeConfig?.ai?.temperature ?? 0.7,
       topK: 40,

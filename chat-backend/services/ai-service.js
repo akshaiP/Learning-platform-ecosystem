@@ -33,7 +33,7 @@ class AIService {
       });
 
       // Use the configured model if provided, otherwise default to 2.5 flash
-      const modelName = config.gemini.model || 'gemini-1.5-flash-latest';
+      const modelName = config.gemini.model || 'gemini-2.0-flash';
       const response = await fetch(
         `${config.gemini.apiUrl}/${modelName}:generateContent?key=${this.apiKey}`,
         {

@@ -22,9 +22,9 @@ module.exports = {
       provider: 'gemini',
       // MODEL CHANGE: Switch between versions by changing this line
       // For 2.5 Flash: 'gemini-2.5-flash-latest'
-      // For 1.5 Flash: 'gemini-1.5-flash-latest' 
+      // For 1.5 Flash: 'gemini-2.0-flash' 
       // For 2.5 Pro: 'gemini-2.5-pro-latest'
-      model: 'gemini-1.5-flash-latest', // ✅ CHANGED: Updated from 1.5 to 2.5 Flash
+      model: 'gemini-2.0-flash', // ✅ CHANGED: Updated from 1.5 to 2.5 Flash
       // ... rest of config
     },
   

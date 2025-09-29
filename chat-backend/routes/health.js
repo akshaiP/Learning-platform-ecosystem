@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
         status: aiHealth.status,
         response_time: aiHealth.responseTime + 'ms',
         provider: 'gemini',
-        model: 'gemini-1.5-flash-latest'
+        model: 'gemini-2.0-flash'
       };
 
       if (aiHealth.status !== 'healthy') {
