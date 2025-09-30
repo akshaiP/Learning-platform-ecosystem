@@ -319,11 +319,11 @@
                 </div>
                 
                 <!-- Task Steps Container -->
-                <div class="space-y-8">
+                <div class="flex flex-col space-y-8">
                     {{#content.task_steps}}
-                    <div class="task-step bg-white rounded-3xl shadow-soft border border-gray-200 overflow-hidden" data-step="{{_idx}}">
+                    <div class="task-step bg-white rounded-3xl shadow-medium border border-gray-200 overflow-hidden" data-step="{{_idx}}">
                         <!-- Step Header -->
-                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-b border-gray-200">
+                        <div class="bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 px-8 py-6 border-b border-gray-200">
                             <div class="flex items-center space-x-4">
                                 <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-medium">
                                     {{displayIndex}}
@@ -335,7 +335,7 @@
                                     {{/description}}
                                 </div>
                                 <div class="flex items-center">
-                                    <button id="complete-btn-{{_idx}}" data-step-index="{{_idx}}" onclick="markStepCompleted(this.dataset.stepIndex)" class="text-sm px-3 py-2 rounded-xl border-2 border-green-500 text-green-600 font-semibold hover:bg-green-50 transition disabled:opacity-60">
+                                    <button id="complete-btn-{{_idx}}" data-step-index="{{_idx}}" onclick="markStepCompleted(this.dataset.stepIndex)" class="text-sm px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-sm hover:shadow-md disabled:opacity-60">
                                         <i class="fas fa-check mr-1"></i>
                                         <span class="align-middle">Mark Completed</span>
                                     </button>
@@ -344,7 +344,7 @@
                         </div>
                         
                         <!-- Step Content -->
-                        <div class="p-8">
+                        <div class="p-8 bg-white">
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <!-- Left Column: Images (single or carousel) -->
                                 {{#image}}
