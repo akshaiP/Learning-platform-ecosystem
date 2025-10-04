@@ -644,10 +644,100 @@ async function generateAndPreview() {
     await generateSCORM(true);
 }
 
+// Frontend validation before SCORM generation
+function validateFormData() {
+    const errors = [];
+    const data = collectFormData();
+    
+    // Basic required fields validation
+    if (!data.title?.trim()) {
+        errors.push('Topic Title is required');
+    }
+    if (!data.topicId?.trim()) {
+        errors.push('Topic ID is required');
+    }
+    if (!data.description?.trim()) {
+        errors.push('Description is required');
+    }
+    if (!data.taskStatement?.trim()) {
+        errors.push('Task Statement is required');
+    }
+    
+    // Validate topic ID format
+    if (data.topicId && !/^[A-Za-z]+-M\d+-T\d+(?:\.\d+)?$/.test(data.topicId)) {
+        errors.push('Topic ID must follow format: CourseName-Mx-Ty (e.g., Robotics-M1-T1)');
+    }
+    
+    // Validate learning objectives (only if they exist)
+    if (data.learningObjectives && data.learningObjectives.length > 0) {
+        data.learningObjectives.forEach((objective, index) => {
+            if (!objective?.trim()) {
+                errors.push(`Learning Objective ${index + 1}: Text is required`);
+            }
+        });
+    }
+    
+    // Validate task steps (only if they exist)
+    if (data.taskSteps && data.taskSteps.length > 0) {
+        data.taskSteps.forEach((step, index) => {
+            if (!step.title?.trim()) {
+                errors.push(`Task Step ${index + 1}: Title is required`);
+            }
+            if (!step.instructions?.trim()) {
+                errors.push(`Task Step ${index + 1}: Instructions are required`);
+            }
+            // Validate hint structure if hint exists
+            if (step.hintText && !step.hintText.trim() && step.hintCode && !step.hintCode.trim()) {
+                errors.push(`Task Step ${index + 1}: Hint must have either text or code, not just an empty hint`);
+            }
+        });
+    }
+    
+    // Validate concepts (only if they exist)
+    if (data.concepts && data.concepts.length > 0) {
+        data.concepts.forEach((concept, index) => {
+            if (!concept.title?.trim()) {
+                errors.push(`Concept ${index + 1}: Title is required`);
+            }
+            if (!concept.summary?.trim()) {
+                errors.push(`Concept ${index + 1}: Summary is required`);
+            }
+        });
+    }
+    
+    // Validate quiz questions (only if they exist)
+    if (data.quizQuestions && data.quizQuestions.length > 0) {
+        data.quizQuestions.forEach((question, index) => {
+            if (!question.question?.trim()) {
+                errors.push(`Quiz Question ${index + 1}: Question text is required`);
+            }
+            if (!question.options || question.options.length < 2) {
+                errors.push(`Quiz Question ${index + 1}: At least 2 answer options are required`);
+            }
+            if (question.type === 'mcq' && (question.correctAnswer === undefined || question.correctAnswer === null)) {
+                errors.push(`Quiz Question ${index + 1}: Please select the correct answer`);
+            }
+            if (question.type === 'checkbox' && (!question.correctAnswers || question.correctAnswers.length === 0)) {
+                errors.push(`Quiz Question ${index + 1}: Please select at least one correct answer`);
+            }
+        });
+    }
+    
+    return errors;
+}
+
 // Generate SCORM Package
 async function generateSCORM(showPreview = false) {
     try {
-        showLoadingModal();
+        // Frontend validation first
+        const validationErrors = validateFormData();
+        if (validationErrors.length > 0) {
+            const errorMessage = 'Please fix the following errors:\n\n' + validationErrors.join('\n');
+            alert(errorMessage);
+            return;
+        }
+        
+        showLoadingModal('Generating SCORM Package', 'Building your learning content...');
         
         const data = collectFormData();
         console.log('Sending form data:', data); // Debug log
@@ -693,12 +783,7 @@ async function generateSCORM(showPreview = false) {
             body: formData
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
         const result = await response.json();
-        
         hideLoadingModal();
         
         if (result.success) {
@@ -709,13 +794,87 @@ async function generateSCORM(showPreview = false) {
             }
             showSuccessModal(result.downloadUrl, result.filename);
         } else {
-            throw new Error(result.error || 'Unknown error occurred');
+            // Parse server error message
+            let errorMessage = 'Unknown error occurred';
+            
+            if (result.error) {
+                errorMessage = result.error;
+            } else if (result.message) {
+                errorMessage = result.message;
+            } else if (result.details) {
+                errorMessage = result.details;
+            } else if (!response.ok) {
+                errorMessage = `Server error (${response.status}): ${response.statusText}`;
+            }
+            
+            // Check if the error contains build output details
+            const buildOutput = result.buildOutput || result.buildStderr || '';
+            if (buildOutput) {
+                // Look for specific error patterns in the build output
+                if (buildOutput.includes('task_steps') && buildOutput.includes('hint') && buildOutput.includes('missing text property')) {
+                    errorMessage = 'Task step hint is missing required text. Please add hint text or remove the hint section.';
+                } else if (buildOutput.includes('Required image not found')) {
+                    const imageMatch = buildOutput.match(/Required image not found: (.+)/);
+                    if (imageMatch) {
+                        errorMessage = `Image not found: ${imageMatch[1]}. Please upload the required image or remove the reference.`;
+                    }
+                } else if (buildOutput.includes('Failed to build')) {
+                    const buildMatch = buildOutput.match(/Failed to build [^:]+: (.+)/);
+                    if (buildMatch) {
+                        errorMessage = buildMatch[1];
+                    }
+                } else if (buildOutput.includes('missing text property')) {
+                    errorMessage = 'Task step hint is missing required text. Please add hint text or remove the hint section.';
+                }
+            }
+            
+            // Parse common error patterns and provide user-friendly messages
+            if (errorMessage.includes('Required image not found')) {
+                const imageMatch = errorMessage.match(/Required image not found: (.+)/);
+                if (imageMatch) {
+                    errorMessage = `Image not found: ${imageMatch[1]}. Please upload the required image or remove the reference.`;
+                }
+            } else if (errorMessage.includes('missing text property')) {
+                errorMessage = 'Task step hint is missing required text. Please add hint text or remove the hint section.';
+            } else if (errorMessage.includes('task_steps') && errorMessage.includes('hint')) {
+                errorMessage = 'Task step hint validation failed. Please ensure hints have proper text content or remove empty hint sections.';
+            } else if (errorMessage.includes('task_steps')) {
+                errorMessage = 'Task step validation failed. Please check that all required fields are filled.';
+            } else if (errorMessage.includes('concepts')) {
+                errorMessage = 'Concept validation failed. Please check that all concept fields are properly filled.';
+            } else if (errorMessage.includes('quiz')) {
+                errorMessage = 'Quiz validation failed. Please check that all quiz questions have proper answers selected.';
+            } else if (errorMessage.includes('Topic not found')) {
+                errorMessage = 'Topic configuration not found. Please try saving your topic first.';
+            } else if (errorMessage.includes('Failed to download file')) {
+                const fileMatch = errorMessage.match(/Failed to download file (.+):/);
+                if (fileMatch) {
+                    errorMessage = `Failed to download image: ${fileMatch[1]}. Please check that the image exists and is properly uploaded.`;
+                }
+            } else if (errorMessage.includes('Command failed: npm run build:topic')) {
+                // This is a generic build failure - we need to check the server logs for specific errors
+                errorMessage = 'Build process failed. Please check that all required fields are properly filled and try again.';
+            }
+            
+            showDetailedError('SCORM Generation Failed', errorMessage);
         }
         
     } catch (error) {
         hideLoadingModal();
-        alert(`Error generating SCORM package: ${error.message}`);
         console.error('Generation error:', error);
+        
+        // Handle network errors or other exceptions
+        let errorMessage = 'Network error occurred. Please check your connection and try again.';
+        
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+        } else if (error.message.includes('HTTP error')) {
+            errorMessage = 'Server error occurred. Please try again or contact support.';
+        } else {
+            errorMessage = error.message;
+        }
+        
+        showDetailedError('Generation Error', errorMessage);
     }
 }
 
@@ -1218,6 +1377,32 @@ function showToast(message, type) {
     el.className = `fixed z-50 bottom-4 right-4 px-4 py-2 rounded shadow text-white ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
     el.classList.remove('hidden');
     setTimeout(() => el.classList.add('hidden'), 2500);
+}
+
+function showDetailedError(title, message) {
+    // Create a more detailed error modal
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl p-8 max-w-lg w-full mx-4">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900">${title}</h3>
+            </div>
+            <div class="mb-6">
+                <p class="text-gray-700 leading-relaxed">${message}</p>
+            </div>
+            <div class="flex justify-end">
+                <button type="button" onclick="this.closest('.fixed').remove()" 
+                        class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Close
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 }
 
 // Modal functions

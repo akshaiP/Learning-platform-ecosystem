@@ -146,7 +146,17 @@ router.post('/generate', upload.any(), async (req, res) => {
                 await fs.remove(file.path).catch(() => {});
             }
         }
-        res.status(500).json({ success: false, error: error.message });
+        
+        // Include build output in error response for better debugging
+        let errorResponse = { success: false, error: error.message };
+        if (error.buildOutput) {
+            errorResponse.buildOutput = error.buildOutput;
+        }
+        if (error.buildStderr) {
+            errorResponse.buildStderr = error.buildStderr;
+        }
+        
+        res.status(500).json(errorResponse);
     }
 });
 
@@ -460,14 +470,24 @@ async function buildUsingExistingSystem(topicId) {
     const buildCommand = `npm run build:topic`;
     console.log('Executing:', buildCommand);
     
-    const { stdout, stderr } = await execAsync(buildCommand, {
-        cwd: workingDir,
-        env: env,
-        timeout: 60000 // 60 second timeout
-    });
-    
-    console.log('Build output:', stdout);
-    if (stderr) console.warn('Build warnings:', stderr);
+    try {
+        const { stdout, stderr } = await execAsync(buildCommand, {
+            cwd: workingDir,
+            env: env,
+            timeout: 60000 // 60 second timeout
+        });
+        
+        console.log('Build output:', stdout);
+        if (stderr) console.warn('Build warnings:', stderr);
+    } catch (execError) {
+        console.error('Build command failed:', execError);
+        
+        // Create a new error with build output details
+        const buildError = new Error(`Command failed: ${buildCommand}`);
+        buildError.buildOutput = execError.stdout || '';
+        buildError.buildStderr = execError.stderr || '';
+        throw buildError;
+    }
     
     // Find the generated file
     const outputDir = path.join(workingDir, 'output');
