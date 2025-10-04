@@ -55,174 +55,239 @@
         <!-- Cloud Topics Section -->
         <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-900">Manage Topics</h2>
-                <button type="button" onclick="listTopics()" class="text-sm px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
-                    <i class="fas fa-rotate mr-1 text-gray-700"></i>Refresh
-                </button>
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900">Manage Topics</h2>
+                    <p class="text-xs text-gray-500">Browse by Course → Module → Topic, or search</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="listTopics()" class="text-sm px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
+                        <i class="fas fa-rotate mr-1 text-gray-700"></i>Refresh
+                    </button>
+                </div>
             </div>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                <div class="md:col-span-2">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        <input id="topicSearch" type="text" placeholder="Search by title or id..." class="w-full h-10 pl-9 pr-3 border border-gray-300 rounded-lg" oninput="refreshTopicView()" />
+                    </div>
+                </div>
+                <div>
+                    <select id="courseFilter" class="w-full h-10 px-3 border border-gray-300 rounded-lg" onchange="onCourseChange()">
+                        <option value="">All Courses</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="moduleFilter" class="w-full h-10 px-3 border border-gray-300 rounded-lg" onchange="refreshTopicView()">
+                        <option value="">All Modules</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Topics Grid -->
+            <div id="topicsHint" class="text-sm text-gray-500 bg-gray-50 border border-dashed border-gray-300 rounded-lg p-4 mb-4">
+                Select a Course or type in Search to view topics.
+            </div>
+            <div id="topicsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 hidden">
+                <!-- Topic cards rendered by JS -->
+            </div>
+
+            <!-- Actions -->
             <div class="flex items-center gap-3">
-                <select id="topicSelect" class="px-3 py-2 border border-gray-300 rounded-lg">
+                <!-- Fallback hidden select kept for backward compatibility (populated but hidden) -->
+                <select id="topicSelect" class="hidden">
                     <option value="">Select a topic...</option>
                 </select>
-                <button type="button" onclick="loadTopicFromCloud()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                <button type="button" onclick="loadTopicFromCloud()" id="loadTopicBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     <i class="fas fa-cloud-download-alt mr-2"></i>Load Topic
                 </button>
-                <button type="button" onclick="deleteTopicFromCloud()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                <button type="button" onclick="deleteTopicFromCloud()" id="deleteTopicBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     <i class="fas fa-trash mr-2"></i>Delete
                 </button>
+                <div class="ml-auto text-sm text-gray-500"><span id="topicsCount">0</span> topics</div>
             </div>
         </section>
-        <form id="scormForm" class="space-y-8">
-            
-            <!-- Topic Basic Information -->
-            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                <div class="flex items-center mb-6">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3">1</div>
-                    <h2 class="text-2xl font-bold text-gray-900">Topic Information</h2>
+
+        <!-- Progress Indicator -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <!-- Progress Steps -->
+                <div class="flex items-center justify-center lg:justify-start">
+                    <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-2 progress-step" onclick="goToPage(1)">
+                            <div class="w-10 h-10 step-circle rounded-full flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:scale-110 transition-transform">1</div>
+                            <span class="text-sm font-medium text-gray-700 hidden sm:block">Basic Info</span>
+                        </div>
+                        <div class="w-12 h-0.5 bg-gray-300 mx-2"></div>
+                        <div class="flex items-center space-x-2 progress-step" onclick="goToPage(2)">
+                            <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold text-sm cursor-pointer hover:scale-110 transition-transform">2</div>
+                            <span class="text-sm font-medium text-gray-500 hidden sm:block">Objectives</span>
+                        </div>
+                        <div class="w-12 h-0.5 bg-gray-300 mx-2"></div>
+                        <div class="flex items-center space-x-2 progress-step" onclick="goToPage(3)">
+                            <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold text-sm cursor-pointer hover:scale-110 transition-transform">3</div>
+                            <span class="text-sm font-medium text-gray-500 hidden sm:block">Task Steps</span>
+                        </div>
+                        <div class="w-12 h-0.5 bg-gray-300 mx-2"></div>
+                        <div class="flex items-center space-x-2 progress-step" onclick="goToPage(4)">
+                            <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold text-sm cursor-pointer hover:scale-110 transition-transform">4</div>
+                            <span class="text-sm font-medium text-gray-500 hidden sm:block">Quiz</span>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Topic ID naming guidance (collapsible, full-width for clean layout) -->
-                <details class="mb-6 bg-blue-50 border border-blue-200 rounded-xl">
-                    <summary class="cursor-pointer select-none px-4 py-3 text-sm text-blue-900 font-medium flex items-center justify-between">
-                        <span><i class="fas fa-circle-info mr-2 text-blue-600"></i>Topic ID naming guide</span>
-                        <span class="text-blue-700 text-xs">Click to expand</span>
-                    </summary>
-                    <div class="px-4 pb-4">
-                        <ul class="list-disc pl-5 space-y-1 text-sm text-blue-900">
-                            <li><span class="font-semibold">Format</span>: <span class="font-mono">CourseName-Mx-Ty(.z)</span></li>
-                            <li><span class="font-semibold">CourseName</span>: letters only (A–Z, a–z). <span class="font-semibold">No spaces or special characters</span>. Use CamelCase if you like (e.g., <span class="font-mono">RoboticsAI</span>).</li>
-                            <li><span class="font-semibold">Mx</span>: module number, digits only. Example: <span class="font-mono">M1</span>, <span class="font-mono">M12</span>.</li>
-                            <li><span class="font-semibold">Ty</span>: topic number, digits only. Optional subtopic: <span class="font-mono">.z</span> (e.g., <span class="font-mono">T3.1</span>).</li>
-                            <li><span class="font-semibold">Examples</span>: <span class="font-mono">Robotics-M1-T1</span>, <span class="font-mono">RoboticsAI-M2-T3.1</span>.</li>
-                            <li>Maintain a consistent <span class="font-semibold">CourseName</span> across related topics to enable filtering later.</li>
-                        </ul>
-                    </div>
-                </details>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Topic Title *</label>
-                        <input type="text" name="title" required 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
-                               placeholder="e.g., NLP & Text Summarization with AI">
+                <!-- Navigation Buttons -->
+                <div class="flex items-center justify-center lg:justify-end space-x-3 nav-buttons">
+                    <button type="button" onclick="previousPage()" id="prevBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i class="fas fa-arrow-left mr-2"></i>Previous
+                    </button>
+                    <button type="button" onclick="nextPage()" id="nextBtn" class="btn-primary nav-button px-4 py-2 rounded-lg text-white">
+                        Next<i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <form id="scormForm" class="space-y-8">
+            <!-- Page 1: Basic Information & Hero Section -->
+            <div id="page-1" class="page-content">
+                <!-- Topic Basic Information -->
+                <section class="form-section bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 step-circle rounded-full flex items-center justify-center text-white font-bold mr-3">1</div>
+                        <h2 class="text-2xl font-bold text-gray-900">Topic Information</h2>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Topic ID *</label>
-                        <input type="text" name="topicId" required 
+                    <!-- Topic ID naming guidance (collapsible, full-width for clean layout) -->
+                    <details class="mb-6 bg-blue-50 border border-blue-200 rounded-xl">
+                        <summary class="cursor-pointer select-none px-4 py-3 text-sm text-blue-900 font-medium flex items-center justify-between">
+                            <span><i class="fas fa-circle-info mr-2 text-blue-600"></i>Topic ID naming guide</span>
+                            <span class="text-blue-700 text-xs">Click to expand</span>
+                        </summary>
+                        <div class="px-4 pb-4">
+                            <ul class="list-disc pl-5 space-y-1 text-sm text-blue-900">
+                                <li><span class="font-semibold">Format</span>: <span class="font-mono">CourseName-Mx-Ty(.z)</span></li>
+                                <li><span class="font-semibold">CourseName</span>: letters only (A–Z, a–z). <span class="font-semibold">No spaces or special characters</span>. Use CamelCase if you like (e.g., <span class="font-mono">RoboticsAI</span>).</li>
+                                <li><span class="font-semibold">Mx</span>: module number, digits only. Example: <span class="font-mono">M1</span>, <span class="font-mono">M12</span>.</li>
+                                <li><span class="font-semibold">Ty</span>: topic number, digits only. Optional subtopic: <span class="font-mono">.z</span> (e.g., <span class="font-mono">T3.1</span>).</li>
+                                <li><span class="font-semibold">Examples</span>: <span class="font-mono">Robotics-M1-T1</span>, <span class="font-mono">RoboticsAI-M2-T3.1</span>.</li>
+                                <li>Maintain a consistent <span class="font-semibold">CourseName</span> across related topics to enable filtering later.</li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Topic Title *</label>
+                            <input type="text" name="title" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
+                                   placeholder="e.g., NLP & Text Summarization with AI">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Topic ID *</label>
+                            <input type="text" name="topicId" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
+                                   placeholder="e.g., Robotics-M1-T1 or RoboticsAI-M2-T3.1">
+                            <p class="text-xs text-gray-500 mt-2">Format: <span class="font-mono">CourseName-Mx-Ty(.z)</span>. CourseName: letters only, no spaces.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                        <textarea name="description" required rows="3"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
+                                  placeholder="Brief description of what learners will achieve..."></textarea>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Task Statement *</label>
+                        <input type="text" name="taskStatement" required 
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
-                               placeholder="e.g., Robotics-M1-T1 or RoboticsAI-M2-T3.1">
-                        <p class="text-xs text-gray-500 mt-2">Format: <span class="font-mono">CourseName-Mx-Ty(.z)</span>. CourseName: letters only, no spaces.</p>
+                               placeholder="e.g., Build a Text Summarization Web App">
                     </div>
-                </div>
-                
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
-                    <textarea name="description" required rows="3"
-                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
-                              placeholder="Brief description of what learners will achieve..."></textarea>
-                </div>
-                
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Task Statement *</label>
-                    <input type="text" name="taskStatement" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-nebula-500 focus:border-nebula-500"
-                           placeholder="e.g., Build a Text Summarization Web App">
-                </div>
-                
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
-                    <div class="flex items-center space-x-4">
-                        <input type="file" name="companyLogo" accept="image/*" class="hidden" id="companyLogoInput">
-                        <button type="button" onclick="document.getElementById('companyLogoInput').click()" 
-                                class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-4 text-center hover:border-gray-400 transition-colors">
-                            <i class="fas fa-upload text-gray-400 mb-2"></i>
-                            <p class="text-sm text-gray-600">Click to upload logo</p>
-                        </button>
-                        <div id="companyLogoPreview" class="hidden">
-                            <!-- Preview will be inserted here -->
+                    
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Company Logo *</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="file" name="companyLogo" accept="image/*" class="hidden" id="companyLogoInput">
+                            <button type="button" onclick="document.getElementById('companyLogoInput').click()" 
+                                    class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-4 text-center hover:border-gray-400 transition-colors">
+                                <i class="fas fa-upload text-gray-400 mb-2"></i>
+                                <p class="text-sm text-gray-600">Click to upload logo</p>
+                            </button>
+                            <div id="companyLogoPreview" class="hidden">
+                                <!-- Preview will be inserted here -->
+                            </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Learning Objectives -->
-            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                <div class="flex items-center mb-6">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-3">2</div>
-                    <h2 class="text-2xl font-bold text-gray-900">Learning Objectives</h2>
-                </div>
-                
-                <div id="learningObjectives" class="space-y-4">
-                    <div class="flex items-center space-x-4 learning-objective-item">
-                        <input type="text" name="learningObjectives[]" 
-                               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                               placeholder="What will learners achieve?">
-                        <button type="button" onclick="removeLearningObjective(this)" 
-                                class="text-red-500 hover:text-red-700 p-2">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                <!-- Hero Section -->
+                <section class="form-section bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 step-circle rounded-full flex items-center justify-center text-white font-bold mr-3">2</div>
+                        <h2 class="text-2xl font-bold text-gray-900">Hero Section</h2>
                     </div>
-                </div>
-                
-                <div class="mt-6">
-                    <button type="button" onclick="addLearningObjective()" 
-                            class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Add Objective
-                    </button>
-                </div>
-            </section>
+                    
+                    <!-- Hero Image -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Hero Image</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="file" name="heroImage" accept="image/*" class="hidden" id="heroImageInput">
+                            <button type="button" onclick="document.getElementById('heroImageInput').click()" 
+                                    class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-4 text-center hover:border-gray-400 transition-colors">
+                                <i class="fas fa-image text-gray-400 mb-2"></i>
+                                <p class="text-sm text-gray-600">Upload hero image</p>
+                            </button>
+                            <div id="heroImagePreview" class="hidden">
+                                <!-- Preview will be inserted here -->
+                            </div>
+                        </div>
+                        <input type="text" name="heroImageCaption" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 mt-4"
+                               placeholder="Hero image caption (optional)">
+                    </div>
+                </section>
+            </div>
 
-            <!-- Task Steps Builder -->
-            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                <div class="flex items-center mb-6">
-                    <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">3</div>
-                    <h2 class="text-2xl font-bold text-gray-900">Task Steps</h2>
-                </div>
-                
-                <div id="taskSteps" class="space-y-8">
-                    <!-- Task steps will be dynamically added here -->
-                </div>
-                
-                <div class="mt-6">
-                    <button type="button" onclick="addTaskStep()" 
-                            class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Add Step
-                    </button>
-                </div>
-            </section>
-
-            <!-- Hero Section & Concepts -->
-            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                <div class="flex items-center mb-6">
-                    <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold mr-3">4</div>
-                    <h2 class="text-2xl font-bold text-gray-900">Hero Section & Concepts</h2>
-                </div>
-                
-                <!-- Hero Image -->
-                <div class="mb-8">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Hero Image</label>
-                    <div class="flex items-center space-x-4">
-                        <input type="file" name="heroImage" accept="image/*" class="hidden" id="heroImageInput">
-                        <button type="button" onclick="document.getElementById('heroImageInput').click()" 
-                                class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-4 text-center hover:border-gray-400 transition-colors">
-                            <i class="fas fa-image text-gray-400 mb-2"></i>
-                            <p class="text-sm text-gray-600">Upload hero image</p>
-                        </button>
-                        <div id="heroImagePreview" class="hidden">
-                            <!-- Preview will be inserted here -->
+            <!-- Page 2: Learning Objectives & Concepts -->
+            <div id="page-2" class="page-content hidden">
+                <!-- Learning Objectives -->
+                <section class="form-section bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 step-circle rounded-full flex items-center justify-center text-white font-bold mr-3">1</div>
+                        <h2 class="text-2xl font-bold text-gray-900">Learning Objectives</h2>
+                    </div>
+                    
+                    <div id="learningObjectives" class="space-y-4">
+                        <div class="flex items-center space-x-4 learning-objective-item">
+                            <input type="text" name="learningObjectives[]" 
+                                   class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                   placeholder="What will learners achieve?">
+                            <button type="button" onclick="removeLearningObjective(this)" 
+                                    class="text-red-500 hover:text-red-700 p-2">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
-                    <input type="text" name="heroImageCaption" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 mt-4"
-                           placeholder="Hero image caption (optional)">
-                </div>
-                
-                <!-- Concepts -->
-                <div>
-                    <div class="mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Key Concepts</h3>
+                    
+                    <div class="mt-6">
+                        <button type="button" onclick="addLearningObjective()" 
+                                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Add Objective
+                        </button>
                     </div>
+                </section>
+
+                <!-- Key Concepts -->
+                <section class="form-section bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 step-circle rounded-full flex items-center justify-center text-white font-bold mr-3">2</div>
+                        <h2 class="text-2xl font-bold text-gray-900">Key Concepts</h2>
+                    </div>
+                    
                     <div id="concepts" class="space-y-6">
                         <!-- Concepts will be dynamically added here -->
                     </div>
@@ -232,44 +297,84 @@
                             <i class="fas fa-plus mr-2"></i>Add Concept
                         </button>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
 
-            <!-- Quiz Builder -->
-            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-                <div class="flex items-center mb-6">
-                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold mr-3">5</div>
-                    <h2 class="text-2xl font-bold text-gray-900">Knowledge Check Quiz</h2>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
-                        <input type="text" name="quizTitle" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                               placeholder="e.g., Knowledge Check" value="Knowledge Check">
+            <!-- Page 3: Task Steps -->
+            <div id="page-3" class="page-content hidden">
+                <section class="form-section bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 step-circle rounded-full flex items-center justify-center text-white font-bold mr-3">1</div>
+                        <h2 class="text-2xl font-bold text-gray-900">Task Steps</h2>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Description</label>
-                        <input type="text" name="quizDescription" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                               placeholder="Brief description of the quiz">
+                    
+                    <div id="taskSteps" class="space-y-8">
+                        <!-- Task steps will be dynamically added here -->
                     </div>
-                </div>
-                
-                <div id="quizQuestions" class="space-y-6">
-                    <!-- Quiz questions will be dynamically added here -->
-                </div>
-                
-                <div class="mt-6">
-                    <button type="button" onclick="addQuizQuestion()" 
-                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Add Question
-                    </button>
-                </div>
-            </section>
+                    
+                    <div class="mt-6">
+                        <button type="button" onclick="addTaskStep()" 
+                                class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Add Step
+                        </button>
+                    </div>
+                </section>
+            </div>
 
-            <!-- Generate Section -->
+            <!-- Page 4: Quiz Questions -->
+            <div id="page-4" class="page-content hidden">
+                <section class="form-section bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 step-circle rounded-full flex items-center justify-center text-white font-bold mr-3">1</div>
+                        <h2 class="text-2xl font-bold text-gray-900">Knowledge Check Quiz</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
+                            <input type="text" name="quizTitle" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                   placeholder="e.g., Knowledge Check" value="Knowledge Check">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Description</label>
+                            <input type="text" name="quizDescription" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                   placeholder="Brief description of the quiz">
+                        </div>
+                    </div>
+                    
+                    <div id="quizQuestions" class="space-y-6">
+                        <!-- Quiz questions will be dynamically added here -->
+                    </div>
+                    
+                    <div class="mt-6">
+                        <button type="button" onclick="addQuizQuestion()" 
+                                class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Add Question
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Bottom Navigation - Always Visible -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        Page <span id="currentPageNumber">1</span> of <span id="totalPagesNumber">4</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button type="button" onclick="previousPage()" id="bottomPrevBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-arrow-left mr-2"></i>Previous
+                        </button>
+                        <button type="button" onclick="nextPage()" id="bottomNextBtn" class="btn-primary nav-button px-4 py-2 rounded-lg text-white">
+                            Next<i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Section - Always Visible -->
             <section class="bg-gradient-to-r from-nebula-500 to-nebula-purple-500 rounded-2xl shadow-lg p-8 text-white">
                 <div class="text-center">
                     <h2 class="text-3xl font-bold mb-4">Generate Your SCORM Package</h2>
@@ -295,8 +400,8 @@
     <div id="loadingModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-nebula-500 mx-auto mb-4"></div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Generating SCORM Package</h3>
-            <p class="text-gray-600">Please wait while we build your learning content...</p>
+            <h3 id="loadingTitle" class="text-lg font-semibold text-gray-900 mb-2">Please wait</h3>
+            <p id="loadingSubtitle" class="text-gray-600">Processing your request...</p>
         </div>
     </div>
 

@@ -380,3 +380,256 @@ html {
 .form-complete textarea::placeholder {
     color: rgba(255, 255, 255, 0.7);
 }
+
+/* Multi-page navigation styles */
+.page-content {
+    transition: all 0.3s ease-in-out;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.page-content.hidden {
+    opacity: 0;
+    transform: translateX(20px);
+    pointer-events: none;
+}
+
+/* Progress indicator enhancements */
+.progress-step {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.progress-step:hover {
+    transform: translateY(-2px);
+}
+
+.progress-step .step-circle {
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-step .step-circle:hover {
+    box-shadow: 0 4px 8px rgba(74, 155, 142, 0.3);
+    transform: scale(1.1);
+}
+
+.progress-step.current .step-circle {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Progress bar connector */
+.progress-step + .w-12 {
+    background: linear-gradient(90deg, #4A9B8E, #cbd5e1);
+    transition: all 0.3s ease;
+}
+
+.progress-step.completed + .w-12 {
+    background: linear-gradient(90deg, #4A9B8E, #4A9B8E);
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(74, 155, 142, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(74, 155, 142, 0);
+    }
+}
+
+/* Navigation button enhancements */
+.nav-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.nav-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.nav-button:hover::before {
+    left: 100%;
+}
+
+.nav-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Page transition animations */
+.page-transition-enter {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+.page-transition-enter-active {
+    opacity: 1;
+    transform: translateX(0);
+    transition: all 0.3s ease-out;
+}
+
+.page-transition-exit {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.page-transition-exit-active {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: all 0.3s ease-in;
+}
+
+/* Enhanced form sections */
+.form-section {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.form-section:hover {
+    border-color: #4A9B8E;
+    box-shadow: 0 4px 12px rgba(74, 155, 142, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Step numbering improvements */
+.step-circle {
+    background: linear-gradient(135deg, #4A9B8E, #6B4C93);
+    box-shadow: 0 4px 8px rgba(74, 155, 142, 0.3);
+    transition: all 0.3s ease;
+}
+
+.step-circle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(74, 155, 142, 0.4);
+}
+
+/* Form field enhancements */
+.form-field {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.form-field:focus-within {
+    transform: translateY(-1px);
+}
+
+.form-field label {
+    transition: color 0.3s ease;
+}
+
+.form-field:focus-within label {
+    color: #4A9B8E;
+    font-weight: 600;
+}
+
+/* Enhanced button styles */
+.btn-primary {
+    background: linear-gradient(135deg, #4A9B8E, #6B4C93);
+    border: none;
+    box-shadow: 0 4px 8px rgba(74, 155, 142, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(74, 155, 142, 0.4);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border: 1px solid #cbd5e1;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+    transform: translateY(-1px);
+}
+
+/* Toast notification enhancements */
+.toast {
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Loading state improvements */
+.loading-overlay {
+    backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.loading-spinner {
+    border: 3px solid #f3f4f6;
+    border-top: 3px solid #4A9B8E;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Responsive improvements for mobile */
+@media (max-width: 640px) {
+    .page-content {
+        padding: 1rem;
+    }
+    
+    .progress-step {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .progress-step span {
+        font-size: 0.75rem;
+    }
+    
+    .nav-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .nav-button {
+        width: 100%;
+    }
+    
+    /* Hide progress bar connectors on mobile */
+    .progress-step + .w-12 {
+        display: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .form-section {
+        border-width: 2px;
+    }
+    
+    .step-circle {
+        border: 2px solid currentColor;
+    }
+    
+    button {
+        border: 2px solid currentColor;
+    }
+}

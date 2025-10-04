@@ -6,6 +6,10 @@ let formData = {
     quizQuestions: []
 };
 
+// Multi-page navigation state
+let currentPage = 1;
+const totalPages = 4;
+
 // Auto-save to localStorage
 function autoSave() {
     const data = collectFormData();
@@ -717,39 +721,184 @@ async function generateSCORM(showPreview = false) {
 
 
 // Cloud-backed topic management
+let topicsCache = [];
+let selectedTopicId = '';
+
+function parseTopicIdParts(topicId) {
+    // Expected formats: Course-Mx-Ty or CourseName-M12-T3.1
+    // Return { course, module, topic }
+    if (!topicId || typeof topicId !== 'string') return { course: '', module: '', topic: '' };
+    const parts = topicId.split('-');
+    const course = parts[0] || '';
+    const module = (parts.find(p => /^M\d+$/i.test(p)) || '').toUpperCase();
+    const topic = (parts.find(p => /^T\d+(?:\.\d+)?$/i.test(p)) || '').toUpperCase();
+    return { course, module, topic };
+}
+
+function buildCourseFilterOptions() {
+    const courseFilter = document.getElementById('courseFilter');
+    if (!courseFilter) return;
+    const courses = Array.from(new Set((topicsCache || []).map(t => parseTopicIdParts(t.id).course).filter(Boolean))).sort();
+    const current = courseFilter.value;
+    courseFilter.innerHTML = '<option value="">All Courses</option>' + courses.map(c => `<option value="${c}">${c}</option>`).join('');
+    if (courses.includes(current)) courseFilter.value = current;
+}
+
+function buildModuleFilterOptions() {
+    const courseFilter = document.getElementById('courseFilter');
+    const moduleFilter = document.getElementById('moduleFilter');
+    if (!moduleFilter) return;
+    const selectedCourse = courseFilter ? courseFilter.value : '';
+    const modules = Array.from(new Set((topicsCache || [])
+        .filter(t => !selectedCourse || parseTopicIdParts(t.id).course === selectedCourse)
+        .map(t => parseTopicIdParts(t.id).module)
+        .filter(Boolean))).sort((a,b)=>{
+            const na = Number(a.replace(/[^\d]/g,''));
+            const nb = Number(b.replace(/[^\d]/g,''));
+            return na - nb;
+        });
+    const current = moduleFilter.value;
+    moduleFilter.innerHTML = '<option value="">All Modules</option>' + modules.map(m => `<option value="${m}">${m}</option>`).join('');
+    if (modules.includes(current)) moduleFilter.value = current;
+}
+
+function onCourseChange() {
+    buildModuleFilterOptions();
+    refreshTopicView();
+}
+
+function setSelectedTopic(topicId) {
+    selectedTopicId = topicId || '';
+    // Toggle card selection styles
+    const grid = document.getElementById('topicsGrid');
+    if (grid) {
+        grid.querySelectorAll('[data-topic-id]').forEach(card => {
+            if (card.getAttribute('data-topic-id') === selectedTopicId) {
+                card.classList.add('ring-2','ring-nebula-500','border-nebula-500','bg-nebula-50');
+            } else {
+                card.classList.remove('ring-2','ring-nebula-500','border-nebula-500','bg-nebula-50');
+            }
+        });
+    }
+    // Keep hidden select in sync for compatibility
+    const select = document.getElementById('topicSelect');
+    if (select) select.value = selectedTopicId;
+    // Enable/disable action buttons
+    const canAct = Boolean(selectedTopicId);
+    const loadBtn = document.getElementById('loadTopicBtn');
+    const delBtn = document.getElementById('deleteTopicBtn');
+    if (loadBtn) loadBtn.disabled = !canAct;
+    if (delBtn) delBtn.disabled = !canAct;
+}
+
+function renderTopicCards(list) {
+    const grid = document.getElementById('topicsGrid');
+    const hint = document.getElementById('topicsHint');
+    const countEl = document.getElementById('topicsCount');
+    if (!grid) return;
+    grid.innerHTML = '';
+    (list || []).forEach(t => {
+        const { course, module, topic } = parseTopicIdParts(t.id || '');
+        const card = document.createElement('div');
+        card.setAttribute('data-topic-id', t.id);
+        card.className = 'border border-gray-200 rounded-xl p-4 hover:shadow-sm transition cursor-pointer bg-white';
+        card.onclick = () => setSelectedTopic(t.id);
+        card.innerHTML = `
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="text-base font-semibold text-gray-900 truncate max-w-xs" title="${t.title || t.id}">${(t.title || '').trim() || '(Untitled)'}</div>
+                    <div class="text-xs text-gray-400 mt-1">${t.id}</div>
+                </div>
+                <div class="text-gray-400"><i class="fas fa-chevron-right"></i></div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+    if (countEl) countEl.textContent = String(list.length);
+    // Toggle hint/grid visibility
+    if (hint && grid) {
+        if ((list || []).length === 0) {
+            hint.classList.remove('hidden');
+            grid.classList.add('hidden');
+        } else {
+            hint.classList.add('hidden');
+            grid.classList.remove('hidden');
+        }
+    }
+}
+
+function refreshTopicView() {
+    const search = (document.getElementById('topicSearch')?.value || '').toLowerCase();
+    const course = document.getElementById('courseFilter')?.value || '';
+    const module = document.getElementById('moduleFilter')?.value || '';
+    // If no filter and no search, show nothing (encourage filtering)
+    const shouldShow = Boolean(course || module || search);
+    if (!shouldShow) {
+        renderTopicCards([]);
+        setSelectedTopic('');
+        return;
+    }
+    const filtered = (topicsCache || []).filter(t => {
+        const id = (t.id || '').toLowerCase();
+        const title = (t.title || '').toLowerCase();
+        const parts = parseTopicIdParts(t.id);
+        const matchesSearch = !search || id.includes(search) || title.includes(search);
+        const matchesCourse = !course || parts.course === course;
+        const matchesModule = !module || parts.module === module;
+        return matchesSearch && matchesCourse && matchesModule;
+    });
+    renderTopicCards(filtered);
+    // Preserve selection if it is still visible
+    if (!filtered.find(t => t.id === selectedTopicId)) {
+        setSelectedTopic('');
+    } else {
+        setSelectedTopic(selectedTopicId);
+    }
+}
 async function listTopics() {
     try {
         const select = document.getElementById('topicSelect');
-        if (select) {
-            select.innerHTML = '<option value="">Loading topics...</option>';
-        }
+        if (select) select.innerHTML = '<option value="">Loading topics...</option>';
         const res = await fetch('/form/topics');
         const data = await res.json();
         if (data.success) {
+            topicsCache = Array.isArray(data.topics) ? data.topics : [];
+            // Populate hidden select for compatibility
             if (select) {
                 select.innerHTML = '<option value="">Select a topic...</option>';
-                (data.topics || []).forEach(t => {
+                topicsCache.forEach(t => {
                     const opt = document.createElement('option');
                     opt.value = t.id;
                     opt.textContent = t.title ? `${t.title} (${t.id})` : t.id;
                     select.appendChild(opt);
                 });
             }
+            // Build filters and render grid
+            buildCourseFilterOptions();
+            buildModuleFilterOptions();
+            refreshTopicView();
         } else {
-            if (select) {
-                select.innerHTML = '<option value="">No topics found</option>';
-            }
+            if (select) select.innerHTML = '<option value="">No topics found</option>';
+            topicsCache = [];
+            buildCourseFilterOptions();
+            buildModuleFilterOptions();
+            renderTopicCards([]);
         }
     } catch (err) {
         const select = document.getElementById('topicSelect');
-        if (select) {
-            select.innerHTML = '<option value="">Failed to load topics</option>';
-        }
+        if (select) select.innerHTML = '<option value="">Failed to load topics</option>';
+        topicsCache = [];
+        buildCourseFilterOptions();
+        buildModuleFilterOptions();
+        renderTopicCards([]);
         showToast('Could not load topics. Click Refresh to retry.', 'error');
     }
 }
 
 async function saveTopicToCloud() {
+    if (isBusy) return;
+    isBusy = true;
+    showLoadingModal('Saving draft…', 'Uploading content and assets to cloud');
     try {
     const data = collectFormData();
     const topicId = (data.topicId || '').trim();
@@ -782,12 +931,19 @@ async function saveTopicToCloud() {
         await listTopics();
     } catch (e) {
         showToast(`Save failed: ${e.message}`, 'error');
+    } finally {
+        hideLoadingModal();
+        isBusy = false;
     }
 }
 
 async function loadTopicFromCloud() {
+    if (isBusy) return;
+    isBusy = true;
+    showLoadingModal('Loading topic…', 'Fetching topic configuration and images');
+    // Prefer card selection; fallback to select
     const select = document.getElementById('topicSelect');
-    const topicId = select ? select.value : '';
+    const topicId = selectedTopicId || (select ? select.value : '');
     if (!topicId) return;
     try {
         const res = await fetch(`/form/topics/${encodeURIComponent(topicId)}`);
@@ -797,22 +953,33 @@ async function loadTopicFromCloud() {
         showToast('Topic loaded', 'success');
     } catch (e) {
         showToast(`Load failed: ${e.message}`, 'error');
+    } finally {
+        hideLoadingModal();
+        isBusy = false;
     }
 }
 
 async function deleteTopicFromCloud() {
+    if (isBusy) return;
     const select = document.getElementById('topicSelect');
-    const topicId = select ? select.value : '';
+    const topicId = selectedTopicId || (select ? select.value : '');
     if (!topicId) return;
     if (!confirm('Delete this topic permanently?')) return;
+    isBusy = true;
+    showLoadingModal('Deleting topic…', 'Removing the topic from cloud storage');
     try {
         const res = await fetch(`/form/topics/${encodeURIComponent(topicId)}`, { method: 'DELETE' });
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Delete failed');
         showToast('Topic deleted', 'success');
+        clearAllFormFields(); // Clear all form data
         await listTopics();
+        setSelectedTopic('');
     } catch (e) {
         showToast(`Delete failed: ${e.message}`, 'error');
+    } finally {
+        hideLoadingModal();
+        isBusy = false;
     }
 }
 
@@ -1054,12 +1221,25 @@ function showToast(message, type) {
 }
 
 // Modal functions
-function showLoadingModal() {
-    document.getElementById('loadingModal').classList.remove('hidden');
+let isBusy = false;
+
+function showLoadingModal(title, subtitle) {
+    const modal = document.getElementById('loadingModal');
+    const t = document.getElementById('loadingTitle');
+    const s = document.getElementById('loadingSubtitle');
+    if (t && title) t.textContent = title;
+    if (s && subtitle) s.textContent = subtitle;
+    modal.classList.remove('hidden');
 }
 
 function hideLoadingModal() {
-    document.getElementById('loadingModal').classList.add('hidden');
+    const modal = document.getElementById('loadingModal');
+    const t = document.getElementById('loadingTitle');
+    const s = document.getElementById('loadingSubtitle');
+    // Reset default text for next use
+    if (t) t.textContent = 'Please wait';
+    if (s) s.textContent = 'Processing your request...';
+    modal.classList.add('hidden');
 }
 
 function showSuccessModal(downloadUrl, filename) {
@@ -1076,6 +1256,9 @@ function showSuccessModal(downloadUrl, filename) {
 
 // Initialize form
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize page navigation first
+    initializePageNavigation();
+    
     // Load any saved draft
     loadDraft();
     
@@ -1120,4 +1303,191 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+// Multi-page navigation functions
+function showPage(pageNumber) {
+    // Hide all pages
+    document.querySelectorAll('.page-content').forEach(page => {
+        page.classList.add('hidden');
+    });
+    
+    // Show the requested page
+    const targetPage = document.getElementById(`page-${pageNumber}`);
+    if (targetPage) {
+        targetPage.classList.remove('hidden');
+    }
+    
+    // Update progress indicator
+    updateProgressIndicator(pageNumber);
+    
+    // Update navigation buttons
+    updateNavigationButtons(pageNumber);
+    
+    // Auto-save current form data
+    autoSave();
+}
+
+function updateProgressIndicator(pageNumber) {
+    const progressSteps = document.querySelectorAll('.progress-step');
+    
+    progressSteps.forEach((step, index) => {
+        const circle = step.querySelector('div');
+        const text = step.querySelector('span');
+        
+        if (index + 1 === pageNumber) {
+            // Current page
+            circle.className = 'w-10 h-10 step-circle rounded-full flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:scale-110 transition-transform';
+            if (text) text.className = 'text-sm font-medium text-gray-700 hidden sm:block';
+        } else if (index + 1 < pageNumber) {
+            // Completed pages
+            circle.className = 'w-10 h-10 step-circle rounded-full flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:scale-110 transition-transform';
+            if (text) text.className = 'text-sm font-medium text-gray-700 hidden sm:block';
+        } else {
+            // Future pages
+            circle.className = 'w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold text-sm cursor-pointer hover:scale-110 transition-transform';
+            if (text) text.className = 'text-sm font-medium text-gray-500 hidden sm:block';
+        }
+    });
+}
+
+function updateNavigationButtons(pageNumber) {
+    // Update both top and bottom navigation buttons
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const bottomPrevBtn = document.getElementById('bottomPrevBtn');
+    const bottomNextBtn = document.getElementById('bottomNextBtn');
+    const currentPageNumber = document.getElementById('currentPageNumber');
+    
+    // Update page number display
+    if (currentPageNumber) {
+        currentPageNumber.textContent = pageNumber;
+    }
+    
+    // Update Previous buttons
+    const prevButtons = [prevBtn, bottomPrevBtn].filter(Boolean);
+    prevButtons.forEach(btn => {
+        if (pageNumber === 1) {
+            btn.disabled = true;
+            btn.className = 'bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+        } else {
+            btn.disabled = false;
+            btn.className = 'bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors';
+        }
+    });
+    
+    // Update Next buttons
+    const nextButtons = [nextBtn, bottomNextBtn].filter(Boolean);
+    nextButtons.forEach(btn => {
+        if (pageNumber === totalPages) {
+            btn.innerHTML = 'Finish<i class="fas fa-check ml-2"></i>';
+            btn.className = 'bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors';
+        } else {
+            btn.innerHTML = 'Next<i class="fas fa-arrow-right ml-2"></i>';
+            btn.className = 'btn-primary nav-button px-4 py-2 rounded-lg text-white';
+        }
+    });
+}
+
+function nextPage() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        showPage(currentPage);
+    } else {
+        // On the last page, scroll to generate section
+        document.querySelector('section.bg-gradient-to-r').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }
+}
+
+function goToPage(pageNumber) {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+        currentPage = pageNumber;
+        showPage(currentPage);
+    }
+}
+
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        showPage(currentPage);
+    }
+}
+
+// Validation function removed - users can navigate freely between pages
+
+// Clear all form fields
+function clearAllFormFields() {
+    const form = document.getElementById('scormForm');
+    if (!form) return;
+    
+    // Clear basic fields
+    form.querySelector('input[name="title"]').value = '';
+    form.querySelector('input[name="topicId"]').value = '';
+    form.querySelector('textarea[name="description"]').value = '';
+    form.querySelector('input[name="taskStatement"]').value = '';
+    form.querySelector('input[name="heroImageCaption"]').value = '';
+    form.querySelector('input[name="quizTitle"]').value = 'Knowledge Check';
+    form.querySelector('input[name="quizDescription"]').value = '';
+    
+    // Clear file inputs
+    form.querySelectorAll('input[type="file"]').forEach(input => {
+        input.value = '';
+    });
+    
+    // Clear learning objectives
+    const learningObjectivesContainer = document.getElementById('learningObjectives');
+    if (learningObjectivesContainer) {
+        learningObjectivesContainer.innerHTML = `
+            <div class="flex items-center space-x-4 learning-objective-item">
+                <input type="text" name="learningObjectives[]" 
+                       class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                       placeholder="What will learners achieve?">
+                <button type="button" onclick="removeLearningObjective(this)" 
+                        class="text-red-500 hover:text-red-700 p-2">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+    }
+    
+    // Clear task steps
+    const taskStepsContainer = document.getElementById('taskSteps');
+    if (taskStepsContainer) {
+        taskStepsContainer.innerHTML = '';
+    }
+    
+    // Clear concepts
+    const conceptsContainer = document.getElementById('concepts');
+    if (conceptsContainer) {
+        conceptsContainer.innerHTML = '';
+    }
+    
+    // Clear quiz questions
+    const quizQuestionsContainer = document.getElementById('quizQuestions');
+    if (quizQuestionsContainer) {
+        quizQuestionsContainer.innerHTML = '';
+    }
+    
+    // Clear image previews
+    document.querySelectorAll('[id$="Preview"]').forEach(preview => {
+        preview.innerHTML = '';
+        preview.classList.add('hidden');
+    });
+    
+    // Clear any delete images container
+    const deleteContainer = document.getElementById('deleteImagesContainer');
+    if (deleteContainer) {
+        deleteContainer.innerHTML = '';
+    }
+    
+    // Auto-save the cleared state
+    autoSave();
+}
+
+// Initialize page navigation
+function initializePageNavigation() {
+    showPage(1); // Start with page 1
 }
