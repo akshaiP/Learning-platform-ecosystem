@@ -172,7 +172,37 @@
             "src": "nlp-concept.jpg",
             "alt": "NLP processing pipeline illustration"
           },
-          "learn_more_context": "nlp_fundamentals"
+          "learn_more_context": "nlp_fundamentals",
+          "interactive_carousel": {
+            "enabled": true,
+            "bot_iframe_url": "https://e2894fc77b65.ngrok-free.app/widget.html",
+            "slides": [
+              {
+                "topic": "Introduction to the Concept",
+                "image": "test5.png",
+                "description": "This slide introduces the fundamental concepts and provides an overview of what you'll learn. The infographic shows the complete architecture and key components you need to understand.",
+                "prompt": "introduction fundamentals overview architecture key concepts"
+              },
+              {
+                "topic": "Introduction to the Concept",
+                "image": "ca-1.jpg",
+                "description": "This slide introduces the fundamental concepts and provides an overview of what you'll learn. The infographic shows the complete architecture and key components you need to understand.",
+                "prompt": "introduction fundamentals overview architecture key concepts"
+              },
+              {
+                "topic": "Deep Dive into Components",
+                "image": "ca-2.jpg",
+                "description": "Explore the individual components in detail. This diagram breaks down each part of the system and explains how they interact with each other.",
+                "prompt": "components system architecture interaction detailed explanation"
+              },
+              {
+                "topic": "Practical Applications",
+                "image": "ca-3.jpg",
+                "description": "See real-world applications and use cases. Learn how these concepts are applied in industry and practical scenarios.",
+                "prompt": "practical applications real world examples use cases industry practices"
+              }
+            ]
+          }
         },
         {
           "title": "API Integration",

@@ -116,7 +116,8 @@
             "description": {{{descriptionJson}}},
             "taskStatement": {{{taskStatementJson}}},
             "taskRequirements": {{{taskRequirementsJson}}},
-            "learningObjectives": {{{learningObjectivesJson}}},
+                "learningObjectives": {{{learningObjectivesJson}}},
+                "concepts": {{{conceptsJson}}},
             "taskSteps": {{{taskStepsJson}}},
             "backendUrl": "{{backend_url}}",
             "chatContexts": {{{chatContextsJson}}}
@@ -247,7 +248,7 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {{#content.concepts}}
-                    <div class="group bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden border border-gray-100">
+                    <div class="group bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden border border-gray-100" data-concept-card>
                         {{#image}}
                         <div class="aspect-video overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
                             <img src="{{src}}" alt="{{alt}}" class="w-full h-full object-contain transition-transform duration-500">
@@ -261,12 +262,65 @@
                                 <i class="fas fa-arrow-right mr-2 group-hover/btn:translate-x-1 transition-transform duration-200"></i>
                                 <span>Learn More</span>
                             </button>
+                            {{#interactive_carousel.enabled}}
+                            <button onclick="(function(btn){try{if(!window.carouselAssistant)return;var card=btn.closest('[data-concept-card]');var list=Array.prototype.slice.call(document.querySelectorAll('[data-concept-card]'));var idx=list.indexOf(card);if(idx>-1){window.carouselAssistant.open(idx);}}catch(e){console.warn('Open carousel failed:',e);}})(this)"
+                                    class="ml-4 inline-flex items-center text-purple-600 font-semibold hover:text-purple-700 transition-colors">
+                                <i class="fas fa-vr-cardboard mr-2"></i>
+                                <span>Open Interactive Carousel</span>
+                            </button>
+                            {{/interactive_carousel.enabled}}
                         </div>
                     </div>
                     {{/content.concepts}}
                 </div>
             </div>
             {{/content.concepts.length}}
+
+            <!-- Carousel Assistant Modal Container -->
+            <div id="carouselAssistantModal" class="hidden"></div>
+            <!-- Include carousel styles and scripts -->
+            <link rel="stylesheet" href="carousel-assistant-styles.css">
+            <script src="carousel-assistant-modal.js"></script>
+            <script>
+            (function(){
+              function getConcepts() {
+                if (window.templateData && window.templateData.content && window.templateData.content.concepts) {
+                  return window.templateData.content.concepts;
+                }
+                if (window.templateData && Array.isArray(window.templateData.concepts)) {
+                  return window.templateData.concepts;
+                }
+                if (typeof topicData !== 'undefined' && topicData.content && topicData.content.concepts) {
+                  return topicData.content.concepts;
+                }
+                try {
+                  var el = document.getElementById('templateData');
+                  if (el && el.textContent) {
+                    var parsed = JSON.parse(el.textContent);
+                    if (parsed && parsed.content && parsed.content.concepts) return parsed.content.concepts;
+                    if (parsed && Array.isArray(parsed.concepts)) return parsed.concepts;
+                    return null;
+                  }
+                } catch (e) {}
+                return null;
+              }
+
+              function initCarouselAssistant() {
+                try {
+                  var concepts = getConcepts();
+                  if (concepts) {
+                    window.carouselAssistant = new CarouselAssistantController(concepts);
+                  }
+                } catch (e) { console.warn('Carousel assistant init failed:', e); }
+              }
+
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initCarouselAssistant);
+              } else {
+                initCarouselAssistant();
+              }
+            })();
+            </script>
 
             <!-- Step-by-Step Task Instructions -->
             {{#content.task_steps.length}}

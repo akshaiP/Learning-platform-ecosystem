@@ -100,6 +100,18 @@ class AssetProcessor {
             index: index
           }, 'concept', false);
         }
+
+        // NEW: Extract images from interactive carousel slides
+        if (concept.interactive_carousel && Array.isArray(concept.interactive_carousel.slides)) {
+          concept.interactive_carousel.slides.forEach((slide, sIdx) => {
+            if (!slide || !slide.image) return;
+            if (typeof slide.image === 'string') {
+              addImage({ src: slide.image, alt: slide.topic || '', caption: '', conceptTitle: concept.title, index: index, slideIndex: sIdx }, 'concept', false);
+            } else if (slide.image && slide.image.src) {
+              addImage({ ...slide.image, conceptTitle: concept.title, index: index, slideIndex: sIdx }, 'concept', false);
+            }
+          });
+        }
       });
     }
     

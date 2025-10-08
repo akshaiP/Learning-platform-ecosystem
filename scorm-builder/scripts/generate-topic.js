@@ -50,7 +50,10 @@ class TopicGenerator {
         'core-functions.js',
         'quiz-system.js',
         'chat-system.js',
-        'task-system.js'
+        'task-system.js',
+        // Carousel assistant assets (Phase 1)
+        'carousel-assistant-modal.js',
+        'carousel-assistant-styles.css'
     ];
     
     for (const jsFile of jsFiles) {
@@ -106,6 +109,20 @@ class TopicGenerator {
           if (newPath) {
             concept.image.src = newPath;
           }
+        }
+
+        // Update interactive carousel slide images if present
+        if (concept.interactive_carousel && Array.isArray(concept.interactive_carousel.slides)) {
+          concept.interactive_carousel.slides.forEach(slide => {
+            if (!slide || !slide.image) return;
+            if (typeof slide.image === 'string') {
+              const mapped = imageMap[slide.image];
+              if (mapped) slide.image = mapped;
+            } else if (slide.image && slide.image.src) {
+              const mapped = imageMap[slide.image.src];
+              if (mapped) slide.image.src = mapped;
+            }
+          });
         }
       });
     }
@@ -287,6 +304,8 @@ class TopicGenerator {
     data.taskRequirementsJson = safeJson(data.content.task_requirements || []);
     data.learningObjectivesJson = safeJson(data.learning_objectives || []);
     data.taskStepsJson = safeJson(data.content.task_steps || []);
+    // Expose concepts for template-level JS features (e.g., carousel assistant)
+    data.conceptsJson = safeJson(data.content.concepts || []);
     
     // Add company branding data
     data.company = {
