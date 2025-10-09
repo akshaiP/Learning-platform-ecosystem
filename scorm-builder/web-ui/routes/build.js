@@ -226,6 +226,17 @@ async function buildConfigFromFormDataCloud(body, files, existingConfig) {
                         if (!merged.hint.images && prev.hint && Array.isArray(prev.hint.images)) {
                             merged.hint.images = prev.hint.images;
                         }
+                        // Clean up empty hint objects after merge
+                        const hasText = merged.hint.text && merged.hint.text.trim().length > 0;
+                        const hasCode = merged.hint.code && (
+                            (typeof merged.hint.code === 'string' && merged.hint.code.trim().length > 0) ||
+                            (typeof merged.hint.code === 'object' && merged.hint.code.content && merged.hint.code.content.trim().length > 0)
+                        );
+                        const hasImages = merged.hint.images && merged.hint.images.length > 0;
+
+                        if (!hasText && !hasCode && !hasImages) {
+                            delete merged.hint;
+                        }
                     }
                     return merged;
                 });
@@ -235,7 +246,53 @@ async function buildConfigFromFormDataCloud(body, files, existingConfig) {
             if (Array.isArray(newContent.concepts) && Array.isArray(oldContent.concepts)) {
                 newContent.concepts = newContent.concepts.map((c, idx) => {
                     const prev = oldContent.concepts[idx] || {};
+
+                    // Merge concept image
                     if (!c.image && prev.image) c.image = prev.image;
+
+                    // Merge carousel data
+                    if (c.interactive_carousel) {
+                        const newCarousel = c.interactive_carousel;
+
+                        // If there's previous carousel data, merge it
+                        if (prev.interactive_carousel) {
+                            const prevCarousel = prev.interactive_carousel;
+
+                            // If carousel is disabled in new data but was enabled before, preserve the slides and bot URL
+                            if (!newCarousel.enabled && prevCarousel.enabled && prevCarousel.slides && Array.isArray(prevCarousel.slides)) {
+                                newCarousel.slides = prevCarousel.slides;
+                                newCarousel.bot_iframe_url = newCarousel.bot_iframe_url || prevCarousel.bot_iframe_url;
+                            }
+                            // If carousel is enabled in both, merge slides
+                            else if (newCarousel.enabled && prevCarousel.enabled && newCarousel.slides && prevCarousel.slides && Array.isArray(newCarousel.slides) && Array.isArray(prevCarousel.slides)) {
+                                newCarousel.slides = newCarousel.slides.map((slide, slideIdx) => {
+                                    const prevSlide = prevCarousel.slides[slideIdx] || {};
+                                    // Merge slide image if not provided in new upload
+                                    if (!slide.image && prevSlide.image) {
+                                        slide.image = prevSlide.image;
+                                    }
+                                    return slide;
+                                });
+                            }
+                            // If no new slides but previous slides exist and carousel is still enabled, preserve them
+                            else if (newCarousel.enabled && (!newCarousel.slides || newCarousel.slides.length === 0) && prevCarousel.slides && Array.isArray(prevCarousel.slides)) {
+                                newCarousel.slides = prevCarousel.slides;
+                            }
+
+                            // Preserve bot URL if not set in new data
+                            if (!newCarousel.bot_iframe_url && prevCarousel.bot_iframe_url) {
+                                newCarousel.bot_iframe_url = prevCarousel.bot_iframe_url;
+                            }
+                        }
+                    } else if (prev.interactive_carousel) {
+                        // If no new carousel data but previous carousel exists, preserve it as disabled
+                        c.interactive_carousel = {
+                            enabled: false,
+                            bot_iframe_url: prev.interactive_carousel.bot_iframe_url || '',
+                            slides: prev.interactive_carousel.slides || []
+                        };
+                    }
+
                     return c;
                 });
             }
@@ -252,6 +309,25 @@ async function buildConfigFromFormDataCloud(body, files, existingConfig) {
                     return q;
                 });
             }
+        }
+
+        // Final cleanup: remove any empty hint objects that might have been created during merge
+        if (config.content && Array.isArray(config.content.task_steps)) {
+            config.content.task_steps = config.content.task_steps.map(step => {
+                if (step.hint) {
+                    const hasText = step.hint.text && step.hint.text.trim().length > 0;
+                    const hasCode = step.hint.code && (
+                        (typeof step.hint.code === 'string' && step.hint.code.trim().length > 0) ||
+                        (typeof step.hint.code === 'object' && step.hint.code.content && step.hint.code.content.trim().length > 0)
+                    );
+                    const hasImages = step.hint.images && step.hint.images.length > 0;
+
+                    if (!hasText && !hasCode && !hasImages) {
+                        delete step.hint;
+                    }
+                }
+                return step;
+            });
         }
     } catch (_) {
         // best-effort merge; ignore errors
@@ -352,15 +428,24 @@ function processTaskSteps(taskSteps, imageMap) {
             };
         }
         
-        // Add hint if present
-        if (step.hintText && step.hintText.trim()) {
-            // Merge with existing hint (so we don't lose images)
-            processedStep.hint = {
-                ...(processedStep.hint || {}),
-                text: step.hintText
-            };
-            
-            if (step.hintCode && step.hintCode.trim()) {
+        // Add hint if any hint content is present (text, code, or images)
+        const hasHintText = step.hintText && step.hintText.trim();
+        const hasHintCode = step.hintCode && step.hintCode.trim();
+        const hasHintImages = processedStep.hint && processedStep.hint.images && processedStep.hint.images.length > 0;
+
+        if (hasHintText || hasHintCode || hasHintImages) {
+            // Initialize hint object if needed
+            if (!processedStep.hint) {
+                processedStep.hint = {};
+            }
+
+            // Add text if present
+            if (hasHintText) {
+                processedStep.hint.text = step.hintText;
+            }
+
+            // Add code if present
+            if (hasHintCode) {
                 processedStep.hint.code = {
                     content: step.hintCode,
                     language: step.hintCodeLanguage || 'javascript'
@@ -369,10 +454,25 @@ function processTaskSteps(taskSteps, imageMap) {
         }
         
         return processedStep;
+    }).filter(step => {
+        // Clean up empty hint objects - only remove if completely empty
+        if (step.hint) {
+            const hasText = step.hint.text && step.hint.text.trim().length > 0;
+            const hasCode = step.hint.code && (
+                (typeof step.hint.code === 'string' && step.hint.code.trim().length > 0) ||
+                (typeof step.hint.code === 'object' && step.hint.code.content && step.hint.code.content.trim().length > 0)
+            );
+            const hasImages = step.hint.images && step.hint.images.length > 0;
+
+            if (!hasText && !hasCode && !hasImages) {
+                delete step.hint;
+            }
+        }
+        return true; // Keep all steps
     });
 }
 
-// Process concepts with images
+// Process concepts with images and carousel data
 function processConcepts(concepts, imageMap) {
     return concepts.map((concept) => {
         const processed = {
@@ -381,11 +481,43 @@ function processConcepts(concepts, imageMap) {
             learn_more_context: concept.learnMoreContext || concept.title?.toLowerCase().replace(/\s+/g, '_') || 'concept'
         };
 
+        // Handle concept image
         if (concept._id) {
             const imageKey = `concept_${concept._id}_image`;
             if (imageMap[imageKey] && imageMap[imageKey][0]) {
                 processed.image = { src: imageMap[imageKey][0], alt: concept.title || 'Concept image' };
             }
+        }
+
+        // Handle interactive carousel data (both enabled and disabled)
+        if (concept.interactive_carousel) {
+            const carousel = {
+                enabled: concept.interactive_carousel.enabled || false,
+                bot_iframe_url: concept.interactive_carousel.bot_iframe_url || '',
+                slides: []
+            };
+
+            // Process carousel slides only if enabled
+            if (concept.interactive_carousel.enabled && concept.interactive_carousel.slides && Array.isArray(concept.interactive_carousel.slides)) {
+                carousel.slides = concept.interactive_carousel.slides.map((slide, slideIndex) => {
+                    const processedSlide = {
+                        topic: slide.topic || '',
+                        description: slide.description || '',
+                        prompt: slide.prompt || ''
+                    };
+
+                    // Handle slide images - look for image in imageMap
+                    const slideImageKey = `carousel_${concept._id}_slide_${slideIndex + 1}_image`;
+                    if (imageMap[slideImageKey] && imageMap[slideImageKey][0]) {
+                        processedSlide.image = imageMap[slideImageKey][0];
+                    }
+
+                    return processedSlide;
+                }).filter(slide => slide.topic && slide.description && slide.prompt); // Only include complete slides
+            }
+
+            // Always include carousel data if it exists (enabled or disabled)
+            processed.interactive_carousel = carousel;
         }
 
         return processed;
@@ -566,10 +698,27 @@ function applyDeletionsToConfig(config, deleteList) {
     // Concepts
     if (Array.isArray(config.content.concepts)) {
         config.content.concepts = config.content.concepts.map(c => {
+            const updatedConcept = { ...c };
+
+            // Handle concept image deletion
             if (c && c.image && shouldDelete(c.image.src)) {
-                return { ...c, image: null };
+                updatedConcept.image = null;
             }
-            return c;
+
+            // Handle carousel image deletions
+            if (c.interactive_carousel && c.interactive_carousel.slides && Array.isArray(c.interactive_carousel.slides)) {
+                updatedConcept.interactive_carousel = {
+                    ...c.interactive_carousel,
+                    slides: c.interactive_carousel.slides.map(slide => {
+                        if (slide.image && shouldDelete(slide.image)) {
+                            return { ...slide, image: null };
+                        }
+                        return slide;
+                    })
+                };
+            }
+
+            return updatedConcept;
         });
     }
 

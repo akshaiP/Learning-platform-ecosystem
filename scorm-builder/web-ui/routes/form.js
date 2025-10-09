@@ -118,46 +118,99 @@ function validateFormData(data) {
     if (data.quizQuestions && Array.isArray(data.quizQuestions)) {
         data.quizQuestions.forEach((question, index) => {
             if (!question.question || question.question.trim() === '') {
-                errors.push({ 
-                    field: `quizQuestions[${index}].question`, 
-                    message: `Quiz question ${index + 1} text is required` 
+                errors.push({
+                    field: `quizQuestions[${index}].question`,
+                    message: `Quiz question ${index + 1} text is required`
                 });
             }
             if (!question.options || question.options.length < 2) {
-                errors.push({ 
-                    field: `quizQuestions[${index}].options`, 
-                    message: `Quiz question ${index + 1} must have at least 2 options` 
+                errors.push({
+                    field: `quizQuestions[${index}].options`,
+                    message: `Quiz question ${index + 1} must have at least 2 options`
                 });
             }
-            
+
             // Validate question type
             const questionType = question.type || 'mcq';
             if (questionType === 'mcq') {
                 // Single choice validation
-                if (typeof question.correctAnswer !== 'number' || 
-                    question.correctAnswer < 0 || 
+                if (typeof question.correctAnswer !== 'number' ||
+                    question.correctAnswer < 0 ||
                     question.correctAnswer >= question.options.length) {
-                    errors.push({ 
-                        field: `quizQuestions[${index}].correctAnswer`, 
-                        message: `Quiz question ${index + 1} must have a valid correct answer selected` 
+                    errors.push({
+                        field: `quizQuestions[${index}].correctAnswer`,
+                        message: `Quiz question ${index + 1} must have a valid correct answer selected`
                     });
                 }
             } else if (questionType === 'checkbox') {
                 // Multiple choice validation
                 if (!Array.isArray(question.correctAnswers) || question.correctAnswers.length === 0) {
-                    errors.push({ 
-                        field: `quizQuestions[${index}].correctAnswers`, 
-                        message: `Quiz question ${index + 1} must have at least one correct answer selected` 
+                    errors.push({
+                        field: `quizQuestions[${index}].correctAnswers`,
+                        message: `Quiz question ${index + 1} must have at least one correct answer selected`
                     });
                 } else {
                     // Validate that all selected answers are within valid range
-                    const invalidAnswers = question.correctAnswers.filter(answer => 
+                    const invalidAnswers = question.correctAnswers.filter(answer =>
                         typeof answer !== 'number' || answer < 0 || answer >= question.options.length
                     );
                     if (invalidAnswers.length > 0) {
-                        errors.push({ 
-                            field: `quizQuestions[${index}].correctAnswers`, 
-                            message: `Quiz question ${index + 1} has invalid correct answer selections` 
+                        errors.push({
+                            field: `quizQuestions[${index}].correctAnswers`,
+                            message: `Quiz question ${index + 1} has invalid correct answer selections`
+                        });
+                    }
+                }
+            }
+        });
+    }
+
+    // Carousel validation
+    if (data.concepts && Array.isArray(data.concepts)) {
+        data.concepts.forEach((concept, conceptIndex) => {
+            if (concept.interactive_carousel && concept.interactive_carousel.enabled) {
+                const carousel = concept.interactive_carousel;
+
+                // Validate that carousel has at least one slide
+                if (!carousel.slides || !Array.isArray(carousel.slides) || carousel.slides.length === 0) {
+                    errors.push({
+                        field: `concepts[${conceptIndex}].interactive_carousel.slides`,
+                        message: `Concept ${conceptIndex + 1}: Interactive carousel must have at least one slide`
+                    });
+                } else {
+                    // Validate each slide
+                    carousel.slides.forEach((slide, slideIndex) => {
+                        if (!slide.topic || slide.topic.trim() === '') {
+                            errors.push({
+                                field: `concepts[${conceptIndex}].interactive_carousel.slides[${slideIndex}].topic`,
+                                message: `Concept ${conceptIndex + 1}, Slide ${slideIndex + 1}: Topic is required`
+                            });
+                        }
+
+                        if (!slide.description || slide.description.trim() === '') {
+                            errors.push({
+                                field: `concepts[${conceptIndex}].interactive_carousel.slides[${slideIndex}].description`,
+                                message: `Concept ${conceptIndex + 1}, Slide ${slideIndex + 1}: Description is required`
+                            });
+                        }
+
+                        if (!slide.prompt || slide.prompt.trim() === '') {
+                            errors.push({
+                                field: `concepts[${conceptIndex}].interactive_carousel.slides[${slideIndex}].prompt`,
+                                message: `Concept ${conceptIndex + 1}, Slide ${slideIndex + 1}: AI prompt keywords are required`
+                            });
+                        }
+                    });
+                }
+
+                // Validate bot URL format if provided
+                if (carousel.bot_iframe_url && carousel.bot_iframe_url.trim() !== '') {
+                    try {
+                        new URL(carousel.bot_iframe_url);
+                    } catch (e) {
+                        errors.push({
+                            field: `concepts[${conceptIndex}].interactive_carousel.bot_iframe_url`,
+                            message: `Concept ${conceptIndex + 1}: Voice Assistant URL must be a valid URL`
                         });
                     }
                 }

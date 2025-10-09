@@ -209,6 +209,205 @@ function updateStepNumbers() {
     });
 }
 
+// Carousel Management Functions
+function toggleCarouselSection(conceptId, isEnabled) {
+    const section = document.getElementById(`concept_${conceptId}_carousel_section`);
+    if (isEnabled) {
+        section.classList.remove('hidden');
+        // Add first slide if none exist
+        const slidesContainer = document.getElementById(`concept_${conceptId}_carousel_slides`);
+        if (slidesContainer.children.length === 0) {
+            addCarouselSlide(conceptId);
+        }
+    } else {
+        section.classList.add('hidden');
+    }
+    autoSave();
+}
+
+function addCarouselSlide(conceptId) {
+    const container = document.getElementById(`concept_${conceptId}_carousel_slides`);
+    const slideNumber = container.children.length + 1;
+    const slideId = `${conceptId}_slide_${slideNumber}`;
+
+    const div = document.createElement('div');
+    div.className = 'border border-gray-200 rounded-lg p-4 carousel-slide-item bg-gray-50';
+    div.setAttribute('data-slide-id', slideId);
+    div.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+            <h5 class="text-sm font-semibold text-gray-900">Slide ${slideNumber}</h5>
+            <button type="button" onclick="removeCarouselSlide('${conceptId}', '${slideId}')"
+                    class="remove-slide-btn text-red-500 hover:text-red-700 p-1">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-3">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Slide Topic *</label>
+                <input type="text" name="carousel_${slideId}_topic" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                       placeholder="e.g., Understanding the Basics">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">AI Prompt Keywords *</label>
+                <input type="text" name="carousel_${slideId}_prompt" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                       placeholder="e.g., fundamentals, basics, introduction">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <textarea name="carousel_${slideId}_description" required rows="3"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="Detailed description with **markdown** support. Use *italic* or **bold** text for emphasis..."></textarea>
+            <p class="text-xs text-gray-500 mt-1">Supports markdown: **bold**, *italic*, \u0060code\u0060</p>
+        </div>
+
+        <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Slide Image *</label>
+            <div class="flex items-center space-x-3">
+                <input type="file" accept="image/*" class="hidden" id="carousel_${slideId}_image_input" name="carousel_${slideId}_image">
+                <button type="button" onclick="document.getElementById('carousel_${slideId}_image_input').click()"
+                        class="bg-white border-2 border-dashed border-gray-300 rounded-lg px-4 py-2 text-center hover:border-gray-400 transition-colors flex-1">
+                    <i class="fas fa-image text-gray-400 mr-2"></i>
+                    <span class="text-sm text-gray-600">Choose slide image</span>
+                </button>
+            </div>
+            <div id="carousel_${slideId}_image_preview" class="mt-2"></div>
+            <p class="text-xs text-gray-500 mt-1">Max file size: 2MB. Recommended: 1400×800px (7:4 ratio)</p>
+        </div>
+    `;
+
+    container.appendChild(div);
+
+    // Setup image preview for this slide
+    if (typeof setupImagePreview === 'function') {
+        setupImagePreview(`carousel_${slideId}_image_input`, `carousel_${slideId}_image_preview`, true);
+    }
+
+    // Setup change event listener for image input to update slide data
+    const imageInput = document.getElementById(`carousel_${slideId}_image_input`);
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            // If there was already an image loaded from cloud, mark it for deletion
+            const previewDiv = document.getElementById(`carousel_${slideId}_image_preview`);
+            if (previewDiv) {
+                const existingImg = previewDiv.querySelector('img');
+                const deleteBtn = previewDiv.querySelector('button[onclick*="removeLoadedSingleImage"]');
+                if (existingImg && deleteBtn) {
+                    // Extract filename from the existing delete button
+                    const onclickAttr = deleteBtn.getAttribute('onclick');
+                    const filenameMatch = onclickAttr.match(/removeLoadedSingleImage[^,]*,\s*[^,]*,\s*['"]([^'"]+)['"]/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        // Mark the old image for deletion
+                        if (typeof markImageForDeletion === 'function') {
+                            markImageForDeletion(filenameMatch[1]);
+                        }
+                    }
+                }
+            }
+            autoSave();
+        });
+    }
+
+    // Focus on the new slide and scroll to it
+    const newSlide = div.querySelector('input[name*="_topic"]');
+    if (newSlide) {
+        newSlide.focus();
+        newSlide.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    autoSave();
+}
+
+function removeCarouselSlide(conceptId, slideId) {
+    const slideElement = document.querySelector(`[data-slide-id="${slideId}"]`);
+    if (slideElement) {
+        // Check if there's an image preview with a delete button and trigger deletion
+        const imagePreview = slideElement.querySelector('[id$="_image_preview"]');
+        if (imagePreview) {
+            const deleteButton = imagePreview.querySelector('button[onclick*="removeLoadedSingleImage"]');
+            if (deleteButton) {
+                // Extract the image filename from the onclick handler
+                const onclickAttr = deleteButton.getAttribute('onclick');
+                const filenameMatch = onclickAttr.match(/removeLoadedSingleImage[^,]*,\s*[^,]*,\s*['"]([^'"]+)['"]/);
+                if (filenameMatch && filenameMatch[1]) {
+                    // Mark the image for deletion
+                    if (typeof markImageForDeletion === 'function') {
+                        markImageForDeletion(filenameMatch[1]);
+                    }
+                }
+            }
+        }
+
+        slideElement.remove();
+        renumberCarouselSlides(conceptId);
+        autoSave();
+    }
+}
+
+function renumberCarouselSlides(conceptId) {
+    const container = document.getElementById(`concept_${conceptId}_carousel_slides`);
+    const slides = container.querySelectorAll('.carousel-slide-item');
+
+    slides.forEach((slide, index) => {
+        const slideNumber = index + 1;
+        const newSlideId = `${conceptId}_slide_${slideNumber}`;
+
+        // Update slide number heading
+        const heading = slide.querySelector('h5');
+        if (heading) {
+            heading.textContent = `Slide ${slideNumber}`;
+        }
+
+        // Update data-slide-id attribute
+        slide.setAttribute('data-slide-id', newSlideId);
+
+        // Update remove button onclick
+        const removeButton = slide.querySelector('button[onclick*="removeCarouselSlide"]');
+        if (removeButton) {
+            removeButton.setAttribute('onclick', `removeCarouselSlide('${conceptId}', '${newSlideId}')`);
+        }
+
+        // Update all input and textarea names and IDs
+        const inputs = slide.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            const oldName = input.name;
+            const oldId = input.id;
+
+            if (oldName && oldName.includes('carousel_')) {
+                const newName = oldName.replace(/carousel_[^_]+_slide_\d+/, `carousel_${newSlideId}`);
+                input.name = newName;
+            }
+
+            if (oldId && oldId.includes('carousel_')) {
+                const newId = oldId.replace(/carousel_[^_]+_slide_\d+/, `carousel_${newSlideId}`);
+                input.id = newId;
+
+                // Update label for attribute if it exists
+                const label = slide.querySelector(`label[for="${oldId}"]`);
+                if (label) {
+                    label.setAttribute('for', newId);
+                }
+
+                // Update button onclick if it references this ID
+                const button = slide.querySelector(`button[onclick*="${oldId}"]`);
+                if (button) {
+                    button.setAttribute('onclick', `document.getElementById('${newId}').click()`);
+                }
+            }
+        });
+
+        // Update preview div ID
+        const previewDiv = slide.querySelector('[id$="_image_preview"]');
+        if (previewDiv) {
+            previewDiv.id = `carousel_${newSlideId}_image_preview`;
+        }
+    });
+}
+
 // Concepts Management
 function addConcept() {
     const container = document.getElementById('concepts');
@@ -234,10 +433,10 @@ function addConcept() {
                        placeholder="e.g., Natural Language Processing">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Learn More Context</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Prompt</label>
                 <input type="text" name="concept_${conceptId}_learnMoreContext"
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                       placeholder="e.g., nlp_fundamentals">
+                       placeholder="e.g., Explain about xxx , yyy..">
             </div>
         </div>
         
@@ -252,13 +451,67 @@ function addConcept() {
             <label class="block text-sm font-medium text-gray-700 mb-2">Concept Image</label>
             <div class="flex items-center space-x-4">
                 <input type="file" accept="image/*" class="hidden" id="concept_${conceptId}_image_input" name="concept_${conceptId}_image">
-                <button type="button" onclick="document.getElementById('concept_${conceptId}_image_input').click()" 
+                <button type="button" onclick="document.getElementById('concept_${conceptId}_image_input').click()"
                         class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-3 text-center hover:border-gray-400 transition-colors">
                     <i class="fas fa-image text-gray-400 mr-2"></i>
                     <span class="text-sm text-gray-600">Upload concept image</span>
                 </button>
             </div>
             <div id="concept_${conceptId}_image_preview" class="mt-3"></div>
+        </div>
+
+        <!-- Interactive Carousel Section -->
+        <div class="mt-6 border-t border-gray-200 pt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-md font-semibold text-gray-900">Interactive Carousel (Optional)</h4>
+                <div class="flex items-center space-x-2">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="concept_${conceptId}_carousel_enabled" name="concept_${conceptId}_carousel_enabled"
+                               class="sr-only peer" onchange="toggleCarouselSection('${conceptId}', this.checked)">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-medium text-gray-700">Enable</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="concept_${conceptId}_carousel_section" class="hidden">
+                <!-- Voice Assistant URL -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Voice Assistant URL (Optional)
+                        <i class="fas fa-info-circle text-gray-400 ml-1" title="URL for the AI assistant iframe"></i>
+                    </label>
+                    <input type="url" name="concept_${conceptId}_carousel_botUrl"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="https://example.com/widget.html">
+                    <p class="text-xs text-gray-500 mt-1">Leave empty to use default voice assistant</p>
+                </div>
+
+                <!-- Carousel Slides -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-sm font-medium text-gray-700">Carousel Slides</label>
+                        <button type="button" onclick="addCarouselSlide('${conceptId}')"
+                                class="add-slide-btn bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                            <i class="fas fa-plus mr-1"></i>Add Slide
+                        </button>
+                    </div>
+
+                    <div id="concept_${conceptId}_carousel_slides" class="carousel-slides-container space-y-4">
+                        <!-- Carousel slides will be dynamically added here -->
+                    </div>
+                </div>
+
+                <!-- Info Text -->
+                <div class="carousel-info-panel bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p class="text-xs text-blue-800">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Recommended image size:</strong> 1400×800 pixels (7:4 ratio)<br>
+                        <strong>Supported formats:</strong> JPG, PNG, WebP (max 2MB)<br>
+                        <strong>Description supports:</strong> Markdown syntax for formatting
+                    </p>
+                </div>
+            </div>
         </div>
     `;
     
@@ -528,6 +781,7 @@ function collectFormData() {
     
     // Task steps - collect dynamically
     data.taskSteps = collectTaskStepsData();
+
     
     // Concepts
     data.concepts = collectConceptsData();
@@ -566,7 +820,7 @@ function collectTaskStepsData() {
 function collectConceptsData() {
     const concepts = [];
     const conceptElements = document.querySelectorAll('.concept-item');
-    
+
     conceptElements.forEach((element, index) => {
         const conceptIndex = index + 1;
         const title = element.querySelector(`input[name="concept_concept_${conceptIndex}_title"]`)?.value || '';
@@ -574,10 +828,62 @@ function collectConceptsData() {
         const learnMoreContext = element.querySelector(`input[name="concept_concept_${conceptIndex}_learnMoreContext"]`)?.value || '';
 
         const conceptData = { title, summary, learnMoreContext };
+
+        // Collect carousel data (both enabled and disabled states)
+        const carouselEnabled = element.querySelector(`input[name="concept_concept_${conceptIndex}_carousel_enabled"]`)?.checked;
+        const botUrl = element.querySelector(`input[name="concept_concept_${conceptIndex}_carousel_botUrl"]`)?.value || '';
+        const slides = collectCarouselSlidesData(element, conceptIndex);
+
+        // Always include interactive_carousel field to preserve data when toggling
+        conceptData.interactive_carousel = {
+            enabled: carouselEnabled,
+            bot_iframe_url: botUrl,
+            slides: carouselEnabled ? slides : []
+        };
+
         if (conceptData.title) concepts.push(conceptData);
     });
-    
+
     return concepts;
+}
+
+function collectCarouselSlidesData(conceptElement, conceptIndex) {
+    const slides = [];
+    const slideElements = conceptElement.querySelectorAll('.carousel-slide-item');
+
+    slideElements.forEach((slideElement, slideIndex) => {
+        const slideNumber = slideIndex + 1;
+        const slideId = `concept_${conceptIndex}_slide_${slideNumber}`;
+
+        const topic = slideElement.querySelector(`input[name="carousel_${slideId}_topic"]`)?.value || '';
+        const description = slideElement.querySelector(`textarea[name="carousel_${slideId}_description"]`)?.value || '';
+        const prompt = slideElement.querySelector(`input[name="carousel_${slideId}_prompt"]`)?.value || '';
+        const imageInput = slideElement.querySelector(`input[name="carousel_${slideId}_image"]`);
+
+        if (topic && description && prompt) {
+            const slideData = {
+                topic: topic.trim(),
+                description: description.trim(),
+                prompt: prompt.trim()
+            };
+
+            // Handle image file
+            if (imageInput && imageInput.files && imageInput.files.length > 0) {
+                slideData.image = imageInput.files[0];
+            } else {
+                // Check if there's already an image reference from cloud loading
+                const previewDiv = slideElement.querySelector(`[id$="_image_preview"]`);
+                if (previewDiv && previewDiv.querySelector('img')) {
+                    // There's an existing image that wasn't re-uploaded
+                    // This will be handled by the server-side merge logic
+                }
+            }
+
+            slides.push(slideData);
+        }
+    });
+
+    return slides;
 }
 
 function collectQuizQuestionsData() {
@@ -1068,6 +1374,55 @@ function populateFormFromCloudConfig(config, imageUrls) {
         document.querySelector(`input[name="concept_concept_${i}_title"]`).value = c.title || '';
         document.querySelector(`textarea[name="concept_concept_${i}_summary"]`).value = c.summary || '';
         document.querySelector(`input[name="concept_concept_${i}_learnMoreContext"]`).value = c.learn_more_context || '';
+
+        // Handle carousel data (both enabled and disabled)
+        if (c.interactive_carousel) {
+            const carouselCheckbox = document.querySelector(`input[name="concept_concept_${i}_carousel_enabled"]`);
+            const carouselSection = document.getElementById(`concept_concept_${i}_carousel_section`);
+            const botUrlInput = document.querySelector(`input[name="concept_concept_${i}_carousel_botUrl"]`);
+
+            // Set the checkbox state based on enabled flag
+            carouselCheckbox.checked = c.interactive_carousel.enabled || false;
+
+            // Show/hide section based on enabled state
+            if (c.interactive_carousel.enabled) {
+                carouselSection.classList.remove('hidden');
+            } else {
+                carouselSection.classList.add('hidden');
+            }
+
+            // Always set the bot URL if it exists
+            if (c.interactive_carousel.bot_iframe_url) {
+                botUrlInput.value = c.interactive_carousel.bot_iframe_url;
+            }
+
+            // Add carousel slides if they exist (even if disabled - to preserve data)
+            if (c.interactive_carousel.slides && Array.isArray(c.interactive_carousel.slides)) {
+                c.interactive_carousel.slides.forEach((slideData, slideIdx) => {
+                    addCarouselSlide(`concept_${i}`);
+                    const slideNumber = slideIdx + 1;
+                    const slideId = `concept_${i}_slide_${slideNumber}`;
+
+                    // Populate slide data
+                    const topicInput = document.querySelector(`input[name="carousel_${slideId}_topic"]`);
+                    const descriptionInput = document.querySelector(`textarea[name="carousel_${slideId}_description"]`);
+                    const promptInput = document.querySelector(`input[name="carousel_${slideId}_prompt"]`);
+
+                    if (topicInput) topicInput.value = slideData.topic || '';
+                    if (descriptionInput) descriptionInput.value = slideData.description || '';
+                    if (promptInput) promptInput.value = slideData.prompt || '';
+
+                    // Handle slide image
+                    if (slideData.image) {
+                        const url = imageUrls[slideData.image] || '';
+                        if (url) {
+                            renderSingleLoadedImagePreview(`carousel_${slideId}_image_preview`, `carousel_${slideId}_image_input`, url, slideData.image, `Slide ${slideNumber} image`);
+                        }
+                    }
+                });
+            }
+        }
+
         if (c.image && c.image.src) {
             const url = imageUrls[c.image.src] || '';
             if (url) {

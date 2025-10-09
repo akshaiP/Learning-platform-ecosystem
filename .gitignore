@@ -11,3 +11,7 @@ logs/
 # MacOS
 .DS_Store
 .vscode/
+
+.claude/
+AGENTS.md
+CLAUDE.md

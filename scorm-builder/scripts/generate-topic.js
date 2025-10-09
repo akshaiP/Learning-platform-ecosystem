@@ -764,8 +764,12 @@ class TopicGenerator {
           }
           
           if (typeof hint === 'object') {
-            if (!hint.text) {
-              throw new Error(`hints[${index}] missing text property`);
+            // A hint is valid if it has at least one of: text, step_image
+            const hasText = hint.text && hint.text.trim().length > 0;
+            const hasStepImage = hint.step_image && hint.step_image.src;
+
+            if (!hasText && !hasStepImage) {
+              throw new Error(`hints[${index}] must have at least one of: text or step_image`);
             }
             
             // Validate step image if present
@@ -833,10 +837,19 @@ class TopicGenerator {
               // Legacy string format is acceptable
               return;
             }
-            
+
             if (typeof step.hint === 'object') {
-              if (!step.hint.text) {
-                throw new Error(`task_steps[${index}].hint missing text property`);
+              // A hint is valid if it has at least one of: text, code, or images
+              const hasText = step.hint.text && step.hint.text.trim().length > 0;
+              const hasCode = step.hint.code && (
+                (typeof step.hint.code === 'string' && step.hint.code.trim().length > 0) ||
+                (typeof step.hint.code === 'object' && step.hint.code.content && step.hint.code.content.trim().length > 0)
+              );
+              const hasImages = (Array.isArray(step.hint.images) && step.hint.images.length > 0) ||
+                               (step.hint.image && step.hint.image.src);
+
+              if (!hasText && !hasCode && !hasImages) {
+                throw new Error(`task_steps[${index}].hint must have at least one of: text, code, or images`);
               }
               
               // Validate hint image(s) if present
