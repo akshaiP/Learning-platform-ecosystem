@@ -122,6 +122,22 @@ node services/migrate-to-cloud.js migrate
 node services/migrate-to-cloud.js migrate Robotics-M1-T1
 ```
 
+### Export from Cloud to Local
+
+```bash
+# Export a cloud topic into local topics directory (same name)
+node services/migrate-to-cloud.js export <topic-id>
+
+# Export and rename the local folder
+node services/migrate-to-cloud.js export <topic-id> --as <local-name>
+```
+
+This will:
+- Load the cloud topic document from Firestore
+- Create `scorm-builder/topics/<local-name || topic-id>/`
+- Write `config.json` with the topic data
+- Download all images from `topics/{userId}/{topicId}/images/` into the local `images/` folder
+
 ## Data Structure
 
 ### Firestore Collections

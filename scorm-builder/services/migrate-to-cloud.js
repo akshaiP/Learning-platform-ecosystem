@@ -259,6 +259,37 @@ class TopicMigrator {
             throw error;
         }
     }
+
+    /**
+     * Export a cloud topic to local filesystem
+     * @param {string} topicId - Cloud topic ID
+     * @param {string} userId - User ID that owns the topic in cloud
+     * @param {string|null} localTopicId - Optional local folder name (defaults to topicId)
+     */
+    async exportTopic(topicId, userId = 'default', localTopicId = null) {
+        try {
+            if (!topicId) {
+                throw new Error('Topic ID is required to export from cloud');
+            }
+
+            const targetFolderName = localTopicId || topicId;
+            const localTopicPath = path.join(this.topicsPath, targetFolderName);
+
+            console.log(`☁️  Exporting cloud topic '${topicId}' to local '${targetFolderName}'...`);
+
+            const result = await topicService.exportCloudTopic(topicId, localTopicPath, userId);
+
+            console.log('✅ Export completed:');
+            console.log(`   ☁️  Cloud: ${topicId}`);
+            console.log(`   📁 Local: ${result.localPath}`);
+            console.log(`   🖼️  Images: ${result.downloadedImages}`);
+
+            return result;
+        } catch (error) {
+            console.error(`❌ Failed to export topic ${topicId}:`, error);
+            throw error;
+        }
+    }
 }
 
 // CLI interface
@@ -291,6 +322,14 @@ async function main() {
                 }
                 break;
 
+            case 'export': {
+                const cloudTopicId = args[1];
+                const localNameArgIndex = args.findIndex(a => a === '--as');
+                const localName = localNameArgIndex !== -1 ? args[localNameArgIndex + 1] : null;
+                await migrator.exportTopic(cloudTopicId, 'default', localName || null);
+                break;
+            }
+
             default:
                 console.log('📖 Topic Migration Utility');
                 console.log('');
@@ -299,6 +338,7 @@ async function main() {
                 console.log('  node migrate-to-cloud.js compare                 # Compare local vs cloud');
                 console.log('  node migrate-to-cloud.js migrate [topic-id]      # Migrate specific topic');
                 console.log('  node migrate-to-cloud.js migrate --dry-run       # Show what would be migrated');
+                console.log('  node migrate-to-cloud.js export <topic-id> [--as <local-name>]  # Export cloud topic to local');
                 console.log('');
                 break;
         }

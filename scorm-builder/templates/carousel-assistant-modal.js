@@ -251,38 +251,42 @@
       return (
         '<div class="ca-overlay" role="dialog" aria-modal="true" aria-label="Interactive Carousel" tabindex="-1">' +
           '<div class="ca-modal">' +
-            '<button class="ca-close" aria-label="Close" title="Close">&times;</button>' +
+            '<button class="ca-close" aria-label="Close" title="Close"><i class="fas fa-times"></i></button>' +
             '<div class="ca-body">' +
               '<div class="ca-split" id="caSplitContainer">' +
+                // LEFT PANE: Image + Iframe + Controls
                 '<div class="ca-left" id="caLeftPane">' +
-                  '<div class="ca-viewport" id="caViewport">' +
-                    '<img id="caImage" alt="Slide image" />' +
-                    '<div class="ca-zoom-controls" aria-label="Zoom controls">' +
-                      '<button class="ca-zoom-btn" data-zoom="in" aria-label="Zoom in">+</button>' +
-                      '<button class="ca-zoom-btn" data-zoom="out" aria-label="Zoom out">-</button>' +
-                      '<button class="ca-zoom-btn" data-zoom="reset" aria-label="Reset zoom">Reset</button>' +
+                  '<div class="ca-image-section">' +
+                    '<div class="ca-viewport" id="caViewport">' +
+                      '<img id="caImage" alt="Slide image" />' +
+                      '<div class="ca-zoom-controls" aria-label="Zoom controls">' +
+                        '<button class="ca-zoom-btn" data-zoom="in" aria-label="Zoom in" title="Zoom In"><i class="fas fa-search-plus"></i></button>' +
+                        '<button class="ca-zoom-btn" data-zoom="out" aria-label="Zoom out" title="Zoom Out"><i class="fas fa-search-minus"></i></button>' +
+                        '<button class="ca-zoom-btn ca-zoom-btn-reset" data-zoom="reset" aria-label="Reset zoom" title="Reset Zoom"><i class="fas fa-compress-arrows-alt"></i></button>' +
+                      '</div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="ca-controls-section">' +
+                    '<div class="ca-dots" id="caDots" aria-label="Slide indicators"></div>' +
+                    '<div class="ca-iframe-controls">' +
+                      '<button class="ca-nav ca-prev" aria-label="Previous slide"><i class="fas fa-chevron-left"></i><span>Prev</span></button>' +
+                      '<div class="ca-iframe-wrap">' +
+                        '<div class="ca-loader" id="caIframeLoader" aria-hidden="true"></div>' +
+                        '<iframe id="caIframe" title="Voice Assistant" allow="microphone"></iframe>' +
+                      '</div>' +
+                      '<button class="ca-nav ca-next" aria-label="Next slide"><span>Next</span><i class="fas fa-chevron-right"></i></button>' +
                     '</div>' +
                   '</div>' +
                 '</div>' +
+                // DIVIDER
                 '<div class="ca-divider" id="caDivider" aria-label="Resize panel" role="separator" aria-orientation="vertical" tabindex="0"></div>' +
+                // RIGHT PANE: Description only (full height)
                 '<div class="ca-right" id="caRightPane">' +
                   '<div class="ca-desc">' +
-                    '<h4 id="caTopic"></h4>' +
+                    '<h4 id="caTopic" class="ca-topic-title"></h4>' +
                     '<div id="caDescription" class="ca-desc-scroll"></div>' +
                   '</div>' +
                 '</div>' +
-              '</div>' +
-              // MOVED: Navigation buttons now beside iframe with dots centered
-              '<div class="ca-voice-wrap">' +
-                '<button class="ca-nav ca-prev" aria-label="Previous slide">&#10094;</button>' +
-                '<div class="ca-iframe-container">' +
-                  '<div class="ca-dots" id="caDots" aria-label="Slide indicators"></div>' +
-                  '<div class="ca-iframe-wrap">' +
-                    '<div class="ca-loader" id="caIframeLoader" aria-hidden="true"></div>' +
-                    '<iframe id="caIframe" title="Voice Assistant" allow="microphone"></iframe>' +
-                  '</div>' +
-                '</div>' +
-                '<button class="ca-nav ca-next" aria-label="Next slide">&#10095;</button>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -342,6 +346,7 @@
 
     close() {
       this._detachEvents();
+      this._teardownIframe();
       this._hide();
     }
 
@@ -423,10 +428,51 @@
         if (this.zoomController) this.zoomController.reset();
       }
       if (els.topic) els.topic.textContent = slide.topic || '';
-      if (els.desc) els.desc.textContent = slide.description || '';
+      
+      if (els.desc) {
+        els.desc.innerHTML = this._formatDescription(slide.description || '');
+      }
+      
       this._renderDots();
       this._setIframe(slide);
     }
+    
+    _formatDescription(text) {
+      if (!text) return '';
+      
+      let formatted = text;
+      
+      // Convert line breaks
+      formatted = formatted.replace(/\n/g, '<br>');
+      
+      // Convert **bold** to <strong>
+      formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      
+      // Convert *italic* to <em>
+      formatted = formatted.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      
+      // Convert bullet points (lines starting with - or *)
+      formatted = formatted.replace(/^[\-\*]\s+(.+?)(<br>|$)/gm, '<li>$1</li>');
+      
+      // Wrap consecutive <li> in <ul>
+      formatted = formatted.replace(/(<li>.*?<\/li>)+/gs, (match) => {
+        return '<ul class="ca-list">' + match + '</ul>';
+      });
+      
+      // Convert numbered lists (1. 2. 3.)
+      formatted = formatted.replace(/^\d+\.\s+(.+?)(<br>|$)/gm, '<li>$1</li>');
+      formatted = formatted.replace(/(<li>.*?<\/li>)+/gs, (match) => {
+        if (match.includes('<ul')) return match; // Skip if already wrapped
+        return '<ol class="ca-list">' + match + '</ol>';
+      });
+      
+      // Wrap in paragraph if no block elements
+      if (!formatted.includes('<ul') && !formatted.includes('<ol') && !formatted.includes('<p>')) {
+        formatted = '<p>' + formatted + '</p>';
+      }
+      
+      return formatted;
+    }    
 
     prev() {
       const nextIdx = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
@@ -444,15 +490,27 @@
 
     _setIframe(slide) {
       const els = this._els();
-      if (!els.iframe) return;
+      // Ensure iframe exists (it may be removed on close)
+      if (!els.iframe) {
+        const wrap = document.querySelector('#carouselAssistantModal .ca-iframe-wrap');
+        if (!wrap) return;
+        const fresh = document.createElement('iframe');
+        fresh.id = 'caIframe';
+        fresh.title = 'Voice Assistant';
+        fresh.setAttribute('allow', 'microphone');
+        wrap.appendChild(fresh);
+      }
+      const refreshedEls = this._els();
+      const iframe = refreshedEls.iframe;
+      if (!iframe) return;
       const url = this._buildIframeUrl(slide);
       try {
-        els.iframe.removeEventListener('load', this._onIframeLoad);
+        iframe.removeEventListener('load', this._onIframeLoad);
       } catch (e) {}
-      if (els.iframeLoader) els.iframeLoader.setAttribute('aria-hidden', 'false');
-      if (els.iframeLoader) els.iframeLoader.classList.add('visible');
-      els.iframe.addEventListener('load', this._onIframeLoad);
-      els.iframe.src = url;
+      if (refreshedEls.iframeLoader) refreshedEls.iframeLoader.setAttribute('aria-hidden', 'false');
+      if (refreshedEls.iframeLoader) refreshedEls.iframeLoader.classList.add('visible');
+      iframe.addEventListener('load', this._onIframeLoad);
+      iframe.src = url;
     }
 
     _onIframeLoad() {
@@ -466,10 +524,35 @@
     _buildIframeUrl(slide) {
       const firstName = getLearnerFirstName();
       const base = this.botBaseUrl || 'https://voice-bot-production-d096.up.railway.app/widget.html';
-      const prompt = `The learner\'s name is ${firstName}, please address them by name during the conversation. ${slide.prompt || ''}`;
+      // The learner name is ${firstName}
+      const prompt = `${slide.prompt || ''}`;
       const encoded = encodeURIComponent(prompt.trim());
       const joiner = base.includes('?') ? '&' : '?';
       return `${base}${joiner}topics=${encoded}&widget=true`;
+    }
+
+    _teardownIframe() {
+      const els = this._els();
+      const iframe = els.iframe;
+      if (!iframe) return;
+      try {
+        // Remove load handler
+        iframe.removeEventListener('load', this._onIframeLoad);
+      } catch (e) {}
+      try {
+        // Forcefully stop any media by unloading the document
+        iframe.src = 'about:blank';
+      } catch (e) {}
+      // Remove the iframe node to fully terminate the browsing context
+      const wrap = iframe.parentNode;
+      if (wrap) {
+        try { wrap.removeChild(iframe); } catch (e) {}
+      }
+      // Reset loader state if visible
+      if (els.iframeLoader) {
+        els.iframeLoader.classList.remove('visible');
+        els.iframeLoader.setAttribute('aria-hidden', 'true');
+      }
     }
   }
 

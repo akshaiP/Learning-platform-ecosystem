@@ -257,18 +257,20 @@
                         <div class="p-6">
                             <h4 class="font-bold text-gray-900 mb-3 text-lg">{{title}}</h4>
                             <p class="text-gray-600 mb-6 leading-relaxed">{{summary}}</p>
-                            <button onclick="openLearnMore('{{learn_more_context}}', '{{title}}')" 
-                                    class="group/btn inline-flex items-center text-nebula-500 font-semibold hover:text-nebula-600 transition-colors">
-                                <i class="fas fa-arrow-right mr-2 group-hover/btn:translate-x-1 transition-transform duration-200"></i>
-                                <span>Learn More</span>
-                            </button>
-                            {{#interactive_carousel.enabled}}
-                            <button onclick="(function(btn){try{if(!window.carouselAssistant)return;var card=btn.closest('[data-concept-card]');var list=Array.prototype.slice.call(document.querySelectorAll('[data-concept-card]'));var idx=list.indexOf(card);if(idx>-1){window.carouselAssistant.open(idx);}}catch(e){console.warn('Open carousel failed:',e);}})(this)"
-                                    class="ml-4 inline-flex items-center text-purple-600 font-semibold hover:text-purple-700 transition-colors">
-                                <i class="fas fa-vr-cardboard mr-2"></i>
-                                <span>Open Interactive Carousel</span>
-                            </button>
-                            {{/interactive_carousel.enabled}}
+                            <div class="mt-2 flex flex-wrap items-center gap-3">
+                                <button onclick="openLearnMore('{{learn_more_context}}', '{{title}}')" 
+                                        class="inline-flex items-center px-4 py-2 rounded-lg bg-nebula-500 text-white hover:bg-nebula-600 shadow-sm transition-colors">
+                                    <i class="fas fa-comments mr-2"></i>
+                                    <span>Open Chat Tutor</span>
+                                </button>
+                                {{#interactive_carousel.enabled}}
+                                <button onclick="(function(btn){try{if(!window.carouselAssistant)return;var card=btn.closest('[data-concept-card]');var list=Array.prototype.slice.call(document.querySelectorAll('[data-concept-card]'));var idx=list.indexOf(card);if(idx>-1){window.carouselAssistant.open(idx);}}catch(e){console.warn('Open carousel failed:',e);}})(this)"
+                                        class="inline-flex items-center px-4 py-2 rounded-lg bg-nebula-purple-500 text-white hover:bg-nebula-700 shadow-sm transition-colors">
+                                    <i class="fas fa-vr-cardboard mr-2"></i>
+                                    <span>Start Audio Carousel</span>
+                                </button>
+                                {{/interactive_carousel.enabled}}
+                            </div>
                         </div>
                     </div>
                     {{/content.concepts}}
@@ -1155,9 +1157,24 @@
             try {
                 var panel = document.getElementById('voiceWidgetPanel');
                 if (!panel) return;
+                var iframe = document.getElementById('voiceWidgetIframe');
                 if (panel.classList.contains('hidden')) {
+                    // Opening: ensure iframe exists (it may have been removed on close)
+                    if (!iframe) {
+                        var fresh = document.createElement('iframe');
+                        fresh.id = 'voiceWidgetIframe';
+                        fresh.title = 'Voice Assistant';
+                        fresh.allow = 'microphone';
+                        fresh.className = 'flex-1 w-full border-0';
+                        panel.appendChild(fresh);
+                    }
                     panel.classList.remove('hidden');
                 } else {
+                    // Closing: unload and remove iframe to terminate audio/session
+                    if (iframe) {
+                        try { iframe.src = 'about:blank'; } catch (e) {}
+                        try { iframe.remove(); } catch (e) {}
+                    }
                     panel.classList.add('hidden');
                 }
             } catch (e) {
