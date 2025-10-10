@@ -206,13 +206,77 @@ class AssetProcessor {
 
   async processImage(imageRef, topicDir, outputDir) {
     try {
+      // Check if this is a cloud URL (for default images)
+      if (imageRef.src.startsWith('https://') || imageRef.src.startsWith('http://')) {
+        // For default company logo, download it from cloud storage and include in SCORM
+        if (imageRef.context === 'company_logo' && imageRef.src.includes('default-company-logo.png')) {
+          console.log(`📥 Downloading default company logo from cloud: ${imageRef.src}`);
+
+          try {
+            const cloudServices = require('../services/cloud-services');
+            // Extract the cloud path from the URL
+            const cloudPath = 'default-company-logo.png';
+
+            // Download to a temporary location
+            const tempLocalPath = require('path').join(outputDir, 'temp-default-logo.png');
+            await cloudServices.downloadFile(cloudPath, tempLocalPath);
+
+            // Process it like a local image
+            const ext = require('path').extname(tempLocalPath);
+            const baseName = 'default-company-logo';
+            const filename = `${imageRef.context}-${baseName}${ext}`;
+            const finalPath = require('path').join(outputDir, filename);
+
+            // Move to final location
+            await require('fs-extra').move(tempLocalPath, finalPath);
+
+            const stats = await require('fs-extra').stat(finalPath);
+            console.log(`📁 Downloaded and processed default company logo: ${filename} (${this.formatFileSize(stats.size)})`);
+
+            return {
+              original: imageRef,
+              filename: filename,
+              path: finalPath,
+              size: stats.size,
+              context: imageRef.context,
+              processedAt: new Date().toISOString(),
+              isCloudUrl: false // Now treated as local image
+            };
+          } catch (downloadError) {
+            console.warn(`⚠️ Failed to download default company logo: ${downloadError.message}`);
+            // Fallback to keeping the cloud URL
+            return {
+              original: imageRef,
+              filename: imageRef.src,
+              path: imageRef.src,
+              size: 0,
+              context: imageRef.context,
+              processedAt: new Date().toISOString(),
+              isCloudUrl: true
+            };
+          }
+        }
+
+        // For other cloud URLs, reference them directly
+        console.log(`🌐 Using cloud image for ${imageRef.context}: ${imageRef.src}`);
+        return {
+          original: imageRef,
+          filename: imageRef.src, // Use URL as filename for cloud images
+          path: imageRef.src, // Path is the URL
+          size: 0, // Unknown size for cloud images
+          context: imageRef.context,
+          processedAt: new Date().toISOString(),
+          isCloudUrl: true
+        };
+      }
+
       // Resolve source path - handle both old and new path formats
       let sourcePath = this.resolveImagePath(imageRef.src, topicDir);
-      
+
       // Check if source exists
       if (!await fs.pathExists(sourcePath)) {
         console.warn(`⚠️ Image not found: ${sourcePath}`);
-        
+
         // Try alternative paths
         const alternatives = this.getAlternativePaths(imageRef.src, topicDir);
         for (const altPath of alternatives) {
@@ -222,7 +286,7 @@ class AssetProcessor {
             break;
           }
         }
-        
+
         if (!await fs.pathExists(sourcePath)) {
           if (imageRef.required) {
             throw new Error(`Required image not found: ${imageRef.src}`);

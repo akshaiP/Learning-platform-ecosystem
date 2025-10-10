@@ -193,7 +193,7 @@ async function buildConfigFromFormDataCloud(body, files, existingConfig) {
                 ? { src: imageMap.companyLogo[0], alt: body.title || 'Company Logo' }
                 : (existingConfig && existingConfig.content && existingConfig.content.company_logo)
                     ? existingConfig.content.company_logo
-                    : { src: 'nebula-logo.png', alt: 'Nebula KnowLab Logo' },
+                    : { src: 'https://storage.googleapis.com/scorm-builder-topics-bucket/default-company-logo.png', alt: 'Default Company Logo' },
             task_statement: body.taskStatement || 'Complete the learning task',
             task_steps: processTaskSteps(taskSteps, imageMap),
             hero_image: imageMap.heroImage

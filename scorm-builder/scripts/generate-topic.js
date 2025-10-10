@@ -72,9 +72,15 @@ class TopicGenerator {
     const imageMap = {};
     processedImages.forEach(img => {
       const originalSrc = img.original.src;
-      imageMap[originalSrc] = `assets/images/${img.filename}`;
+      if (img.isCloudUrl) {
+        // For cloud URLs, keep the original URL (will be handled by signed URL generation)
+        imageMap[originalSrc] = originalSrc;
+      } else {
+        // For local images, map to the processed assets path
+        imageMap[originalSrc] = `assets/images/${img.filename}`;
+      }
     });
-    
+
     // Update company logo
     if (topicConfig.content?.company_logo?.src) {
       const newPath = imageMap[topicConfig.content.company_logo.src];

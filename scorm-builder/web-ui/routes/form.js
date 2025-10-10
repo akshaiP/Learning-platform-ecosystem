@@ -252,6 +252,21 @@ router.get('/topics/:id', async (req, res) => {
                 imageUrls[filename] = f.url; // fallback (may be 403 if bucket is private)
             }
         }
+
+        // Check if the topic uses the default company logo and generate signed URL for it
+        const companyLogo = result.data?.content?.company_logo;
+        if (companyLogo && companyLogo.src === 'https://storage.googleapis.com/scorm-builder-topics-bucket/default-company-logo.png') {
+            try {
+                const defaultLogoSignedUrl = await cloudServices.getSignedUrl('default-company-logo.png', 3600);
+                imageUrls['default-company-logo.png'] = defaultLogoSignedUrl;
+                console.log('✅ Generated signed URL for default company logo');
+            } catch (error) {
+                console.warn('⚠️ Failed to generate signed URL for default company logo:', error.message);
+                // Keep the public URL as fallback
+                imageUrls['default-company-logo.png'] = companyLogo.src;
+            }
+        }
+
         res.json({ success: true, data: result.data, imageUrls });
     } catch (error) {
         console.error('Error loading topic:', error);
