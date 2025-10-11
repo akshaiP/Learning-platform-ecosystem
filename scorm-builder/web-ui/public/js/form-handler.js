@@ -463,7 +463,7 @@ function addConcept() {
         <!-- Interactive Carousel Section -->
         <div class="mt-6 border-t border-gray-200 pt-6">
             <div class="flex items-center justify-between mb-4">
-                <h4 class="text-md font-semibold text-gray-900">Interactive Carousel (Optional)</h4>
+                <h4 class="text-md font-semibold text-gray-900">Interactive Carousel</h4>
                 <div class="flex items-center space-x-2">
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="concept_${conceptId}_carousel_enabled" name="concept_${conceptId}_carousel_enabled"

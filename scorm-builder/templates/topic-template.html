@@ -1055,20 +1055,6 @@
                 window.carouselSystem.initializeCarousels();
             }
             
-            // Set Voice Assistant iframe src using dynamic topic and task statement
-            try {
-                var iframe = document.getElementById('voiceWidgetIframe');
-                if (iframe && window.templateData) {
-                    var title = (window.templateData.title || '').toString();
-                    // var task = (window.templateData.taskStatement || '').toString();
-                    var topicsParam = encodeURIComponent([title].filter(Boolean).join(', '));
-                    var baseUrl = 'https://voice-bot-production-d096.up.railway.app/widget.html';
-                    iframe.src = baseUrl + '?topics=' + topicsParam + '&widget=true';
-                }
-            } catch (e) {
-                console.warn('Unable to set voice widget iframe src:', e);
-            }
-
             console.log('✅ Template fully initialized');
             console.log('📊 Context data available:', {
                 topic: window.templateData.title,
@@ -1156,18 +1142,82 @@
         function toggleVoiceWidget() {
             try {
                 var panel = document.getElementById('voiceWidgetPanel');
-                if (!panel) return;
+                if (!panel) {
+                    console.warn('Voice widget panel not found');
+                    return;
+                }
                 var iframe = document.getElementById('voiceWidgetIframe');
                 if (panel.classList.contains('hidden')) {
-                    // Opening: ensure iframe exists (it may have been removed on close)
-                    if (!iframe) {
-                        var fresh = document.createElement('iframe');
-                        fresh.id = 'voiceWidgetIframe';
-                        fresh.title = 'Voice Assistant';
-                        fresh.allow = 'microphone';
-                        fresh.className = 'flex-1 w-full border-0';
-                        panel.appendChild(fresh);
+                    // Opening: always create a fresh iframe to avoid conflicts
+                    console.log('Creating new iframe for voice widget');
+
+                    // Remove any existing iframe to prevent conflicts
+                    if (iframe) {
+                        try { iframe.remove(); } catch (e) {}
                     }
+
+                    // Remove any existing iframe by ID
+                    var existingIframe = document.getElementById('voiceWidgetIframe');
+                    if (existingIframe) {
+                        try { existingIframe.remove(); } catch (e) {}
+                    }
+
+                    // Create fresh iframe
+                    var fresh = document.createElement('iframe');
+                    fresh.id = 'voiceWidgetIframe';
+                    fresh.title = 'Voice Assistant';
+                    fresh.allow = 'microphone';
+                    fresh.className = 'flex-1 w-full border-0';
+                    fresh.style.border = '0';
+                    fresh.src = ''; // Explicitly set empty src
+                    panel.appendChild(fresh);
+                    iframe = fresh;
+
+                    // Load the iframe src since we created a fresh iframe
+                    if (iframe) {
+                        // Small delay to ensure iframe is fully initialized in DOM
+                        setTimeout(function() {
+                            try {
+                                // Ensure templateData is available, if not try to get it again
+                                if (!window.templateData) {
+                                    try {
+                                        window.templateData = JSON.parse(document.getElementById('templateData').textContent);
+                                    } catch (e) {
+                                        console.warn('Could not load template data for voice widget:', e);
+                                        return;
+                                    }
+                                }
+
+                                if (window.templateData) {
+                                    var title = (window.templateData.title || '').toString();
+                                    // var task = (window.templateData.taskStatement || '').toString();
+                                    var topicsParam = encodeURIComponent([title].filter(Boolean).join(', '));
+                                    var baseUrl = 'https://voice-bot-production-d096.up.railway.app/widget.html';
+                                    var fullUrl = baseUrl + '?topics=' + topicsParam + '&widget=true';
+
+                                    console.log('🎤 Setting iframe src:', fullUrl);
+                                    iframe.src = fullUrl;
+
+                                    // Add load event listener to confirm iframe loaded
+                                    iframe.onload = function() {
+                                        console.log('✅ Voice Assistant iframe loaded successfully');
+                                    };
+                                    iframe.onerror = function() {
+                                        console.error('❌ Voice Assistant iframe failed to load');
+                                    };
+                                } else {
+                                    console.warn('Template data not available for voice widget, using fallback');
+                                    // Fallback: load without topic data
+                                    var fallbackUrl = 'https://voice-bot-production-d096.up.railway.app/widget.html?widget=true';
+                                    iframe.src = fallbackUrl;
+                                    console.log('🎤 Voice Assistant iframe loaded with fallback URL');
+                                }
+                            } catch (e) {
+                                console.warn('Unable to set voice widget iframe src:', e);
+                            }
+                        }, 100); // 100ms delay to ensure iframe is ready
+                    }
+
                     panel.classList.remove('hidden');
                 } else {
                     // Closing: unload and remove iframe to terminate audio/session
