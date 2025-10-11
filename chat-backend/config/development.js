@@ -11,6 +11,7 @@ module.exports = {
         'https://prod.edrevel.com',
         'https://cloud.scorm.com',
         'https://academy.nebulaknowlab.com',
+        'https://scorm-builder-app-759854934093.asia-south1.run.app',
         'file://',
         'null'
       ],

@@ -8,7 +8,9 @@ module.exports = {
         process.env.LMS_DOMAIN || 'https://prod.edrevel.com',
         'http://localhost:8080',
         'https://cloud.scorm.com',
-        'https://academy.nebulaknowlab.com'
+        'https://academy.nebulaknowlab.com',
+        'http://localhost:3000',
+        'https://scorm-builder-app-759854934093.asia-south1.run.app'
       ],
       credentials: true
     },

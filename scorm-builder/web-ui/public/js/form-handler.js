@@ -557,8 +557,8 @@ function addQuizQuestion() {
             <select name="quizQuestion_${questionId}_type" required
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     onchange="toggleQuestionType('${questionId}', this.value)">
-                <option value="mcq">Single Choice (MCQ)</option>
-                <option value="checkbox">Multiple Choice (Checkbox)</option>
+                <option value="mcq">Single Answer (Radio button)</option>
+                <option value="checkbox">Multiple Answer (Checkbox)</option>
             </select>
             <p class="text-xs text-gray-500 mt-1">
                 Choose the question type based on how many correct answers you want
