@@ -5,23 +5,20 @@
     const maxAttempts = 3;
     
     function loadChatWidget() {
-        const script = document.createElement('script');
-        script.src = window.templateConfig?.backendUrl + '/chat-widget.js';
-        
-        script.onload = function() {
+        // Enhanced chat widget is already loaded via script tag
+        // Just initialize it
+        if (window.chatWidget) {
             chatWidgetLoaded = true;
-            console.log('✅ Chat widget loaded successfully');
+            console.log('✅ Enhanced chat widget available');
             
-            // Hide backend's floating button and use template button
+            // Hide any backend trigger buttons and use template button
             setTimeout(() => {
                 hideBackendTriggerButton();
                 setupTemplateButton();
             }, 500);
-        };
-        
-        script.onerror = function() {
+        } else {
+            console.warn('❌ Enhanced chat widget not found');
             loadAttempts++;
-            console.warn(`❌ Failed to load chat widget (attempt ${loadAttempts}/${maxAttempts})`);
             
             if (loadAttempts < maxAttempts) {
                 setTimeout(loadChatWidget, 1000);
@@ -29,9 +26,7 @@
                 console.warn('🔄 Using fallback chat widget');
                 loadFallbackChatWidget();
             }
-        };
-        
-        document.head.appendChild(script);
+        }
     }
     
     function hideBackendTriggerButton() {

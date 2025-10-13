@@ -48,7 +48,7 @@ class ChatSystem {
                 
                 return {
                     context: 'learn_more', 
-                    message: `I want to understand "${conceptTitle}" in detail. ${conceptSummary ? 'I know it is: ' + conceptSummary + '. ' : ''}Please explain it with examples and how it relates to ${template.title || 'this topic'}.`,
+                    message: `I want to understand "${conceptTitle}" in detail. Please explain it with examples and how it relates to ${template.title || 'this topic'}.`,
                     contextData: {
                         conceptTitle: conceptTitle,
                         conceptSummary: conceptSummary,

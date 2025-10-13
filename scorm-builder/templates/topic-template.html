@@ -93,12 +93,16 @@
     <!-- Template Configuration -->
     <script>
         window.templateConfig = {
-            backendUrl: "{{backend_url}}"
+            backendUrl: "{{backend_url}}",
+            chatMode: "{{chat_mode}}", // Options: "custom_backend" | "direct_gemini"
+            fallbackEnabled: true
         };
     </script>
     
     <!-- Core JS Files -->
     <script src="scorm-api.js"></script>
+    <script src="{{backend_url}}/chat-service.js"></script>
+    <script src="{{backend_url}}/enhanced-chat-widget.js"></script>
     <script src="chat-integration.js"></script>
     <script src="core-functions.js"></script>
     <script src="quiz-system.js"></script>
@@ -1045,9 +1049,16 @@
                 console.warn('Progress init skipped:', e);
             }
 
-            // Initialize chat system
+            // Initialize chat system with enhanced features
             if (window.chatSystem && window.templateData && window.topicConfig && window.learnerData) {
                 window.chatSystem.initialize(window.templateData, window.topicConfig, window.learnerData);
+                console.log('✅ Chat system initialized with enhanced features');
+            }
+            
+            // Initialize enhanced chat widget if available
+            if (window.chatWidget && window.learnerData) {
+                console.log('🤖 Enhanced chat widget available for initialization');
+                console.log('📊 Chat configuration:', window.chatService?.getConfigInfo());
             }
             
             // Initialize carousels

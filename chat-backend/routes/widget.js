@@ -4,9 +4,85 @@ const path = require('path');
 const fs = require('fs');
 const logger = require('../services/logger');
 
+router.get('/chat-service.js', (req, res) => {
+  try {
+    const servicePath = path.join(__dirname, '../public/chat-service.js');
+    
+    if (!fs.existsSync(servicePath)) {
+      logger.error('Chat service file not found', { path: servicePath });
+      return res.status(404).json({
+        error: 'Chat service not found'
+      });
+    }
+
+    const serviceContent = fs.readFileSync(servicePath, 'utf8');
+    
+    res.set({
+      'Content-Type': 'application/javascript',
+      'Cache-Control': 'no-cache',
+      'X-Service-Version': '1.0.0'
+    });
+
+    logger.debug('Chat service served', {
+      userAgent: req.get('User-Agent'),
+      referer: req.get('Referer')
+    });
+
+    res.send(serviceContent);
+
+  } catch (error) {
+    logger.error('Error serving chat service', {
+      error: error.message,
+      stack: error.stack
+    });
+
+    res.status(500).json({
+      error: 'Failed to load chat service'
+    });
+  }
+});
+
+router.get('/enhanced-chat-widget.js', (req, res) => {
+  try {
+    const widgetPath = path.join(__dirname, '../public/enhanced-chat-widget.js');
+    
+    if (!fs.existsSync(widgetPath)) {
+      logger.error('Enhanced chat widget file not found', { path: widgetPath });
+      return res.status(404).json({
+        error: 'Enhanced chat widget not found'
+      });
+    }
+
+    const widgetContent = fs.readFileSync(widgetPath, 'utf8');
+    
+    res.set({
+      'Content-Type': 'application/javascript',
+      'Cache-Control': 'no-cache',
+      'X-Widget-Version': '3.0.0'
+    });
+
+    logger.debug('Enhanced chat widget served', {
+      userAgent: req.get('User-Agent'),
+      referer: req.get('Referer')
+    });
+
+    res.send(widgetContent);
+
+  } catch (error) {
+    logger.error('Error serving enhanced chat widget', {
+      error: error.message,
+      stack: error.stack
+    });
+
+    res.status(500).json({
+      error: 'Failed to load enhanced chat widget'
+    });
+  }
+});
+
 /**
  * GET /chat-widget.js
- * Serve the chat widget JavaScript with dynamic configuration
+ * Serve the legacy chat widget JavaScript with dynamic configuration
  */
 router.get('/chat-widget.js', (req, res) => {
   try {

@@ -323,6 +323,10 @@ class TopicGenerator {
       }
     };
 
+    // Add chat configuration
+    data.chat_mode = topicConfig.chatMode || config.chatMode || 'custom_backend';
+    console.log(`🤖 Chat mode for ${data.id}: ${data.chat_mode}`);
+
     // Enhanced escape function for safe HTML data attributes (handles quotes, backslashes, newlines robustly)
     function escapeForHTMLAttribute(str) {
       if (!str) return '';
