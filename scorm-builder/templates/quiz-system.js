@@ -47,11 +47,58 @@ class QuizSystem {
         // Build question HTML based on type
         let questionHTML = `
             <div class="quiz-question-container">
+                <!-- Question Images (Individual display like task/hint sections) -->
+                ${question.images && question.images.length > 0 ? `
+                    <div class="mb-6">
+                        ${question.images.length > 1 ? `
+                            <!-- Multiple Images - Individual Display -->
+                            <div class="relative" data-carousel="question" data-question-index="${questionIndex}">
+                                <div class="bg-gray-50 rounded-2xl p-4 shadow-soft">
+                                    <div class="h-64 sm:h-80 flex items-center justify-center">
+                                        <img id="question-image-${questionIndex}"
+                                             src="${question.images[0].src}"
+                                             alt="${question.images[0].alt || 'Question image 1'}"
+                                             class="max-w-full h-full object-contain rounded-xl shadow-medium cursor-zoom-in transition-transform duration-300 hover:scale-105"
+                                             onclick="openImageModal(this.src, this.alt)">
+                                    </div>
+                                    <p id="question-image-caption-${questionIndex}" class="text-sm text-gray-600 mt-3 font-medium text-center">${question.images[0].caption || ''}</p>
+                                </div>
+                                <!-- Carousel Controls -->
+                                <div class="flex justify-between items-center mt-3">
+                                    <button class="px-3 py-2 rounded-lg bg-white border border-gray-200 shadow-soft text-gray-700 text-sm hover:bg-gray-50 transition-colors"
+                                            data-question-index="${questionIndex}" onclick="prevQuestionImage(this.dataset.questionIndex)">
+                                        <i class="fas fa-chevron-left mr-1"></i>Prev
+                                    </button>
+                                    <div class="text-xs text-gray-500 font-medium">
+                                        <span id="question-carousel-indicator-${questionIndex}">1</span> / ${question.images.length}
+                                    </div>
+                                    <button class="px-3 py-2 rounded-lg bg-white border border-gray-200 shadow-soft text-gray-700 text-sm hover:bg-gray-50 transition-colors"
+                                            data-question-index="${questionIndex}" onclick="nextQuestionImage(this.dataset.questionIndex)">
+                                        Next<i class="fas fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        ` : `
+                            <!-- Single Image -->
+                            <div class="text-center">
+                                <div class="inline-block bg-gray-50 rounded-2xl p-4 shadow-soft">
+                                    <img src="${question.images[0].src}" alt="${question.images[0].alt || 'Question image'}"
+                                         class="max-w-full h-64 sm:h-80 object-contain rounded-xl shadow-medium cursor-zoom-in transition-transform duration-300 hover:scale-105"
+                                         onclick="openImageModal('${question.images[0].src}', '${question.images[0].alt || 'Question image'}')">
+                                    ${question.images[0].caption ? `
+                                        <p class="text-sm text-gray-600 mt-3 font-medium text-center">${question.images[0].caption}</p>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                ` : ''}
+
                 <h4 class="text-xl font-bold text-gray-900 mb-8 leading-relaxed">${question.question}</h4>
                 <div class="mb-4">
                     <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                        questionType === 'mcq' 
-                            ? 'bg-blue-100 text-blue-800' 
+                        questionType === 'mcq'
+                            ? 'bg-blue-100 text-blue-800'
                             : 'bg-purple-100 text-purple-800'
                     }">
                         ${questionType === 'mcq' ? 'Single Choice' : 'Multiple Choice'}
@@ -635,8 +682,78 @@ function retryQuiz() {
     window.quizSystem.retryQuiz();
 }
 
+// Question image carousel functions (individual display like task/hint sections)
+function nextQuestionImage(questionIndex) {
+    const indicator = document.getElementById(`question-carousel-indicator-${questionIndex}`);
+    const imgElement = document.getElementById(`question-image-${questionIndex}`);
+    const captionElement = document.getElementById(`question-image-caption-${questionIndex}`);
+
+    if (!indicator || !imgElement) return;
+
+    // Get the quiz data to access the images
+    const question = window.quizSystem.questions[questionIndex];
+    if (!question || !question.images || question.images.length <= 1) return;
+
+    const totalImages = question.images.length;
+    const current = parseInt(indicator.textContent);
+
+    if (current < totalImages) {
+        const nextIndex = current; // 0-based index for the images array
+        const nextImage = question.images[nextIndex];
+
+        // Update image source and alt text
+        imgElement.src = nextImage.src;
+        imgElement.alt = nextImage.alt || `Question image ${nextIndex + 1}`;
+
+        // Update caption if available
+        if (captionElement) {
+            captionElement.textContent = nextImage.caption || '';
+        }
+
+        // Update indicator
+        indicator.textContent = current + 1;
+    } else {
+        console.log('Already at last image');
+    }
+}
+
+function prevQuestionImage(questionIndex) {
+    const indicator = document.getElementById(`question-carousel-indicator-${questionIndex}`);
+    const imgElement = document.getElementById(`question-image-${questionIndex}`);
+    const captionElement = document.getElementById(`question-image-caption-${questionIndex}`);
+
+    if (!indicator || !imgElement) return;
+
+    // Get the quiz data to access the images
+    const question = window.quizSystem.questions[questionIndex];
+    if (!question || !question.images || question.images.length <= 1) return;
+
+    const current = parseInt(indicator.textContent);
+
+    if (current > 1) {
+        const prevIndex = current - 2; // 0-based index for the images array
+        const prevImage = question.images[prevIndex];
+
+        // Update image source and alt text
+        imgElement.src = prevImage.src;
+        imgElement.alt = prevImage.alt || `Question image ${prevIndex + 1}`;
+
+        // Update caption if available
+        if (captionElement) {
+            captionElement.textContent = prevImage.caption || '';
+        }
+
+        // Update indicator
+        indicator.textContent = current - 1;
+    } else {
+        console.log('Already at first image');
+    }
+}
+
 // Export for global access
 window.initializeQuiz = initializeQuiz;
 window.nextQuestion = nextQuestion;
 window.previousQuestion = previousQuestion;
 window.retryQuiz = retryQuiz;
+window.nextQuestionImage = nextQuestionImage;
+window.prevQuestionImage = prevQuestionImage;

@@ -615,6 +615,19 @@ function addQuizQuestion() {
         </div>
         
         <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Question Images <span class="text-gray-500 text-xs">(for multiple images, select them all at once and upload)</span></label>
+            <div class="flex items-center space-x-4">
+                <input type="file" multiple accept="image/*" class="hidden" id="quizQuestion_${questionId}_images_input" name="quizQuestion_${questionId}_images">
+                <button type="button" onclick="document.getElementById('quizQuestion_${questionId}_images_input').click()"
+                        class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-3 text-center hover:border-red-400 transition-colors">
+                    <i class="fas fa-images text-gray-400 mr-2"></i>
+                    <span class="text-sm text-gray-600">Upload question images</span>
+                </button>
+            </div>
+            <div id="quizQuestion_${questionId}_images_preview" class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3"></div>
+        </div>
+
+        <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">Question Text *</label>
             <textarea name="quizQuestion_${questionId}_question" required rows="2"
                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
@@ -681,6 +694,7 @@ function addQuizQuestion() {
     
     container.appendChild(div);
     if (typeof setupImagePreview === 'function') {
+        setupImagePreview(`quizQuestion_${questionId}_images_input`, `quizQuestion_${questionId}_images_preview`, false);
         setupImagePreview(`quizQuestion_${questionId}_explanationImage_input`, `quizQuestion_${questionId}_explanationImage_preview`, true);
     }
     
@@ -959,11 +973,12 @@ function collectQuizQuestionsData() {
         const options = optionInputs.map(input => input.value.trim()).filter(Boolean);
         const explanation = element.querySelector(`textarea[name="${base}explanation"]`)?.value || '';
 
-        let questionData = { 
-            question: questionText, 
+        let questionData = {
+            _id: `question_${qIndex}`,
+            question: questionText,
             type: questionType,
-            options, 
-            explanation 
+            options,
+            explanation
         };
 
         if (questionType === 'mcq') {
@@ -1713,6 +1728,22 @@ function populateFormFromCloudConfig(config, imageUrls) {
         if (expEl) expEl.value = explanationText;
         const selectEl = document.querySelector(`select[name="${base}type"]`);
         toggleQuestionType(`question_${i}`, q.type || 'mcq', selectEl);
+
+        // Handle question images (multiple images)
+        if (q.images && Array.isArray(q.images) && q.images.length > 0) {
+            const questionImagesPreview = document.getElementById(`quizQuestion_question_${i}_images_preview`);
+            if (questionImagesPreview) {
+                questionImagesPreview.innerHTML = '';
+                q.images.forEach((imgObj, imgIndex) => {
+                    const url = imageUrls[imgObj.src] || '';
+                    if (url) {
+                        renderMultiLoadedImageThumb(questionImagesPreview, url, imgObj.src, `Question image ${imgIndex + 1}`);
+                    }
+                });
+            }
+        }
+
+        // Handle explanation image (single image)
         if (q.explanation_image && q.explanation_image.src) {
             const url = imageUrls[q.explanation_image.src] || '';
             if (url) {

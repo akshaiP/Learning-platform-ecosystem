@@ -197,7 +197,7 @@ class TopicGenerator {
           topicConfig.quiz.explanation_image.src = newPath;
         }
       }
-      
+
       // New multi-question format
       if (topicConfig.quiz.questions && Array.isArray(topicConfig.quiz.questions)) {
         topicConfig.quiz.questions.forEach((question, index) => {
@@ -206,6 +206,18 @@ class TopicGenerator {
             if (newPath) {
               question.explanation_image.src = newPath;
             }
+          }
+
+          // Update question images (NEW)
+          if (question.images && Array.isArray(question.images)) {
+            question.images.forEach((img, imgIndex) => {
+              if (img.src) {
+                const newPath = imageMap[img.src];
+                if (newPath) {
+                  img.src = newPath;
+                }
+              }
+            });
           }
         });
       }

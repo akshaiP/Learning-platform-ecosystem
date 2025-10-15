@@ -306,6 +306,8 @@ async function buildConfigFromFormDataCloud(body, files, existingConfig) {
                 nq.questions = nq.questions.map((q, idx) => {
                     const pq = oq.questions[idx] || {};
                     if (!q.explanation_image && pq.explanation_image) q.explanation_image = pq.explanation_image;
+                    // Merge question images if no new question images were uploaded
+                    if (!q.images && pq.images) q.images = pq.images;
                     return q;
                 });
             }
@@ -563,9 +565,16 @@ function processQuiz(quizQuestions, body, imageMap) {
         }
         
         if (question._id) {
-            const imageKey = `quizQuestion_${question._id}_explanationImage`;
-            if (imageMap[imageKey] && imageMap[imageKey][0]) {
-                q.explanation_image = { src: imageMap[imageKey][0], alt: 'Explanation image' };
+            // Handle question images (multiple images support)
+            const questionImagesKey = `quizQuestion_${question._id}_images`;
+            if (imageMap[questionImagesKey] && imageMap[questionImagesKey].length > 0) {
+                q.images = imageMap[questionImagesKey].map(imgSrc => ({ src: imgSrc, alt: `Question image for ${q.question.substring(0, 30)}...` }));
+            }
+
+            // Handle explanation image (single image)
+            const explanationImageKey = `quizQuestion_${question._id}_explanationImage`;
+            if (imageMap[explanationImageKey] && imageMap[explanationImageKey][0]) {
+                q.explanation_image = { src: imageMap[explanationImageKey][0], alt: 'Explanation image' };
             }
         }
         return q;
@@ -750,13 +759,17 @@ function applyDeletionsToConfig(config, deleteList) {
         });
     }
 
-    // Quiz explanation images
+    // Quiz explanation images and question images
     if (config.quiz && Array.isArray(config.quiz.questions)) {
         config.quiz.questions = config.quiz.questions.map(q => {
+            const updatedQuestion = { ...q };
             if (q && q.explanation_image && shouldDelete(q.explanation_image.src)) {
-                return { ...q, explanation_image: null };
+                updatedQuestion.explanation_image = null;
             }
-            return q;
+            if (q && q.images && Array.isArray(q.images)) {
+                updatedQuestion.images = q.images.filter(img => !(img && shouldDelete(img.src)));
+            }
+            return updatedQuestion;
         });
     }
 }

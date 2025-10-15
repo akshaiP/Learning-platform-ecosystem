@@ -175,16 +175,32 @@ class AssetProcessor {
       if (config.quiz.explanation_image) {
         addImage(config.quiz.explanation_image, 'quiz', false);
       }
-      
+
       // New multi-question format
       if (config.quiz.questions && Array.isArray(config.quiz.questions)) {
         config.quiz.questions.forEach((question, index) => {
+          // Extract explanation images
           if (question.explanation_image) {
             addImage({
               ...question.explanation_image,
               questionIndex: index,
               questionId: question.id || `q${index + 1}`
             }, 'quiz', false);
+          }
+
+          // Extract question images (NEW)
+          if (question.images && Array.isArray(question.images)) {
+            question.images.forEach((img, imgIndex) => {
+              if (img.src) {
+                addImage({
+                  ...img,
+                  questionIndex: index,
+                  questionId: question.id || `q${index + 1}`,
+                  imageIndex: imgIndex,
+                  context: 'quiz_question'
+                }, 'quiz_question', false);
+              }
+            });
           }
         });
       }
@@ -198,7 +214,8 @@ class AssetProcessor {
       step_image: images.filter(img => img.context === 'step_image').length,
       task_step: images.filter(img => img.context === 'task_step').length,
       hint_image: images.filter(img => img.context === 'hint_image').length,
-      quiz: images.filter(img => img.context === 'quiz').length
+      quiz: images.filter(img => img.context === 'quiz').length,
+      quiz_question: images.filter(img => img.context === 'quiz_question').length
     });
     
     return images;
