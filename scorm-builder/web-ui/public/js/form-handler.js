@@ -131,6 +131,41 @@ function addTaskStep() {
             <div id="taskStep_${stepId}_images_preview" class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3"></div>
         </div>
         
+        <!-- Task Page Section -->
+        <div class="mt-6 border-t border-gray-200 pt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-md font-semibold text-gray-900">Task Workspace (Optional)</h4>
+                <div class="flex items-center space-x-2">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="taskStep_${stepId}_taskPage_enabled" name="taskStep_${stepId}_taskPage_enabled"
+                               class="sr-only peer" onchange="toggleTaskPageSection('${stepId}', this.checked)">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-medium text-gray-700">Enable</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="taskStep_${stepId}_taskPage_section" class="hidden">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Task Page URL
+                            <span class="text-gray-400 text-xs ml-2">
+                                <i class="fas fa-info-circle"></i> 
+                                External tool/page that opens in split-screen workspace
+                            </span>
+                        </label>
+                        <input type="url" name="taskStep_${stepId}_taskPageUrl"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="https://example.com/task-page">
+                        <p class="text-xs text-gray-500 mt-1">
+                            Enter a URL to open an interactive workspace alongside this step (e.g., coding environment, simulation, etc.)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Hint Section -->
         <div class="mt-6 border-t border-gray-200 pt-6">
             <h4 class="text-md font-semibold text-gray-900 mb-4">Hint (Optional)</h4>
@@ -221,6 +256,20 @@ function toggleCarouselSection(conceptId, isEnabled) {
         }
     } else {
         section.classList.add('hidden');
+    }
+}
+
+function toggleTaskPageSection(stepId, isEnabled) {
+    const section = document.getElementById(`taskStep_${stepId}_taskPage_section`);
+    if (isEnabled) {
+        section.classList.remove('hidden');
+    } else {
+        section.classList.add('hidden');
+        // Clear the URL field when disabled to ensure clean data
+        const urlInput = document.querySelector(`input[name="taskStep_${stepId}_taskPageUrl"]`);
+        if (urlInput) {
+            urlInput.value = '';
+        }
     }
     autoSave();
 }
@@ -809,6 +858,16 @@ function collectTaskStepsData() {
             hintCodeLanguage: element.querySelector(`select[name*="taskStep_step_${index + 1}_hintCodeLanguage"]`)?.value || ''
         };
         
+        // Add task page data if enabled and URL is provided
+        const taskPageEnabled = element.querySelector(`input[name*="taskStep_step_${index + 1}_taskPage_enabled"]`)?.checked;
+        const taskPageUrl = element.querySelector(`input[name*="taskStep_step_${index + 1}_taskPageUrl"]`)?.value || '';
+        
+        if (taskPageEnabled && taskPageUrl) {
+            stepData.taskPage = {
+                url: taskPageUrl
+            };
+        }
+        
         if (stepData.title) {
             steps.push(stepData);
         }
@@ -1068,9 +1127,14 @@ async function generateSCORM(showPreview = false) {
             if (value instanceof File) {
                 console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
             } else {
-                console.log(`${key}: ${value}`);
+                const maxLength = 200;
+                const displayValue = value.length > maxLength ? value.substring(0, maxLength) + '...' : value;
+                console.log(`${key}: ${displayValue}`);
             }
         }
+        
+        // Debug: Log the task steps data being sent
+        console.log('🔍 Generating with task steps:', JSON.stringify(data.taskSteps, null, 2));
         
         // Debug: Check if file inputs exist in DOM
         console.log('File inputs in DOM:');
@@ -1383,7 +1447,7 @@ async function saveTopicToCloud() {
         formData.set('heroImageCaption', data.heroImageCaption);
         formData.set('quizTitle', data.quizTitle);
         formData.set('quizDescription', data.quizDescription);
-
+        
         const res = await fetch('/build/save', { method: 'POST', body: formData });
         const resData = await res.json();
         if (!resData.success) throw new Error(resData.error || 'Save failed');
@@ -1486,6 +1550,20 @@ function populateFormFromCloudConfig(config, imageUrls) {
         document.querySelector(`textarea[name="taskStep_step_${i}_instructions"]`).value = step.instructions || '';
         document.querySelector(`textarea[name="taskStep_step_${i}_code"]`).value = (step.code && step.code.content) || '';
         document.querySelector(`select[name="taskStep_step_${i}_codeLanguage"]`).value = (step.code && step.code.language) || '';
+        
+        // Task page data
+        if (step.taskPage) {
+            const taskPageEnabled = document.querySelector(`input[name="taskStep_step_${i}_taskPage_enabled"]`);
+            const taskPageUrl = document.querySelector(`input[name="taskStep_step_${i}_taskPageUrl"]`);
+            
+            if (taskPageEnabled && taskPageUrl) {
+                taskPageEnabled.checked = true;
+                taskPageUrl.value = step.taskPage.url || '';
+                // Show the task page section
+                toggleTaskPageSection(`step_${i}`, true);
+            }
+        }
+        
         if (step.hint) {
             document.querySelector(`textarea[name="taskStep_step_${i}_hintText"]`).value = step.hint.text || '';
             document.querySelector(`textarea[name="taskStep_step_${i}_hintCode"]`).value = (step.hint.code && step.hint.code.content) || '';

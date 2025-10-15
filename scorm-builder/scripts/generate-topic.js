@@ -46,12 +46,13 @@ class TopicGenerator {
   async copyJSFiles(tempDir) {
     const jsFiles = [
         'scorm-api.js',
-        'chat-integration.js', 
+        'chat-integration.js',
         'core-functions.js',
         'quiz-system.js',
         'chat-system.js',
         'task-system.js',
-        // Carousel assistant assets (Phase 1)
+        'task-split-screen.js',
+        'task-split-screen.css',
         'carousel-assistant-modal.js',
         'carousel-assistant-styles.css'
     ];
@@ -59,10 +60,12 @@ class TopicGenerator {
     for (const jsFile of jsFiles) {
         const sourcePath = path.join(__dirname, '../templates', jsFile);
         const destPath = path.join(tempDir, jsFile);
-        
+
         if (await fs.pathExists(sourcePath)) {
             await fs.copy(sourcePath, destPath);
             console.log(`✅ Copied ${jsFile}`);
+        } else {
+            console.warn(`⚠️ File not found: ${sourcePath}`);
         }
     }
   }
@@ -416,6 +419,12 @@ class TopicGenerator {
         if (step.instructions) {
           step.instructionsHtml = convertMarkdownToHtml(step.instructions);
         }
+
+        // Prepare taskPage JSON for template if present
+        if (step.taskPage) {
+          step.taskPageJson = safeJson(step.taskPage);
+        }
+
         return step;
       });
       

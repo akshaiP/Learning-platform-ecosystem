@@ -221,7 +221,7 @@ async function buildConfigFromFormDataCloud(body, files, existingConfig) {
                     const prev = oldContent.task_steps[idx] || {};
                     const merged = { ...step };
                     if (!merged.images && Array.isArray(prev.images)) merged.images = prev.images;
-                    if (merged.hint || prev.hint) {
+                                        if (merged.hint || prev.hint) {
                         merged.hint = merged.hint || {};
                         if (!merged.hint.images && prev.hint && Array.isArray(prev.hint.images)) {
                             merged.hint.images = prev.hint.images;
@@ -428,6 +428,20 @@ function processTaskSteps(taskSteps, imageMap) {
             };
         }
         
+        // Add task page if URL is provided (handle both flat and nested structures)
+        const hasTaskPageUrl = step.taskPageUrl && step.taskPageUrl.trim();
+        const hasNestedTaskPage = step.taskPage && step.taskPage.url && step.taskPage.url.trim();
+        
+        if (hasTaskPageUrl) {
+            processedStep.taskPage = {
+                url: step.taskPageUrl.trim()
+            };
+        } else if (hasNestedTaskPage) {
+            processedStep.taskPage = {
+                url: step.taskPage.url.trim()
+            };
+        }
+
         // Add hint if any hint content is present (text, code, or images)
         const hasHintText = step.hintText && step.hintText.trim();
         const hasHintCode = step.hintCode && step.hintCode.trim();

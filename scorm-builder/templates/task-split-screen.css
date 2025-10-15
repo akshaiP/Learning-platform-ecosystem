@@ -1,0 +1,231 @@
+/* Split-Screen Layout */
+.split-screen-container {
+    position: fixed;
+    top: 80px; /* Header height */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    background: white;
+    z-index: 45;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.split-screen-container.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.split-screen-container.expanded {
+    grid-template-columns: 30% 70%;
+}
+
+.split-left-panel {
+    overflow-y: auto;
+    border-right: 1px solid #e5e7eb;
+    background: white;
+}
+
+.split-right-panel {
+    position: relative;
+    background: #f9fafb;
+}
+
+
+
+.task-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}
+
+.split-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Main floating control button */
+.split-control-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #374151, #1f2937);
+    border: 2px solid white;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    position: relative;
+    z-index: 2;
+}
+
+.split-control-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(135deg, #4b5563, #374151);
+}
+
+.split-control-toggle.active {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+/* Expanded control panel */
+.split-control-panel {
+    position: absolute;
+    top: 0;
+    right: 88px; /* Adjusted to account for close button */
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 6px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.split-control-panel.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+}
+
+.split-control-btn {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.split-control-btn:hover {
+    background: #f8fafc;
+    border-color: #22c55e;
+    color: #16a34a;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+    transform: translateY(-1px);
+}
+
+.split-control-btn:active {
+    transform: translateY(0);
+}
+
+.split-control-btn.close-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border: 2px solid white;
+    color: white;
+    padding: 8px 10px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.split-control-btn.close-btn:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border-color: #b91c1c;
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.split-control-btn.new-tab-btn {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border-color: #2563eb;
+    color: white;
+}
+
+.split-control-btn.new-tab-btn:hover {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border-color: #1d4ed8;
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Tooltip */
+
+
+.split-control-btn.close-btn:hover .split-control-tooltip {
+    opacity: 1;
+}
+
+.task-workspace-btn {
+    background: linear-gradient(to right, #2dd4bf, #0891b2);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-workspace-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.task-workspace-btn.active {
+    background: linear-gradient(to right, #dc2626, #b91c1c);
+}
+
+.iframe-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #6b7280;
+}
+
+.iframe-loading .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #2dd4bf;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+
+/* Hide main page content when split screen is active */
+.split-screen-active #pageWrapper > *:not(.split-screen-container) {
+    pointer-events: none;
+}

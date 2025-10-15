@@ -23,7 +23,7 @@ class ScormPackager {
       console.log('📄 Core files written (HTML, CSS, manifest)');
 
       // ✅ STEP 2: Copy JavaScript files
-      const jsFiles = ['scorm-api.js', 'chat-integration.js', 'core-functions.js', 'quiz-system.js', 'chat-system.js', 'task-system.js', 'carousel-assistant-modal.js', 'carousel-assistant-styles.css'];
+      const jsFiles = ['scorm-api.js', 'chat-integration.js', 'core-functions.js', 'quiz-system.js', 'chat-system.js', 'task-system.js', 'carousel-assistant-modal.js', 'carousel-assistant-styles.css','task-split-screen.js','task-split-screen.css'];
       for (const jsFile of jsFiles) {
         const sourcePath = path.join(tempDir, jsFile);
         const destPath = path.join(packageTempDir, jsFile);
