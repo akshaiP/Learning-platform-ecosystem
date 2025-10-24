@@ -6,21 +6,21 @@
     "scripts": {
         "build": "node build.js",
         "build:all": "node build.js --all", 
-        "build:topic": "node build.js --topic $npm_config_topic --dev --backend https://learning-platform-ecosystem.onrender.com",
-        "build:prod": "node build.js --topic $npm_config_topic --backend https://learning-platform-ecosystem.onrender.com",
-        "clean": "rm -rf output/* temp/* test-output/*",
-        "clean:test": "rm -rf test-output && mkdir -p test-output",
+        "build:topic": "node scripts/build-topic.js --dev --backend https://learning-platform-ecosystem.onrender.com",
+        "build:prod": "node build.js --backend https://learning-platform-ecosystem.onrender.com",
+        "clean": "rimraf output/* temp/* test-output/*",
+        "clean:test": "rimraf test-output && mkdirp test-output",
         "extract": "node scripts/extract-topic.js",
         "validate": "node scripts/validate-topics.js",
         "validate:cloud": "node scripts/validate-cloud-topics.js",
-        "test:topic": "npm run validate && npm run build:topic && npm run extract && npm run serve:test",
+        "test:topic": "node scripts/test-topic.js",
         "serve:test": "node test-server.js",
         "lint": "eslint .",
         "prestart": "echo 'Starting SCORM Builder Web UI...'",
         "start:ui": "node web-ui/server.js", 
         "dev:ui": "nodemon web-ui/server.js",
         "start": "node web-ui/server.js",
-        "render-postbuild": "npm run clean && mkdir -p web-ui/public/downloads && mkdir -p output && mkdir -p test-output"
+        "render-postbuild": "npm run clean && mkdirp web-ui/public/downloads && mkdirp output && mkdirp test-output"
     },
     "dependencies": {
         "archiver": "^6.0.1",
@@ -42,7 +42,9 @@
     "devDependencies": {
         "eslint": "^8.46.0",
         "jest": "^29.6.2",
-        "nodemon": "^3.0.1"
+        "nodemon": "^3.0.1",
+        "rimraf": "^5.0.1",
+        "mkdirp": "^3.0.1"
     },
     "keywords": [
         "scorm",
