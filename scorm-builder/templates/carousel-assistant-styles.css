@@ -216,7 +216,7 @@
   align-items: center;
   gap: 32px;
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px; /* Increased to match iframe capabilities */
   justify-content: center;
 }
 
@@ -264,25 +264,26 @@
 }
 
 /* Iframe wrapper (centered between buttons) */
-.ca-iframe-wrap { 
-  position: relative; 
+.ca-iframe-wrap {
+  position: relative;
   height: 160px; /* Increased height */
   width: 100%;
-  max-width: 900px; /* Increased max-width */
+  max-width: 1000px; /* Increased max-width for wider iframe */
   flex: 1;
-  border-radius: 12px; 
-  overflow: hidden; 
+  border-radius: 12px;
+  overflow: hidden;
   background: #ffffff;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  border: none; /* Removed border for seamless integration */
 }
 
-.ca-iframe-wrap iframe { 
+.ca-iframe-wrap iframe {
   width: 100%;
   height: 100%;
-  border: 0; 
-  display: block; 
-  pointer-events: auto !important; 
+  border: none;
+  display: block;
+  pointer-events: auto !important;
+  background: #ffffff; /* Ensure white background to blend with modal */
 }
 
 .ca-loader {

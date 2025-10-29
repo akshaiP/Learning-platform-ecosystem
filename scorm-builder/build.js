@@ -229,16 +229,62 @@ async function initializeCloudServices() {
 }
 
 async function loadTopicConfig(topicId, config) {
+  // In development mode, prioritize local files if they exist
+  if (config.isDev) {
+    const folderConfigPath = path.join(config.topicsDir, topicId, 'config.json');
+
+    if (await fs.pathExists(folderConfigPath)) {
+      log.info(`📁 Development mode: Loading topic from local folder: ${topicId}`);
+      const configData = await fs.readJson(folderConfigPath);
+
+      // Set up temporary topic directory for local assets
+      const tempTopicDir = path.join(__dirname, 'temp', `${topicId}-topic-${Date.now()}`);
+      const topicBaseDir = path.join(config.topicsDir, topicId);
+
+      // Copy local assets to temp directory if they exist
+      const imagesDir = path.join(topicBaseDir, 'images');
+      const videosDir = path.join(topicBaseDir, 'videos');
+      const tempImagesDir = path.join(tempTopicDir, 'images');
+      const tempVideosDir = path.join(tempTopicDir, 'videos');
+
+      await fs.ensureDir(tempImagesDir);
+      await fs.ensureDir(tempVideosDir);
+
+      // Copy images if they exist
+      if (await fs.pathExists(imagesDir)) {
+        await fs.copy(imagesDir, tempImagesDir);
+        log.verbose(`Copied local images from ${imagesDir}`);
+      }
+
+      // Copy videos if they exist
+      if (await fs.pathExists(videosDir)) {
+        await fs.copy(videosDir, tempVideosDir);
+        log.verbose(`Copied local videos from ${videosDir}`);
+      }
+
+      // Store temp topic directory path for cleanup
+      configData._tempTopicDir = tempTopicDir;
+
+      return {
+        id: topicId,
+        backendUrl: config.backendUrl,
+        buildTime: new Date().toISOString(),
+        isDev: config.isDev,
+        ...configData
+      };
+    }
+  }
+
   // Try to load from cloud storage first
   try {
     log.verbose(`Attempting to load topic from cloud: ${topicId}`);
-    
+
     // Initialize cloud services if not already done
     const cloudInitialized = await initializeCloudServices();
     if (!cloudInitialized) {
       throw new Error('Cloud services not available');
     }
-    
+
     // Load topic from Firestore
     const topicResult = await topicService.loadTopic(topicId, 'default');
     const topicData = topicResult.data;

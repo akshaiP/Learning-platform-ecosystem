@@ -886,6 +886,13 @@ class TopicGenerator {
               console.warn(`task_steps[${index}].video missing type - assuming 'local'`);
               step.video.type = 'local';
             }
+
+            // Handle legacy "video" type by converting it to "local"
+            if (step.video.type === 'video') {
+              console.warn(`task_steps[${index}].video has legacy type 'video' - converting to 'local'`);
+              step.video.type = 'local';
+            }
+
             if (!['local', 'embed'].includes(step.video.type)) {
               throw new Error(`task_steps[${index}].video type must be 'local' or 'embed'`);
             }
