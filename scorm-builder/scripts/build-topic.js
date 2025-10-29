@@ -4,12 +4,18 @@ const { spawn } = require('child_process');
 const path = require('path');
 
 // Get arguments from command line
-const args = process.argv.slice(2);
+let args = process.argv.slice(2);
+
+// Check if topic is passed via environment variable (for web UI compatibility)
+if (process.env.npm_config_topic && !args.includes('--topic')) {
+  args = ['--topic', process.env.npm_config_topic, ...args];
+}
 
 // Build the complete command to run build.js with all arguments
-const buildProcess = spawn('node', [path.join(__dirname, '..', 'build.js'), ...args], {
+const buildJsPath = path.join(__dirname, '..', 'build.js');
+const buildProcess = spawn('node', [buildJsPath, ...args], {
   stdio: 'inherit',
-  shell: true
+  shell: false
 });
 
 buildProcess.on('exit', (code) => {
