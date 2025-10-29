@@ -440,7 +440,50 @@
                         <!-- Step Content -->
                         <div class="p-8 bg-white">
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <!-- Left Column: Images (single or carousel) -->
+                                <!-- Left Column: Images (single or carousel) or Video -->
+                                {{#video}}
+                                <div class="order-2 lg:order-1">
+                                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 shadow-soft">
+                                        <!-- Video Preview with Thumbnail -->
+                                        <div class="relative group cursor-pointer" onclick="openVideoModal('{{video.type}}', '{{video.src}}', '{{video.caption}}')">
+                                            <!-- Video Thumbnail Container -->
+                                            <div class="aspect-video bg-gray-900 rounded-xl overflow-hidden relative">
+                                                <!-- Local Video Preview -->
+                                                <video class="w-full h-full object-cover" muted preload="metadata">
+                                                    <source src="{{video.src}}" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
+
+                                                <!-- Video Overlay Icon -->
+                                                <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                                    <div class="bg-white/90 rounded-full p-4 shadow-lg">
+                                                        <i class="fas fa-play text-nebula-500 text-2xl ml-1"></i>
+                                                    </div>
+                                                </div>
+
+                                              </div>
+
+                                            <!-- Video Caption -->
+                                            {{#video.caption}}
+                                            <p class="text-sm text-gray-600 mt-3 font-medium text-center">{{video.caption}}</p>
+                                            {{/video.caption}}
+                                        </div>
+                                    </div>
+                                </div>
+                                {{/video}}
+
+                                {{#hasVideo}}
+                                {{^video}}
+                                <!-- Video fallback (shouldn't happen with validation) -->
+                                <div class="order-2 lg:order-1">
+                                    <div class="bg-red-50 border border-red-200 rounded-2xl p-4">
+                                        <p class="text-red-600 text-center">Video configuration error</p>
+                                    </div>
+                                </div>
+                                {{/video}}
+                                {{/hasVideo}}
+
+                                {{^hasVideo}}
                                 {{#image}}
                                 <div class="order-2 lg:order-1">
                                     <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 shadow-soft">
@@ -475,9 +518,10 @@
                                     </div>
                                 </div>
                                 {{/hasMultipleImages}}
-                                
+                                {{/hasVideo}}
+
                                 <!-- Right Column: Instructions and Code -->
-                                <div class="order-1 lg:order-2 {{^hasAnyImage}}lg:col-span-2{{/hasAnyImage}}">
+                                <div class="order-1 lg:order-2 {{^hasMedia}}lg:col-span-2{{/hasMedia}}">
                                     <!-- Instructions -->
                                     <div class="mb-6">
                                         <h5 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
@@ -961,6 +1005,34 @@
         </div>
     </div>
 
+    <!-- Video View Modal -->
+    <div id="videoModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300">
+        <div class="relative bg-black rounded-2xl shadow-strong max-w-6xl w-full max-h-[95vh] overflow-hidden m-2 flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-nebula-500 to-nebula-purple-500 text-white">
+                <h3 class="text-lg font-bold flex items-center">
+                    <i class="fas fa-play-circle mr-2"></i>
+                    Video Player
+                </h3>
+                <button onclick="closeVideoModal()" class="text-white hover:text-gray-200 transition-colors bg-white/20 rounded-full w-8 h-8 flex items-center justify-center hover:bg-white/30">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Video Container -->
+            <div class="flex-1 flex items-center justify-center bg-black min-h-[400px]">
+                <div id="videoContainer" class="w-full h-full aspect-video max-w-full max-h-full">
+                    <!-- Video content will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Video Caption -->
+            <div id="videoCaptionContainer" class="hidden p-4 bg-gray-900 text-white">
+                <p id="videoCaption" class="text-center text-sm"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- Template Initialization Script -->
     <script>
         // ✅ IMMEDIATE DATA LOADING - Load templateData right away, not in window.onload
@@ -1185,9 +1257,117 @@
 
         // Removed zoom/pan behavior for image modal; simple open/close only.
 
+        // Video modal handlers
+        function openVideoModal(type, src, caption) {
+            try {
+                const modal = document.getElementById('videoModal');
+                const container = document.getElementById('videoContainer');
+                const captionContainer = document.getElementById('videoCaptionContainer');
+                const captionElement = document.getElementById('videoCaption');
+
+                if (container) {
+                    container.innerHTML = '';
+
+                    if (type === 'local') {
+                        // Local video: use HTML5 video element
+                        const video = document.createElement('video');
+                        video.className = 'w-full h-full object-contain';
+                        video.controls = true;
+                        video.autoplay = true;
+                        video.innerHTML = `
+                            <source src="${src}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        `;
+                        container.appendChild(video);
+                    } else if (type === 'embed') {
+                        // Embed video: YouTube, Vimeo, etc.
+                        // Extract video ID from various URL formats
+                        let videoId = null;
+                        let embedUrl = src;
+
+                        // YouTube URL patterns
+                        if (src.includes('youtube.com/watch?v=')) {
+                            videoId = src.split('v=')[1]?.split('&')[0];
+                        } else if (src.includes('youtu.be/')) {
+                            videoId = src.split('youtu.be/')[1]?.split('?')[0];
+                        } else if (src.includes('youtube.com/embed/')) {
+                            videoId = src.split('youtube.com/embed/')[1]?.split('?')[0];
+                        }
+
+                        if (videoId) {
+                            embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autohide=1&showinfo=0&autoplay=1`;
+                        }
+
+                        const iframe = document.createElement('iframe');
+                        iframe.className = 'w-full h-full border-0';
+                        iframe.src = embedUrl;
+                        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                        iframe.allowFullscreen = true;
+                        iframe.title = 'Video Player';
+                        container.appendChild(iframe);
+                    }
+                }
+
+                // Set caption if provided
+                if (caption && captionElement && captionContainer) {
+                    captionElement.textContent = caption;
+                    captionContainer.classList.remove('hidden');
+                } else if (captionContainer) {
+                    captionContainer.classList.add('hidden');
+                }
+
+                // Show modal
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }
+
+            } catch (e) {
+                console.error('Error opening video modal:', e);
+                alert('Error playing video. Please try again.');
+            }
+        }
+
+        function closeVideoModal() {
+            const modal = document.getElementById('videoModal');
+            const container = document.getElementById('videoContainer');
+
+            // Clear video content to stop playback
+            if (container) {
+                container.innerHTML = '';
+            }
+
+            // Hide modal
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // Check if video modal is open
+        function isVideoModalOpen() {
+            const modal = document.getElementById('videoModal');
+            return !!(modal && !modal.classList.contains('hidden'));
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(ev) {
+            if (ev.key === 'Escape') {
+                if (isImageModalOpen()) closeImageModal();
+                if (isVideoModalOpen()) closeVideoModal();
+            }
+        });
+
+        // Close on backdrop click for video modal
+        document.getElementById('videoModal').addEventListener('click', function(ev) {
+            if (ev.target === this) closeVideoModal();
+        });
+
         // Expose globally for inline handlers
         window.openImageModal = openImageModal;
         window.closeImageModal = closeImageModal;
+        window.openVideoModal = openVideoModal;
+        window.closeVideoModal = closeVideoModal;
 </script>
 
     <!-- Voice Assistant Toggle Script -->

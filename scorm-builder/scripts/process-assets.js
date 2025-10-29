@@ -5,7 +5,9 @@ const path = require('path');
 class AssetProcessor {
   constructor() {
     this.supportedImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'];
+    this.supportedVideoTypes = ['.mp4', '.webm', '.ogg'];
     this.maxImageSize = 5 * 1024 * 1024; // 5MB limit
+    this.maxVideoSize = 50 * 1024 * 1024; // 50MB limit for videos
     this.optimizedSizes = {
       hero: { width: 1200, height: 675 }, // 16:9 aspect ratio
       task: { width: 600, height: 400 },
@@ -18,35 +20,48 @@ class AssetProcessor {
 
   async processTopicAssets(topicConfig, topicDir, tempDir) {
     console.log('🖼️ Processing topic assets for task-based learning template...');
-    
+
     try {
-      // Create assets directory in temp
-      const assetsDir = path.join(tempDir, 'assets', 'images');
-      await fs.ensureDir(assetsDir);
-      
+      // Create assets directories in temp
+      const imagesDir = path.join(tempDir, 'assets', 'images');
+      const videosDir = path.join(tempDir, 'assets', 'videos');
+      await fs.ensureDir(imagesDir);
+      await fs.ensureDir(videosDir);
+
       // Extract all image references from topic config (including company logo)
       const imageRefs = this.extractImageReferences(topicConfig);
-      
-      if (imageRefs.length === 0) {
-        console.log('ℹ️ No images found in topic configuration');
+      const videoRefs = this.extractVideoReferences(topicConfig);
+
+      if (imageRefs.length === 0 && videoRefs.length === 0) {
+        console.log('ℹ️ No images or videos found in topic configuration');
         return [];
       }
-      
+
       // Process each image
-      const processedImages = [];
+      const processedAssets = [];
       for (const imageRef of imageRefs) {
-        const processedImage = await this.processImage(imageRef, topicDir, assetsDir);
+        const processedImage = await this.processImage(imageRef, topicDir, imagesDir);
         if (processedImage) {
-          processedImages.push(processedImage);
+          processedAssets.push(processedImage);
         }
       }
-      
-      // Generate asset manifest
-      const manifest = this.generateAssetManifest(processedImages);
-      await fs.writeJSON(path.join(assetsDir, 'manifest.json'), manifest, { spaces: 2 });
-      
-      console.log(`✅ Processed ${processedImages.length}/${imageRefs.length} images successfully`);
-      return processedImages;
+
+      // Process each video
+      for (const videoRef of videoRefs) {
+        const processedVideo = await this.processVideo(videoRef, topicDir, videosDir);
+        if (processedVideo) {
+          processedAssets.push(processedVideo);
+        }
+      }
+
+      // Generate asset manifests
+      const imageManifest = this.generateAssetManifest(processedAssets.filter(asset => asset.type === 'image'));
+      const videoManifest = this.generateAssetManifest(processedAssets.filter(asset => asset.type === 'video'));
+      await fs.writeJSON(path.join(imagesDir, 'manifest.json'), imageManifest, { spaces: 2 });
+      await fs.writeJSON(path.join(videosDir, 'manifest.json'), videoManifest, { spaces: 2 });
+
+      console.log(`✅ Processed ${processedAssets.length}/${imageRefs.length + videoRefs.length} assets successfully`);
+      return processedAssets;
       
     } catch (error) {
       console.error('❌ Error processing assets:', error);
@@ -221,6 +236,108 @@ class AssetProcessor {
     return images;
   }
 
+  extractVideoReferences(config) {
+    const videos = [];
+
+    // Helper function to add video reference
+    const addVideo = (videoObj, context = 'general', required = false) => {
+      if (videoObj && videoObj.src && videoObj.type === 'local') {
+        // Only process local videos, not embed URLs
+        videos.push({
+          src: videoObj.src,
+          caption: videoObj.caption || '',
+          context: context,
+          required: required
+        });
+      }
+    };
+
+    // Extract videos from task steps
+    if (config.content?.task_steps && Array.isArray(config.content.task_steps)) {
+      config.content.task_steps.forEach((step, index) => {
+        if (step.video) {
+          addVideo({
+            ...step.video,
+            stepTitle: step.title,
+            stepIndex: index
+          }, 'task_step', false);
+        }
+      });
+    }
+
+    return videos;
+  }
+
+  async processVideo(videoRef, topicDir, outputDir) {
+    try {
+      // Check if this is a cloud URL (shouldn't happen for local videos, but just in case)
+      if (videoRef.src.startsWith('https://') || videoRef.src.startsWith('http://')) {
+        console.log(`🌐 Skipping cloud video URL: ${videoRef.src}`);
+        return {
+          original: videoRef,
+          filename: videoRef.src,
+          isCloudUrl: true,
+          type: 'video'
+        };
+      }
+
+      // Resolve the video path
+      const videoPath = this.resolveImagePath(videoRef.src, topicDir, 'video');
+
+      if (!fs.pathExistsSync(videoPath)) {
+        console.warn(`⚠️ Video not found: ${videoRef.src} (looked at: ${videoPath})`);
+        return null;
+      }
+
+      // Validate video file
+      const videoStats = await fs.stat(videoPath);
+      const fileExtension = path.extname(videoPath).toLowerCase();
+
+      if (!this.supportedVideoTypes.includes(fileExtension)) {
+        throw new Error(`Unsupported video format: ${fileExtension}. Supported formats: ${this.supportedVideoTypes.join(', ')}`);
+      }
+
+      if (videoStats.size > this.maxVideoSize) {
+        throw new Error(`Video file too large: ${videoStats.size} bytes. Maximum size: ${this.maxVideoSize} bytes`);
+      }
+
+      // Generate unique filename
+      const filename = this.generateVideoFilename(videoRef, fileExtension);
+      const outputPath = path.join(outputDir, filename);
+
+      // Copy video to output directory (no optimization for videos to maintain quality)
+      await fs.copy(videoPath, outputPath);
+
+      console.log(`✅ Processed video: ${videoRef.src} -> ${filename}`);
+
+      return {
+        original: videoRef,
+        filename: filename,
+        isCloudUrl: false,
+        type: 'video',
+        size: videoStats.size,
+        format: fileExtension
+      };
+
+    } catch (error) {
+      console.error(`❌ Error processing video ${videoRef.src}:`, error.message);
+      return null;
+    }
+  }
+
+  generateVideoFilename(videoRef, extension) {
+    // Generate a unique filename based on the context and original filename
+    const originalName = path.basename(videoRef.src, extension);
+    const sanitizedName = originalName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const timestamp = Date.now();
+
+    if (videoRef.stepIndex !== undefined) {
+      return `step_${videoRef.stepIndex}_${sanitizedName}_${timestamp}${extension}`;
+    }
+
+    return `${sanitizedName}_${timestamp}${extension}`;
+  }
+
   async processImage(imageRef, topicDir, outputDir) {
     try {
       // Check if this is a cloud URL (for default images)
@@ -355,23 +472,28 @@ class AssetProcessor {
     }
   }
 
-  resolveImagePath(srcPath, topicDir) {
+  resolveImagePath(srcPath, topicDir, assetType = 'image') {
     let filename = path.basename(srcPath);
-    
+
     // Handle different path formats
     if (srcPath.includes('assets/images/')) {
       filename = srcPath.replace(/^.*assets\/images\//, '');
+    } else if (srcPath.includes('assets/videos/')) {
+      filename = srcPath.replace(/^.*assets\/videos\//, '');
     }
-    
-    return path.join(topicDir, 'images', filename);
+
+    // Determine the appropriate folder based on asset type
+    const folderName = assetType === 'video' ? 'videos' : 'images';
+    return path.join(topicDir, folderName, filename);
   }
 
-  getAlternativePaths(srcPath, topicDir) {
+  getAlternativePaths(srcPath, topicDir, assetType = 'image') {
     const basename = path.basename(srcPath);
+    const folderName = assetType === 'video' ? 'videos' : 'images';
     return [
       path.join(topicDir, basename),
       path.join(topicDir, 'assets', basename),
-      path.join(topicDir, 'images', basename),
+      path.join(topicDir, folderName, basename),
       path.join(topicDir, 'logos', basename) // Additional path for logos
     ];
   }

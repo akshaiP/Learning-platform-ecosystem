@@ -64,6 +64,11 @@ The master template file that serves as the foundation for all generated SCORM p
                         "caption": "Image caption"
                     }
                 ],
+                "video": {
+                    "src": "video.mp4 or YouTube URL",
+                    "type": "local or embed",
+                    "caption": "Video caption"
+                },
                 "code": {
                     "content": "code content",
                     "language": "javascript"
@@ -262,7 +267,130 @@ window.templateData = JSON.parse(document.getElementById('templateData').textCon
 - Keyboard navigation support
 - High contrast support
 
-### 8. Template Customization Points
+### 8. Video Support in Task Steps
+
+The SCORM Builder now supports video content in task steps, providing an alternative to static images. Each task step can include either images OR video (not both), maintaining a clean and focused learning experience.
+
+#### Video Configuration
+
+Video content is configured using the `video` field in task steps:
+
+```json
+{
+  "title": "Step with Video Content",
+  "description": "Step description",
+  "instructions": "Step instructions",
+  "video": {
+    "src": "video-file.mp4",
+    "type": "local",
+    "caption": "Video caption text"
+  }
+}
+```
+
+#### Video Types
+
+**1. Local Videos (type: "local")**
+- Supported formats: MP4, WebM, OGG
+- Maximum file size: 50MB
+- Automatically processed and included in SCORM package
+- Rendered using HTML5 `<video>` element with controls
+
+```json
+{
+  "video": {
+    "src": "demo-video.mp4",
+    "type": "local",
+    "caption": "Watch the step-by-step demonstration"
+  }
+}
+```
+
+**2. Embedded Videos (type: "embed")**
+- Supports YouTube, Vimeo, and other video platforms
+- URLs are automatically converted to embed formats
+- Rendered in iframe with appropriate parameters
+- No file size limits (streamed from external platform)
+
+```json
+{
+  "video": {
+    "src": "https://www.youtube.com/watch?v=VIDEO_ID",
+    "type": "embed",
+    "caption": "Learn from this comprehensive tutorial"
+  }
+}
+```
+
+#### Video URL Formats
+
+**YouTube URLs:**
+- `https://www.youtube.com/watch?v=VIDEO_ID`
+- `https://youtu.be/VIDEO_ID`
+- `https://www.youtube.com/embed/VIDEO_ID`
+
+**Vimeo URLs:**
+- `https://vimeo.com/VIDEO_ID`
+
+#### UI/UX Features
+
+- **Video Preview**: Thumbnail with play button overlay
+- **Type Badge**: Visual indicator showing "Local Video" or "Online Video"
+- **Fullscreen Mode**: Click to open in modal with larger player
+- **Keyboard Navigation**: ESC to close modal
+- **Responsive Design**: Adapts to different screen sizes
+- **Accessibility**: ARIA labels and keyboard navigation support
+
+#### Technical Implementation
+
+- **Video Modal**: Professional modal overlay with dark background
+- **Local Video Processing**: Automatic file validation and path mapping
+- **Embed URL Conversion**: Intelligent parsing of video platform URLs
+- **Error Handling**: Fallback messages for failed video loads
+- **Asset Management**: Videos stored in `assets/videos/` directory
+
+#### Video vs Images
+
+Each task step can contain either images OR video, but not both:
+
+```json
+// ✅ Valid - Video only
+{
+  "video": {
+    "src": "demo.mp4",
+    "type": "local",
+    "caption": "Demo video"
+  }
+}
+
+// ✅ Valid - Images only
+{
+  "images": [
+    {
+      "src": "step1.png",
+      "alt": "Step 1",
+      "caption": "Step 1 illustration"
+    }
+  ]
+}
+
+// ❌ Invalid - Both images and video
+{
+  "images": [...],
+  "video": {...}
+}
+```
+
+#### Best Practices for Video Content
+
+1. **File Optimization**: Keep local videos under 50MB for optimal performance
+2. **Format Selection**: MP4 is recommended for best browser compatibility
+3. **Captions**: Always provide descriptive captions for accessibility
+4. **Duration**: Keep instructional videos concise (2-5 minutes ideal)
+5. **Quality**: Ensure good audio and video quality for learning effectiveness
+6. **Fallbacks**: For embed videos, ensure the external platform is accessible
+
+### 9. Template Customization Points
 
 #### Branding
 - Company logo integration
@@ -277,6 +405,7 @@ window.templateData = JSON.parse(document.getElementById('templateData').textCon
 #### Interactive Components
 - Carousel assistants for concepts
 - Voice assistant integration
+- Video content integration
 - Multi-language support potential
 
 ## File Dependencies

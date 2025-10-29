@@ -70,51 +70,52 @@ class TopicGenerator {
     }
   }
 
-  updateImagePaths(topicConfig, processedImages) {
+  updateImagePaths(topicConfig, processedAssets) {
     // Create a mapping of original src to processed filename
-    const imageMap = {};
-    processedImages.forEach(img => {
-      const originalSrc = img.original.src;
-      if (img.isCloudUrl) {
+    const assetMap = {};
+    processedAssets.forEach(asset => {
+      const originalSrc = asset.original.src;
+      if (asset.isCloudUrl) {
         // For cloud URLs, keep the original URL (will be handled by signed URL generation)
-        imageMap[originalSrc] = originalSrc;
+        assetMap[originalSrc] = originalSrc;
       } else {
-        // For local images, map to the processed assets path
-        imageMap[originalSrc] = `assets/images/${img.filename}`;
+        // For local assets, map to the processed assets path
+        const assetPath = asset.type === 'video' ? `assets/videos/${asset.filename}` : `assets/images/${asset.filename}`;
+        assetMap[originalSrc] = assetPath;
       }
     });
 
     // Update company logo
     if (topicConfig.content?.company_logo?.src) {
-      const newPath = imageMap[topicConfig.content.company_logo.src];
+      const newPath = assetMap[topicConfig.content.company_logo.src];
       if (newPath) {
         topicConfig.content.company_logo.src = newPath;
       }
     }
-    
+
     // Update hero image
     if (topicConfig.content?.hero_image?.src) {
-      const newPath = imageMap[topicConfig.content.hero_image.src];
+      const newPath = assetMap[topicConfig.content.hero_image.src];
       if (newPath) {
         topicConfig.content.hero_image.src = newPath;
       }
     }
-    
+
     // Update task images
     if (topicConfig.content?.task_images) {
       topicConfig.content.task_images.forEach(img => {
-        const newPath = imageMap[img.src];
+        const newPath = assetMap[img.src];
         if (newPath) {
           img.src = newPath;
         }
       });
     }
-    
+
     // Update concept images
     if (topicConfig.content?.concepts) {
       topicConfig.content.concepts.forEach(concept => {
         if (concept.image?.src) {
-          const newPath = imageMap[concept.image.src];
+          const newPath = assetMap[concept.image.src];
           if (newPath) {
             concept.image.src = newPath;
           }
@@ -125,22 +126,22 @@ class TopicGenerator {
           concept.interactive_carousel.slides.forEach(slide => {
             if (!slide || !slide.image) return;
             if (typeof slide.image === 'string') {
-              const mapped = imageMap[slide.image];
+              const mapped = assetMap[slide.image];
               if (mapped) slide.image = mapped;
             } else if (slide.image && slide.image.src) {
-              const mapped = imageMap[slide.image.src];
+              const mapped = assetMap[slide.image.src];
               if (mapped) slide.image.src = mapped;
             }
           });
         }
       });
     }
-    
+
     // Update hint step images (NEW)
     if (topicConfig.content?.hints) {
       topicConfig.content.hints.forEach(hint => {
         if (hint.step_image?.src) {
-          const newPath = imageMap[hint.step_image.src];
+          const newPath = assetMap[hint.step_image.src];
           if (newPath) {
             hint.step_image.src = newPath;
           }
@@ -148,12 +149,12 @@ class TopicGenerator {
       });
     }
     
-    // Update task step images (NEW)
+    // Update task step images and videos (NEW)
     if (topicConfig.content?.task_steps) {
       topicConfig.content.task_steps.forEach(step => {
         // Single image legacy
         if (step.image?.src) {
-          const newPath = imageMap[step.image.src];
+          const newPath = assetMap[step.image.src];
           if (newPath) {
             step.image.src = newPath;
           }
@@ -162,16 +163,27 @@ class TopicGenerator {
         if (Array.isArray(step.images)) {
           step.images.forEach(img => {
             if (img?.src) {
-              const newPath = imageMap[img.src];
+              const newPath = assetMap[img.src];
               if (newPath) img.src = newPath;
             }
           });
         }
-        
+
+        // Update video paths for local videos
+        if (step.video) {
+          if (step.video.type === 'local' && step.video.src) {
+            const newPath = assetMap[step.video.src];
+            if (newPath) {
+              step.video.src = newPath;
+            }
+          }
+          // For embed videos, keep the original URL
+        }
+
         // Update hint images
         if (step.hint) {
           if (step.hint.image?.src) {
-            const newPath = imageMap[step.hint.image.src];
+            const newPath = assetMap[step.hint.image.src];
             if (newPath) {
               step.hint.image.src = newPath;
             }
@@ -179,7 +191,7 @@ class TopicGenerator {
           if (Array.isArray(step.hint.images)) {
             step.hint.images.forEach(img => {
               if (img?.src) {
-                const newPath = imageMap[img.src];
+                const newPath = assetMap[img.src];
                 if (newPath) img.src = newPath;
               }
             });
@@ -192,7 +204,7 @@ class TopicGenerator {
     if (topicConfig.quiz) {
       // Legacy single question format
       if (topicConfig.quiz.explanation_image?.src) {
-        const newPath = imageMap[topicConfig.quiz.explanation_image.src];
+        const newPath = assetMap[topicConfig.quiz.explanation_image.src];
         if (newPath) {
           topicConfig.quiz.explanation_image.src = newPath;
         }
@@ -202,7 +214,7 @@ class TopicGenerator {
       if (topicConfig.quiz.questions && Array.isArray(topicConfig.quiz.questions)) {
         topicConfig.quiz.questions.forEach((question, index) => {
           if (question.explanation_image?.src) {
-            const newPath = imageMap[question.explanation_image.src];
+            const newPath = assetMap[question.explanation_image.src];
             if (newPath) {
               question.explanation_image.src = newPath;
             }
@@ -212,7 +224,7 @@ class TopicGenerator {
           if (question.images && Array.isArray(question.images)) {
             question.images.forEach((img, imgIndex) => {
               if (img.src) {
-                const newPath = imageMap[img.src];
+                const newPath = assetMap[img.src];
                 if (newPath) {
                   img.src = newPath;
                 }
@@ -269,6 +281,15 @@ class TopicGenerator {
           images = [step.image];
         }
 
+        // Check for video content (mutually exclusive with images)
+        let video = null;
+        if (step.video) {
+          video = step.video;
+          // Add convenience flags for template rendering
+          video.isLocal = video.type === 'local';
+          video.isEmbed = video.type === 'embed';
+        }
+
         // Normalize hint images similarly
         let hint = step.hint;
         if (hint && typeof hint === 'object') {
@@ -290,11 +311,14 @@ class TopicGenerator {
           images,
           // Preserve single image for backward-compat template conditions
           image: images && images.length === 1 ? images[0] : undefined,
+          video,
           ...step,
           hint,
           imagesLength,
           hintImagesLength,
-          hasAnyImage: imagesLength > 0
+          hasAnyImage: imagesLength > 0,
+          hasVideo: !!video,
+          hasMedia: imagesLength > 0 || !!video
         };
       });
     }
@@ -844,6 +868,33 @@ class TopicGenerator {
               if (!img.src) throw new Error(`task_steps[${index}].images[${imgIdx}] missing src`);
               if (!img.alt) console.warn(`task_steps[${index}].images[${imgIdx}] missing alt text for accessibility`);
             });
+          }
+
+          // Validate video if present (mutually exclusive with images)
+          if (step.video) {
+            if (step.images && step.images.length > 0) {
+              throw new Error(`task_steps[${index}] cannot have both images and video - use one media type per step`);
+            }
+            if (step.image) {
+              throw new Error(`task_steps[${index}] cannot have both image and video - use one media type per step`);
+            }
+
+            if (!step.video.src) {
+              throw new Error(`task_steps[${index}].video missing src`);
+            }
+            if (!step.video.type) {
+              console.warn(`task_steps[${index}].video missing type - assuming 'local'`);
+              step.video.type = 'local';
+            }
+            if (!['local', 'embed'].includes(step.video.type)) {
+              throw new Error(`task_steps[${index}].video type must be 'local' or 'embed'`);
+            }
+            if (step.video.type === 'local' && !step.video.src.match(/\.(mp4|webm|ogg)$/i)) {
+              console.warn(`task_steps[${index}].video.src should be a valid video file (mp4, webm, or ogg) for local videos`);
+            }
+            if (!step.video.caption) {
+              console.warn(`task_steps[${index}].video missing caption for accessibility`);
+            }
           }
           
           // Validate code if present (now supports string or object)
