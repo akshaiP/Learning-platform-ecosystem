@@ -252,11 +252,11 @@ class TopicService {
 
             const imagePrefix = `topics/${userId}/${topicId}/images/`;
             let files = await cloudServices.listFiles(imagePrefix);
-            
+
             await fs.ensureDir(localImagesPath);
-            
+
             const downloadedFiles = [];
-            
+
             if (files.length === 0) {
                 console.warn(`⚠️  No files found with prefix ${imagePrefix}. Falling back to root filenames if referenced.`);
             }
@@ -275,6 +275,41 @@ class TopicService {
             };
         } catch (error) {
             console.error(`❌ Failed to download images for topic ${topicId}:`, error);
+            throw error;
+        }
+    }
+
+    async downloadTopicVideos(topicId, localVideosPath, userId = 'default') {
+        try {
+            if (!this.initialized) {
+                await this.initialize();
+            }
+
+            const videoPrefix = `topics/${userId}/${topicId}/videos/`;
+            let files = await cloudServices.listFiles(videoPrefix);
+
+            await fs.ensureDir(localVideosPath);
+
+            const downloadedFiles = [];
+
+            if (files.length === 0) {
+                console.warn(`⚠️  No video files found with prefix ${videoPrefix}.`);
+            }
+
+            for (const file of files) {
+                const fileName = path.basename(file.name);
+                const localFilePath = path.join(localVideosPath, fileName);
+                await cloudServices.downloadFile(file.name, localFilePath);
+                downloadedFiles.push({ fileName, localPath: localFilePath, cloudPath: file.name });
+            }
+
+            console.log(`✅ Downloaded ${downloadedFiles.length} videos for topic: ${topicId}`);
+            return {
+                success: true,
+                downloadedFiles: downloadedFiles
+            };
+        } catch (error) {
+            console.error(`❌ Failed to download videos for topic ${topicId}:`, error);
             throw error;
         }
     }
@@ -332,6 +367,7 @@ class TopicService {
             // Create local directory
             await fs.ensureDir(localTopicPath);
             await fs.ensureDir(path.join(localTopicPath, 'images'));
+            await fs.ensureDir(path.join(localTopicPath, 'videos'));
 
             // Save config.json
             const configPath = path.join(localTopicPath, 'config.json');
@@ -339,14 +375,19 @@ class TopicService {
 
             // Download images
             const imagesPath = path.join(localTopicPath, 'images');
-            const downloadResult = await this.downloadTopicImages(topicId, imagesPath, userId);
+            const imageDownloadResult = await this.downloadTopicImages(topicId, imagesPath, userId);
+
+            // Download videos
+            const videosPath = path.join(localTopicPath, 'videos');
+            const videoDownloadResult = await this.downloadTopicVideos(topicId, videosPath, userId);
 
             console.log(`✅ Exported cloud topic to local: ${topicId}`);
             return {
                 success: true,
                 topicId: topicId,
                 localPath: localTopicPath,
-                downloadedImages: downloadResult.downloadedFiles.length
+                downloadedImages: imageDownloadResult.downloadedFiles.length,
+                downloadedVideos: videoDownloadResult.downloadedFiles.length
             };
         } catch (error) {
             console.error(`❌ Failed to export cloud topic ${topicId}:`, error);

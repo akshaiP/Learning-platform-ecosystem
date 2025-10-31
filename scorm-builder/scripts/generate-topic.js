@@ -169,9 +169,10 @@ class TopicGenerator {
           });
         }
 
-        // Update video paths for local videos
+        // Update video paths for local videos (simplified single video format)
         if (step.video) {
-          if (step.video.type === 'local' && step.video.src) {
+          if (step.video.src && !step.video.src.startsWith('http')) {
+            // Only update local videos, not embed URLs
             const newPath = assetMap[step.video.src];
             if (newPath) {
               step.video.src = newPath;

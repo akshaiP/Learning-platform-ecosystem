@@ -241,26 +241,32 @@ class AssetProcessor {
 
     // Helper function to add video reference
     const addVideo = (videoObj, context = 'general', required = false) => {
-      if (videoObj && videoObj.src && videoObj.type === 'local') {
-        // Only process local videos, not embed URLs
-        videos.push({
-          src: videoObj.src,
-          caption: videoObj.caption || '',
-          context: context,
-          required: required
-        });
+      if (videoObj && videoObj.src) {
+        // Only process local videos (non-URL), not embed URLs
+        if (!videoObj.src.startsWith('http')) {
+          videos.push({
+            src: videoObj.src,
+            caption: videoObj.caption || videoObj.alt || '',
+            context: context,
+            required: required
+          });
+        }
       }
     };
 
     // Extract videos from task steps
     if (config.content?.task_steps && Array.isArray(config.content.task_steps)) {
       config.content.task_steps.forEach((step, index) => {
+        // Handle single video (simplified format)
         if (step.video) {
-          addVideo({
-            ...step.video,
-            stepTitle: step.title,
-            stepIndex: index
-          }, 'task_step', false);
+          // Only process local videos, not embed URLs
+          if (step.video.src && !step.video.src.startsWith('http')) {
+            addVideo({
+              ...step.video,
+              stepTitle: step.title,
+              stepIndex: index
+            }, 'task_step', false);
+          }
         }
       });
     }

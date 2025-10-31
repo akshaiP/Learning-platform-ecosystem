@@ -8,7 +8,7 @@ const { buildTopic } = require('../build.js');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Configure multer for image uploads
+// Configure multer for image and video uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, 'public/uploads');
@@ -21,13 +21,14 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+// Image upload configuration
+const imageUpload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
-    
+
     if (mimetype && extname) {
       return cb(null, true);
     } else {
@@ -36,6 +37,26 @@ const upload = multer({
   },
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
+
+// Video upload configuration
+const videoUpload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /mp4|webm|ogg|mov|avi/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'].includes(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb('Error: Videos only (MP4, WebM, OGG, MOV, AVI)!');
+    }
+  },
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
+
+// General upload for backward compatibility (images only)
+const upload = imageUpload;
 
 // Middleware
 app.set('view engine', 'ejs');

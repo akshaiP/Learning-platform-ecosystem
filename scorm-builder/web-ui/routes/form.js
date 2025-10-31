@@ -238,18 +238,33 @@ router.get('/topics/:id', async (req, res) => {
     try {
         const topicId = req.params.id;
         const result = await topicService.loadTopic(topicId, 'default');
-        // Build image URL map from Cloud Storage
-        const prefix = `topics/default/${topicId}/images/`;
         const cloudServices = require('../../services/cloud-services');
-        const files = await cloudServices.listFiles(prefix);
+
+        // Build image URL map from Cloud Storage
+        const imagePrefix = `topics/default/${topicId}/images/`;
+        const imageFiles = await cloudServices.listFiles(imagePrefix);
         const imageUrls = {};
-        for (const f of files) {
+        for (const f of imageFiles) {
             const filename = require('path').basename(f.name);
             try {
                 const signed = await cloudServices.getSignedUrl(f.name, 3600);
                 imageUrls[filename] = signed;
             } catch (_) {
                 imageUrls[filename] = f.url; // fallback (may be 403 if bucket is private)
+            }
+        }
+
+        // Build video URL map from Cloud Storage
+        const videoPrefix = `topics/default/${topicId}/videos/`;
+        const videoFiles = await cloudServices.listFiles(videoPrefix);
+        const videoUrls = {};
+        for (const f of videoFiles) {
+            const filename = require('path').basename(f.name);
+            try {
+                const signed = await cloudServices.getSignedUrl(f.name, 3600);
+                videoUrls[filename] = signed;
+            } catch (_) {
+                videoUrls[filename] = f.url; // fallback (may be 403 if bucket is private)
             }
         }
 
@@ -267,7 +282,7 @@ router.get('/topics/:id', async (req, res) => {
             }
         }
 
-        res.json({ success: true, data: result.data, imageUrls });
+        res.json({ success: true, data: result.data, imageUrls, videoUrls });
     } catch (error) {
         console.error('Error loading topic:', error);
         res.status(404).json({ success: false, error: error.message });

@@ -1280,23 +1280,8 @@
                         `;
                         container.appendChild(video);
                     } else if (type === 'embed') {
-                        // Embed video: YouTube, Vimeo, etc.
-                        // Extract video ID from various URL formats
-                        let videoId = null;
-                        let embedUrl = src;
-
-                        // YouTube URL patterns
-                        if (src.includes('youtube.com/watch?v=')) {
-                            videoId = src.split('v=')[1]?.split('&')[0];
-                        } else if (src.includes('youtu.be/')) {
-                            videoId = src.split('youtu.be/')[1]?.split('?')[0];
-                        } else if (src.includes('youtube.com/embed/')) {
-                            videoId = src.split('youtube.com/embed/')[1]?.split('?')[0];
-                        }
-
-                        if (videoId) {
-                            embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autohide=1&showinfo=0&autoplay=1`;
-                        }
+                        // Embed video: use the embed URL directly (should already be processed)
+                        const embedUrl = src;
 
                         const iframe = document.createElement('iframe');
                         iframe.className = 'w-full h-full border-0';

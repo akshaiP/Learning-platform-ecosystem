@@ -10,18 +10,35 @@ const execAsync = promisify(exec);
 const cloudServices = require('../../services/cloud-services');
 const topicService = require('../../services/topic-service');
 
-// Configure multer for file uploads
+// Configure multer for file uploads (supports both images and videos)
 const upload = multer({
     dest: path.join(__dirname, '../public/uploads/temp'),
-    limits: { fileSize: 5 * 1024 * 1024 }
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit for videos
+    fileFilter: (req, file, cb) => {
+        // Allow both images and videos
+        const allowedImageTypes = /jpeg|jpg|png|gif|webp|svg/;
+        const allowedVideoTypes = /mp4|webm|ogg|mov|avi/;
+        const extname = allowedImageTypes.test(path.extname(file.originalname).toLowerCase()) ||
+                      allowedVideoTypes.test(path.extname(file.originalname).toLowerCase());
+        const allowedMimeTypes = [
+            'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+            'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'
+        ];
+        const mimetype = allowedMimeTypes.includes(file.mimetype);
+
+        if (mimetype && extname) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only image and video files are allowed'));
+        }
+    }
 });
 // Save topic draft to cloud (with images), no build
 router.post('/save', upload.any(), async (req, res) => {
     let topicId = null;
     const userId = 'default';
     try {
-        console.log('💾 Saving topic draft to cloud...');
-        if (!cloudServices.initialized) {
+                if (!cloudServices.initialized) {
             await cloudServices.initialize();
         }
 
@@ -35,20 +52,39 @@ router.post('/save', upload.any(), async (req, res) => {
             existingConfig = null;
         }
 
-        const deleteList = collectDeleteList(req.body);
+        const deleteListObj = collectDeleteList(req.body);
         const { config, uploads } = await buildConfigFromFormDataCloud(req.body, req.files, existingConfig);
-        if (deleteList.length) {
-            applyDeletionsToConfig(config, deleteList);
-            await deleteImagesFromCloud(deleteList, userId, topicId);
+        const allDeletions = [...deleteListObj.images, ...deleteListObj.videos];
+        if (allDeletions.length) {
+            applyDeletionsToConfig(config, allDeletions);
+            if (deleteListObj.images.length) {
+                await deleteImagesFromCloud(deleteListObj.images, userId, topicId);
+            }
+            if (deleteListObj.videos.length) {
+                await deleteVideosFromCloud(deleteListObj.videos, userId, topicId);
+            }
         }
 
         await topicService.saveTopic(config, userId, topicId);
 
         for (const uploadItem of uploads) {
-            const { localPath, targetFileName } = uploadItem;
-            const cloudPath = `topics/${userId}/${topicId}/images/${targetFileName}`;
-            await cloudServices.uploadFile(localPath, cloudPath, {
-                metadata: { topicId, userId, uploadedAt: new Date().toISOString() }
+            const { localPath, targetFileName, fileType } = uploadItem;
+            // Determine if this is a video or image based on file extension and fieldname
+            const fileExt = path.extname(targetFileName).toLowerCase();
+            const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
+            const isVideo = fileType === 'video' || videoExtensions.includes(fileExt) ||
+                           localPath.toLowerCase().includes('video');
+
+            const folder = isVideo ? 'videos' : 'images';
+            const cloudPath = `topics/${userId}/${topicId}/${folder}/${targetFileName}`;
+
+                        await cloudServices.uploadFile(localPath, cloudPath, {
+                metadata: {
+                    topicId,
+                    userId,
+                    uploadedAt: new Date().toISOString(),
+                    fileType: isVideo ? 'video' : 'image'
+                }
             });
         }
 
@@ -75,13 +111,7 @@ router.post('/generate', upload.any(), async (req, res) => {
     let topicId = null;
     const userId = 'default';
     try {
-        console.log('🚀 Starting SCORM generation (cloud-backed)...');
-        console.log('Raw form data keys:', Object.keys(req.body));
-        console.log('Files received:', req.files?.length || 0);
-        if (req.files && req.files.length) {
-            console.log('File fieldnames:', req.files.map(f => f.fieldname));
-        }
-
+        
         if (!cloudServices.initialized) {
             await cloudServices.initialize();
         }
@@ -99,22 +129,36 @@ router.post('/generate', upload.any(), async (req, res) => {
             existingConfig = null;
         }
 
-        const deleteList = collectDeleteList(req.body);
+        const deleteListObj = collectDeleteList(req.body);
         const { config, uploads } = await buildConfigFromFormDataCloud(req.body, req.files, existingConfig);
-        if (deleteList.length) {
-            applyDeletionsToConfig(config, deleteList);
-            await deleteImagesFromCloud(deleteList, userId, topicId);
+        const allDeletions = [...deleteListObj.images, ...deleteListObj.videos];
+        if (allDeletions.length) {
+            applyDeletionsToConfig(config, allDeletions);
+            if (deleteListObj.images.length) {
+                await deleteImagesFromCloud(deleteListObj.images, userId, topicId);
+            }
+            if (deleteListObj.videos.length) {
+                await deleteVideosFromCloud(deleteListObj.videos, userId, topicId);
+            }
         }
 
         // Save topic to Firestore
         await topicService.saveTopic(config, userId, topicId);
 
-        // Upload images to Cloud Storage
+        // Upload images and videos to Cloud Storage
         for (const uploadItem of uploads) {
             const { localPath, targetFileName } = uploadItem;
-            const cloudPath = `topics/${userId}/${topicId}/images/${targetFileName}`;
+            // Determine if it's a video file and use appropriate directory
+            const isVideo = targetFileName.match(/\.(mp4|webm|ogg|mov|avi)$/i);
+            const subDir = isVideo ? 'videos' : 'images';
+            const cloudPath = `topics/${userId}/${topicId}/${subDir}/${targetFileName}`;
             await cloudServices.uploadFile(localPath, cloudPath, {
-                metadata: { topicId, userId, uploadedAt: new Date().toISOString() }
+                metadata: {
+                    topicId,
+                    userId,
+                    uploadedAt: new Date().toISOString(),
+                    fileType: isVideo ? 'video' : 'image'
+                }
             });
         }
 
@@ -125,8 +169,7 @@ router.post('/generate', upload.any(), async (req, res) => {
             }
         }
 
-        console.log(`✅ Topic saved to cloud: ${topicId}`);
-
+        
         // Build using existing system (will load from cloud)
         const buildResult = await buildUsingExistingSystem(topicId);
         await extractForPreview();
@@ -162,20 +205,31 @@ router.post('/generate', upload.any(), async (req, res) => {
 
 // Build config and prepare uploads for cloud storage
 async function buildConfigFromFormDataCloud(body, files, existingConfig) {
-    console.log('🧩 Building topic config for cloud...');
-    const imageMap = {};
+        const imageMap = {};
     const uploads = [];
     if (files && files.length > 0) {
-        console.log(`📸 Processing ${files.length} uploaded images...`);
-        for (const file of files) {
+                for (const file of files) {
             const ext = path.extname(file.originalname || '') || path.extname(file.filename || '');
             // Use original filename (sanitized) to preserve names expected by templates
             const base = path.basename(file.originalname || file.filename || `image${Date.now()}${ext}`);
             const safeName = base.replace(/[^A-Za-z0-9._-]/g, '_');
             const newFilename = safeName;
+
+            // Determine file type
+            const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
+            const videoMimetypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+            const isVideo = videoExtensions.includes(ext.toLowerCase()) ||
+                           (file.mimetype && videoMimetypes.includes(file.mimetype)) ||
+                           file.fieldname.toLowerCase().includes('video');
+
             if (!imageMap[file.fieldname]) imageMap[file.fieldname] = [];
             imageMap[file.fieldname].push(newFilename);
-            uploads.push({ localPath: file.path, targetFileName: newFilename });
+            uploads.push({
+                localPath: file.path,
+                targetFileName: newFilename,
+                fileType: isVideo ? 'video' : 'image',
+                originalName: file.originalname || file.filename
+            });
         }
     }
 
@@ -215,13 +269,20 @@ async function buildConfigFromFormDataCloud(body, files, existingConfig) {
             const oldContent = existingConfig.content;
             const newContent = config.content;
 
-            // Task steps images merge by index
+            // Task steps images and videos merge by index
             if (Array.isArray(newContent.task_steps) && Array.isArray(oldContent.task_steps)) {
                 newContent.task_steps = newContent.task_steps.map((step, idx) => {
                     const prev = oldContent.task_steps[idx] || {};
                     const merged = { ...step };
+
+                    // Merge images if no new images were uploaded
                     if (!merged.images && Array.isArray(prev.images)) merged.images = prev.images;
-                                        if (merged.hint || prev.hint) {
+
+                    // Merge videos if no new videos were uploaded
+                    if (!merged.video && prev.video) merged.video = prev.video;
+
+                    // Merge hint content
+                    if (merged.hint || prev.hint) {
                         merged.hint = merged.hint || {};
                         if (!merged.hint.images && prev.hint && Array.isArray(prev.hint.images)) {
                             merged.hint.images = prev.hint.images;
@@ -390,7 +451,26 @@ function parseItemsFlexible(body, singularPrefix, pluralKey) {
         if (!match) continue;
         const [, itemId, field] = match;
         if (!itemData[itemId]) itemData[itemId] = {};
-        itemData[itemId][field] = value;
+
+        // Handle embed video data specifically
+        if (field === 'videoEmbed' && typeof value === 'string') {
+            try {
+                const embedData = JSON.parse(decodeURIComponent(value));
+                itemData[itemId].video = {
+                    id: embedData.id,
+                    originalUrl: embedData.originalUrl,
+                    embedUrl: embedData.embedUrl,
+                    platform: embedData.platform,
+                    title: embedData.title,
+                    source: 'embed'
+                };
+                            } catch (e) {
+                console.error(`❌ Error parsing embed video for ${singularPrefix} ${itemId}:`, e);
+                itemData[itemId][field] = value;
+            }
+        } else {
+            itemData[itemId][field] = value;
+        }
     }
 
     for (const [id, item] of Object.entries(itemData)) {
@@ -400,25 +480,58 @@ function parseItemsFlexible(body, singularPrefix, pluralKey) {
     return items;
 }
 
-// Process task steps with images
+// Process task steps with images and videos
 function processTaskSteps(taskSteps, imageMap) {
     return taskSteps.map((step) => {
+        
         const processedStep = {
             title: step.title || '',
             description: step.description || '',
             instructions: step.instructions || ''
         };
-        
+
+        // Handle asset type (images or videos)
+        if (step.assetType) {
+            processedStep.assetType = step.assetType;
+        }
+
         // Attach step images if uploaded: field name pattern `taskStep_${_id}_images`
         if (step._id) {
             const imagesKey = `taskStep_${step._id}_images`;
+            const videosKey = `taskStep_${step._id}_video`;
             const hintImagesKey = `taskStep_${step._id}_hintImages`;
+
+            // Process images
             if (imageMap[imagesKey]) {
                 processedStep.images = imageMap[imagesKey].map(fn => ({ src: fn, alt: step.title || 'Step image' }));
             }
+
+            // Process video (single)
+            if (imageMap[videosKey]) {
+                processedStep.video = {
+                    src: imageMap[videosKey][0], // Take first video
+                    alt: step.title || 'Step video',
+                    caption: step.title || 'Step video', // Add caption field for template
+                    type: 'local'
+                };
+            }
+
+            // Process hint images
             if (imageMap[hintImagesKey]) {
                 processedStep.hint = processedStep.hint || {};
                 processedStep.hint.images = imageMap[hintImagesKey].map(fn => ({ src: fn, alt: 'Hint image' }));
+            }
+
+            // Handle video embed from form data (single)
+            if (step.video && step.video.source === 'embed') {
+                processedStep.video = {
+                    src: step.video.embedUrl,
+                    alt: step.video.title || 'Embedded video',
+                    caption: step.video.title || 'Embedded video', // Add caption field for template
+                    type: 'embed',
+                    platform: step.video.platform,
+                    originalUrl: step.video.originalUrl
+                };
             }
         }
 
@@ -613,17 +726,13 @@ function parseOptions(options) {
 
 // Use your existing build system - FIXED working directory
 async function buildUsingExistingSystem(topicId) {
-    console.log('🔧 Running existing build system...');
-    
     // FIXED: Use the correct working directory (scorm-builder root)
     const workingDir = path.join(__dirname, '../..');
-    console.log('Working directory:', workingDir);
-    
+
     // Set environment variable for topic (same way your scripts work)
     const env = { ...process.env, npm_config_topic: topicId };
-    
+
     const buildCommand = `npm run build:topic`;
-    console.log('Executing:', buildCommand);
     
     try {
         const { stdout, stderr } = await execAsync(buildCommand, {
@@ -632,7 +741,6 @@ async function buildUsingExistingSystem(topicId) {
             timeout: 60000 // 60 second timeout
         });
         
-        console.log('Build output:', stdout);
         if (stderr) console.warn('Build warnings:', stderr);
     } catch (execError) {
         console.error('Build command failed:', execError);
@@ -668,8 +776,7 @@ async function buildUsingExistingSystem(topicId) {
 
 // Extract for preview using your existing system
 async function extractForPreview() {
-    console.log('📦 Extracting for preview...');
-    
+        
     const workingDir = path.join(__dirname, '../..');
     const extractCommand = `npm run extract`;
     
@@ -678,23 +785,53 @@ async function extractForPreview() {
         timeout: 30000
     });
     
-    console.log('✅ Extracted to test-output for preview');
-}
+    }
 
 module.exports = router;
 
 // Helpers for deletions
 function collectDeleteList(body) {
     // deleteImages may come as string or array of strings
-    const raw = body.deleteImages;
-    if (!raw) return [];
-    if (Array.isArray(raw)) return raw.filter(Boolean);
-    return [raw].filter(Boolean);
+    const rawImages = body.deleteImages;
+    const rawVideos = body.deleteVideos;
+
+    const imageList = [];
+    const videoList = [];
+
+    if (rawImages) {
+        if (Array.isArray(rawImages)) {
+            imageList.push(...rawImages.filter(Boolean));
+        } else {
+            imageList.push(rawImages);
+        }
+    }
+
+    if (rawVideos) {
+        if (Array.isArray(rawVideos)) {
+            videoList.push(...rawVideos.filter(Boolean));
+        } else {
+            videoList.push(rawVideos);
+        }
+    }
+
+    return { images: imageList, videos: videoList };
 }
 
 async function deleteImagesFromCloud(deleteList, userId, topicId) {
     for (const filename of deleteList) {
         const cloudPath = `topics/${userId}/${topicId}/images/${filename}`;
+        try {
+            await cloudServices.deleteFile(cloudPath);
+        } catch (e) {
+            // Log and continue
+            console.warn('Delete failed (continuing):', cloudPath, e.message);
+        }
+    }
+}
+
+async function deleteVideosFromCloud(deleteList, userId, topicId) {
+    for (const filename of deleteList) {
+        const cloudPath = `topics/${userId}/${topicId}/videos/${filename}`;
         try {
             await cloudServices.deleteFile(cloudPath);
         } catch (e) {
@@ -745,16 +882,26 @@ function applyDeletionsToConfig(config, deleteList) {
         });
     }
 
-    // Task steps and hints
+    // Task steps, videos, and hints
     if (Array.isArray(config.content.task_steps)) {
         config.content.task_steps = config.content.task_steps.map(s => {
             const next = { ...s };
+
+            // Filter images
             if (Array.isArray(next.images)) {
                 next.images = next.images.filter(img => !(img && shouldDelete(img.src)));
             }
+
+            // Filter single video
+            if (next.video && next.video.src && shouldDelete(next.video.src)) {
+                next.video = null;
+            }
+
+            // Filter hint images
             if (next.hint && Array.isArray(next.hint.images)) {
                 next.hint = { ...next.hint, images: next.hint.images.filter(img => !(img && shouldDelete(img.src))) };
             }
+
             return next;
         });
     }

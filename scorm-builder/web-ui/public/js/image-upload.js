@@ -259,5 +259,4 @@ document.addEventListener('DOMContentLoaded', function() {
     setupImagePreview('companyLogoInput', 'companyLogoPreview', true);
     setupImagePreview('heroImageInput', 'heroImagePreview', true);
     
-    console.log('✅ Image upload handler initialized');
-});
+    });

@@ -291,15 +291,21 @@ async function loadTopicConfig(topicId, config) {
     
     log.success(`✅ Loaded topic from cloud: ${topicId}`);
     
-    // Prepare a temporary topic directory with images subfolder for processing
+    // Prepare a temporary topic directory with images and videos subfolders for processing
     const tempTopicDir = path.join(__dirname, 'temp', `${topicId}-topic-${Date.now()}`);
     const tempImagesDir = path.join(tempTopicDir, 'images');
+    const tempVideosDir = path.join(tempTopicDir, 'videos');
     await fs.ensureDir(tempImagesDir);
+    await fs.ensureDir(tempVideosDir);
 
     try {
       // Try to download images from the expected prefix
       const downloadResult = await topicService.downloadTopicImages(topicId, tempImagesDir, 'default');
       log.verbose(`Downloaded ${downloadResult.downloadedFiles.length} images to temp topic directory`);
+
+      // Try to download videos from the expected prefix
+      const videoDownloadResult = await topicService.downloadTopicVideos(topicId, tempVideosDir, 'default');
+      log.verbose(`Downloaded ${videoDownloadResult.downloadedFiles.length} videos to temp topic directory`);
 
       // If nothing downloaded (legacy migration placed files at bucket root), try by filenames from config
       if (!downloadResult.downloadedFiles || downloadResult.downloadedFiles.length === 0) {

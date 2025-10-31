@@ -14,8 +14,7 @@ const totalPages = 4;
 function autoSave() {
     const data = collectFormData();
     localStorage.setItem('scormBuilder_draft', JSON.stringify(data));
-    console.log('Draft auto-saved');
-}
+    }
 
 // Load draft from localStorage
 function loadDraft() {
@@ -23,8 +22,7 @@ function loadDraft() {
     if (saved) {
         const data = JSON.parse(saved);
         populateForm(data);
-        console.log('Draft loaded');
-    }
+            }
 }
 
 // Learning Objectives Management
@@ -115,20 +113,99 @@ function addTaskStep() {
                       placeholder="// Code example for this step..."></textarea>
         </div>
 
-        <!-- Step Images (Multiple) -->
+        <!-- Asset Type Selection -->
         <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Asset Type <span class="text-gray-500 text-xs">(choose images or videos for this step)</span>
+            </label>
+            <div class="flex items-center space-x-4">
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="taskStep_${stepId}_assetType" value="images" checked
+                           onchange="toggleAssetType('${stepId}', 'images')"
+                           class="mr-2 text-purple-600 focus:ring-purple-500">
+                    <span class="text-sm text-gray-700">
+                        <i class="fas fa-images mr-1"></i>Images
+                    </span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                    <input type="radio" name="taskStep_${stepId}_assetType" value="videos"
+                           onchange="toggleAssetType('${stepId}', 'videos')"
+                           class="mr-2 text-purple-600 focus:ring-purple-500">
+                    <span class="text-sm text-gray-700">
+                        <i class="fas fa-video mr-1"></i>Videos
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Step Images (Multiple) -->
+        <div id="taskStep_${stepId}_images_section" class="mt-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">
                 Step Images <span class="text-gray-500 text-xs">(for multiple images, select them all at once and upload)</span>
             </label>
             <div class="flex items-center space-x-4">
                 <input type="file" multiple accept="image/*" class="hidden" id="taskStep_${stepId}_images_input" name="taskStep_${stepId}_images">
-                <button type="button" onclick="document.getElementById('taskStep_${stepId}_images_input').click()" 
+                <button type="button" onclick="document.getElementById('taskStep_${stepId}_images_input').click()"
                         class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-3 text-center hover:border-gray-400 transition-colors">
                     <i class="fas fa-images text-gray-400 mr-2"></i>
                     <span class="text-sm text-gray-600">Upload step images</span>
                 </button>
             </div>
             <div id="taskStep_${stepId}_images_preview" class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3"></div>
+        </div>
+
+        <!-- Step Video (Single) -->
+        <div id="taskStep_${stepId}_videos_section" class="mt-4 hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Step Video <span class="text-gray-500 text-xs">(upload local file or add embed link)</span>
+            </label>
+
+            <!-- Video Input Method Tabs -->
+            <div class="flex items-center space-x-2 mb-3">
+                <button type="button" id="taskStep_${stepId}_uploadTab"
+                        onclick="switchVideoInputMethod('${stepId}', 'upload')"
+                        class="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg border border-purple-300">
+                    <i class="fas fa-upload mr-1"></i>Local Upload
+                </button>
+                <button type="button" id="taskStep_${stepId}_embedTab"
+                        onclick="switchVideoInputMethod('${stepId}', 'embed')"
+                        class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg border border-gray-300">
+                    <i class="fas fa-link mr-1"></i>Embed Link
+                </button>
+            </div>
+
+            <!-- Local Upload Section -->
+            <div id="taskStep_${stepId}_uploadSection" class="video-input-section">
+                <div class="flex items-center space-x-4">
+                    <input type="file" accept="video/*" class="hidden" id="taskStep_${stepId}_video_input" name="taskStep_${stepId}_video">
+                    <button type="button" onclick="document.getElementById('taskStep_${stepId}_video_input').click()"
+                            class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg px-6 py-3 text-center hover:border-purple-400 transition-colors">
+                        <i class="fas fa-video text-gray-400 mr-2"></i>
+                        <span class="text-sm text-gray-600">Upload step video</span>
+                    </button>
+                </div>
+                <div id="taskStep_${stepId}_video_preview" class="mt-3"></div>
+            </div>
+
+            <!-- Embed Link Section -->
+            <div id="taskStep_${stepId}_embedSection" class="video-input-section hidden">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Video URL</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="url" id="taskStep_${stepId}_videoEmbedInput"
+                                   placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                            <button type="button" onclick="addVideoEmbed('${stepId}')"
+                                    class="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Add
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Supports YouTube, Vimeo, and other major platforms</p>
+                    </div>
+                    <div id="taskStep_${stepId}_embed_preview" class="mt-3"></div>
+                </div>
+            </div>
         </div>
         
         <!-- Task Page Section -->
@@ -215,10 +292,13 @@ function addTaskStep() {
     `;
     
     container.appendChild(div);
-    // Setup dynamic image previews
+    // Setup dynamic image and video previews
     if (typeof setupImagePreview === 'function') {
         setupImagePreview(`taskStep_${stepId}_images_input`, `taskStep_${stepId}_images_preview`, false);
         setupImagePreview(`taskStep_${stepId}_hintImages_input`, `taskStep_${stepId}_hintImages_preview`, false);
+    }
+    if (typeof setupVideoUpload === 'function') {
+        setupVideoUpload(`taskStep_${stepId}_video_input`, `taskStep_${stepId}_video_preview`, true);
     }
     
     // Focus on the new step and scroll to it
@@ -807,10 +887,10 @@ function toggleQuestionType(questionId, questionType, triggerEl) {
         console.error('Could not find question item for questionId:', questionId);
         return;
     }
-    
+
     const mcqOptions = questionItem.querySelectorAll('.mcq-option');
     const checkboxOptions = questionItem.querySelectorAll('.checkbox-option');
-    
+
     if (questionType === 'mcq') {
         mcqOptions.forEach(option => option.classList.remove('hidden'));
         checkboxOptions.forEach(option => option.classList.add('hidden'));
@@ -818,8 +898,206 @@ function toggleQuestionType(questionId, questionType, triggerEl) {
         mcqOptions.forEach(option => option.classList.add('hidden'));
         checkboxOptions.forEach(option => option.classList.remove('hidden'));
     }
-    
+
     autoSave();
+}
+
+// Video management functions
+function toggleAssetType(stepId, assetType, clearContent = true) {
+    const imagesSection = document.getElementById(`taskStep_${stepId}_images_section`);
+    const videosSection = document.getElementById(`taskStep_${stepId}_videos_section`);
+
+    if (assetType === 'images') {
+        imagesSection.classList.remove('hidden');
+        videosSection.classList.add('hidden');
+
+        // Clear videos and mark for deletion to prevent conflicts (only if clearContent is true)
+        if (clearContent) {
+            const videosPreview = document.getElementById(`taskStep_${stepId}_video_preview`);
+            const embedSection = document.getElementById(`taskStep_${stepId}_embedSection`);
+            if (videosPreview) {
+                // Mark existing videos for deletion
+                const videoElements = videosPreview.querySelectorAll('[data-file-id]');
+                videoElements.forEach(videoEl => {
+                    const filename = videoEl.dataset.fileId;
+                    if (filename) markVideoForDeletion(filename);
+                });
+                videosPreview.innerHTML = '';
+            }
+            if (embedSection) {
+                // Clear embed videos
+                const embedPreview = document.getElementById(`taskStep_${stepId}_embed_preview`);
+                if (embedPreview) {
+                    const embedInputs = embedPreview.querySelectorAll('input[name*="videoEmbed"]');
+                    embedInputs.forEach(input => {
+                        try {
+                            const embedData = JSON.parse(decodeURIComponent(input.value));
+                            if (embedData.originalUrl) {
+                                // For embed videos, we don't need to delete from cloud since they're URLs
+                                                            }
+                        } catch (e) {
+                            console.error('Error parsing embed data for deletion:', e);
+                        }
+                    });
+                    embedPreview.innerHTML = '';
+                }
+            }
+
+            // Clear video upload input
+            const videoInput = document.getElementById(`taskStep_${stepId}_video_input`);
+            if (videoInput) videoInput.value = '';
+        }
+
+    } else if (assetType === 'videos') {
+        imagesSection.classList.add('hidden');
+        videosSection.classList.remove('hidden');
+
+        // Clear images and mark for deletion to prevent conflicts (only if clearContent is true)
+        if (clearContent) {
+            const imagesPreview = document.getElementById(`taskStep_${stepId}_images_preview`);
+            if (imagesPreview) {
+                // Mark existing images for deletion
+                const imageElements = imagesPreview.querySelectorAll('[onclick*="removeLoadedMultiImage"]');
+                imageElements.forEach(imgEl => {
+                    const onclick = imgEl.getAttribute('onclick');
+                    const filenameMatch = onclick.match(/'([^']+)'/);
+                    if (filenameMatch) markImageForDeletion(filenameMatch[1]);
+                });
+                imagesPreview.innerHTML = '';
+            }
+
+            // Clear image upload input
+            const imagesInput = document.getElementById(`taskStep_${stepId}_images_input`);
+            if (imagesInput) imagesInput.value = '';
+        }
+    }
+
+    autoSave();
+}
+
+function switchVideoInputMethod(stepId, method) {
+    const uploadTab = document.getElementById(`taskStep_${stepId}_uploadTab`);
+    const embedTab = document.getElementById(`taskStep_${stepId}_embedTab`);
+    const uploadSection = document.getElementById(`taskStep_${stepId}_uploadSection`);
+    const embedSection = document.getElementById(`taskStep_${stepId}_embedSection`);
+
+    if (method === 'upload') {
+        // Switch to upload tab
+        uploadTab.className = 'px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg border border-purple-300';
+        embedTab.className = 'px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg border border-gray-300';
+
+        uploadSection.classList.remove('hidden');
+        embedSection.classList.add('hidden');
+    } else if (method === 'embed') {
+        // Switch to embed tab
+        uploadTab.className = 'px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg border border-gray-300';
+        embedTab.className = 'px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg border border-purple-300';
+
+        uploadSection.classList.add('hidden');
+        embedSection.classList.remove('hidden');
+    }
+}
+
+async function addVideoEmbed(stepId) {
+    const input = document.getElementById(`taskStep_${stepId}_videoEmbedInput`);
+    const url = input.value.trim();
+
+    if (!url) {
+        alert('Please enter a video URL');
+        return;
+    }
+
+    // Show loading state
+    const button = input.nextElementSibling;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Validating...';
+    button.disabled = true;
+
+    try {
+        // Validate the embed URL
+        const response = await fetch('/upload/video/validate-embed', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ embedUrl: url })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Invalid video URL');
+        }
+
+        // Create embed preview
+        const embedData = {
+            id: `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            originalUrl: url,
+            embedUrl: result.embedUrl,
+            platform: result.platform,
+            title: `${result.platform.charAt(0).toUpperCase() + result.platform.slice(1)} Video`
+        };
+
+        const previewContainer = document.getElementById(`taskStep_${stepId}_embed_preview`);
+        // Clear any existing embed and add the new one
+        previewContainer.innerHTML = '';
+        const embedElement = createEmbedPreview(embedData, stepId);
+        previewContainer.appendChild(embedElement);
+
+        // Clear input and reset tab
+        input.value = '';
+        button.innerHTML = originalText;
+        button.disabled = false;
+
+        autoSave();
+
+    } catch (error) {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        alert(`Error: ${error.message}`);
+    }
+}
+
+function createEmbedPreview(embedData, stepId) {
+    const div = document.createElement('div');
+    div.className = 'relative group border border-purple-200 rounded-lg p-3 bg-purple-50';
+    div.dataset.embedId = embedData.id;
+
+    // Get platform icon
+    let platformIcon = 'fa-video';
+    if (embedData.platform === 'youtube') platformIcon = 'fa-youtube';
+    else if (embedData.platform === 'vimeo') platformIcon = 'fa-vimeo';
+    else if (embedData.platform === 'loom') platformIcon = 'fa-play-circle';
+
+    div.innerHTML = `
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <div class="flex items-center mb-2">
+                    <i class="fas ${platformIcon} text-purple-600 mr-2"></i>
+                    <span class="text-sm font-medium text-gray-900">${embedData.title}</span>
+                </div>
+                <p class="text-xs text-gray-600 truncate" title="${embedData.originalUrl}">${embedData.originalUrl}</p>
+                <p class="text-xs text-purple-600 mt-1">Platform: ${embedData.platform}</p>
+            </div>
+            <button type="button" onclick="removeVideoEmbed('${stepId}', '${embedData.id}')"
+                    class="ml-3 text-red-500 hover:text-red-700 p-1">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Hidden input for form data -->
+        <input type="hidden" name="taskStep_${stepId}_videoEmbed" value="${encodeURIComponent(JSON.stringify(embedData))}">
+    `;
+
+    return div;
+}
+
+function removeVideoEmbed(stepId, embedId) {
+    const embedElement = document.querySelector(`[data-embed-id="${embedId}"]`);
+    if (embedElement) {
+        embedElement.remove();
+        autoSave();
+    }
 }
 
 // Form Data Collection
@@ -859,7 +1137,7 @@ function collectFormData() {
 function collectTaskStepsData() {
     const steps = [];
     const stepElements = document.querySelectorAll('.task-step-item');
-    
+
     stepElements.forEach((element, index) => {
         const stepData = {
             title: element.querySelector(`input[name*="taskStep_step_${index + 1}_title"]`)?.value || '',
@@ -871,22 +1149,96 @@ function collectTaskStepsData() {
             hintCode: element.querySelector(`textarea[name*="taskStep_step_${index + 1}_hintCode"]`)?.value || '',
             hintCodeLanguage: element.querySelector(`select[name*="taskStep_step_${index + 1}_hintCodeLanguage"]`)?.value || ''
         };
-        
+
+        // Add asset type information
+        const assetType = element.querySelector(`input[name*="taskStep_step_${index + 1}_assetType"]:checked`)?.value || 'images';
+        stepData.assetType = assetType;
+
+        // Add image data if asset type is images
+        if (assetType === 'images') {
+            const images = [];
+            const imagePreviews = element.querySelector(`#taskStep_step_${index + 1}_images_preview`);
+            if (imagePreviews) {
+                const imageElements = imagePreviews.querySelectorAll('[data-file-id]');
+                imageElements.forEach(imgEl => {
+                    const fileId = imgEl.dataset.fileId;
+                    // Get file info from upload handler
+                    const uploadedFile = imageUploadHandler.uploadedFiles.get(fileId);
+                    if (uploadedFile && uploadedFile.file) {
+                        images.push({
+                            fileId: fileId,
+                            name: uploadedFile.file.name,
+                            size: uploadedFile.file.size,
+                            type: uploadedFile.file.type
+                        });
+                    }
+                });
+            }
+            stepData.images = images;
+        }
+
+        // Add video data if asset type is videos
+        if (assetType === 'videos') {
+            let video = null;
+
+            // Get uploaded video file (single)
+            const videoPreview = element.querySelector(`#taskStep_step_${index + 1}_video_preview`);
+            if (videoPreview) {
+                const videoElement = videoPreview.querySelector('[data-file-id]');
+                if (videoElement) {
+                    const fileId = videoElement.dataset.fileId;
+                    const uploadedVideo = videoUploadHandler.uploadedVideos.get(fileId);
+                    if (uploadedVideo && uploadedVideo.file) {
+                                                video = {
+                            fileId: fileId,
+                            name: uploadedVideo.file.name,
+                            size: uploadedVideo.file.size,
+                            type: uploadedVideo.file.type,
+                            duration: uploadedVideo.duration,
+                            width: uploadedVideo.width,
+                            height: uploadedVideo.height,
+                            source: 'upload'
+                        };
+                    }
+                }
+            }
+
+            // Get embed video (single)
+            const embedInput = element.querySelector(`input[name*="taskStep_step_${index + 1}_videoEmbed"]`);
+            if (embedInput) {
+                try {
+                    const embedData = JSON.parse(decodeURIComponent(embedInput.value));
+                                        video = {
+                        id: embedData.id,
+                        originalUrl: embedData.originalUrl,
+                        embedUrl: embedData.embedUrl,
+                        platform: embedData.platform,
+                        title: embedData.title,
+                        source: 'embed'
+                    };
+                } catch (e) {
+                    console.error('Error parsing embed data:', e);
+                }
+            }
+
+                        stepData.video = video;
+        }
+
         // Add task page data if enabled and URL is provided
         const taskPageEnabled = element.querySelector(`input[name*="taskStep_step_${index + 1}_taskPage_enabled"]`)?.checked;
         const taskPageUrl = element.querySelector(`input[name*="taskStep_step_${index + 1}_taskPageUrl"]`)?.value || '';
-        
+
         if (taskPageEnabled && taskPageUrl) {
             stepData.taskPage = {
                 url: taskPageUrl
             };
         }
-        
+
         if (stepData.title) {
             steps.push(stepData);
         }
     });
-    
+
     return steps;
 }
 
@@ -1115,8 +1467,7 @@ async function generateSCORM(showPreview = false) {
         showLoadingModal('Generating SCORM Package', 'Building your learning content...');
         
         const data = collectFormData();
-        console.log('Sending form data:', data); // Debug log
-        
+                
         // Create FormData for file uploads - this includes ALL form inputs including files
         const formData = new FormData(document.getElementById('scormForm'));
         
@@ -1136,28 +1487,7 @@ async function generateSCORM(showPreview = false) {
         formData.set('quizTitle', data.quizTitle);
         formData.set('quizDescription', data.quizDescription);
         
-        // Debug: Log all FormData entries
-        console.log('FormData entries:');
-        for (let [key, value] of formData.entries()) {
-            if (value instanceof File) {
-                console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
-            } else {
-                const maxLength = 200;
-                const displayValue = value.length > maxLength ? value.substring(0, maxLength) + '...' : value;
-                console.log(`${key}: ${displayValue}`);
-            }
-        }
-        
-        // Debug: Log the task steps data being sent
-        console.log('🔍 Generating with task steps:', JSON.stringify(data.taskSteps, null, 2));
-        
-        // Debug: Check if file inputs exist in DOM
-        console.log('File inputs in DOM:');
-        const fileInputs = document.querySelectorAll('input[type="file"]');
-        fileInputs.forEach(input => {
-            console.log(`Found file input: name="${input.name}", id="${input.id}", files=${input.files.length}`);
-        });
-        
+                
         const response = await fetch('/build/generate', {
             method: 'POST',
             body: formData
@@ -1488,7 +1818,7 @@ async function loadTopicFromCloud() {
         const res = await fetch(`/form/topics/${encodeURIComponent(topicId)}`);
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Load failed');
-        populateFormFromCloudConfig(data.data, data.imageUrls || {});
+                populateFormFromCloudConfig(data.data, data.imageUrls || {}, data.videoUrls || {});
         showToast('Topic loaded', 'success');
     } catch (e) {
         showToast(`Load failed: ${e.message}`, 'error');
@@ -1522,7 +1852,7 @@ async function deleteTopicFromCloud() {
     }
 }
 
-function populateFormFromCloudConfig(config, imageUrls) {
+function populateFormFromCloudConfig(config, imageUrls, videoUrls) {
     const form = document.getElementById('scormForm');
     form.querySelector('input[name="title"]').value = config.title || '';
     form.querySelector('input[name="topicId"]').value = config.id || '';
@@ -1584,7 +1914,15 @@ function populateFormFromCloudConfig(config, imageUrls) {
             document.querySelector(`textarea[name="taskStep_step_${i}_hintCode"]`).value = (step.hint.code && step.hint.code.content) || '';
             document.querySelector(`select[name="taskStep_step_${i}_hintCodeLanguage"]`).value = (step.hint.code && step.hint.code.language) || '';
         }
-        // Step images preview
+        // Handle asset type - determine if this step has images or videos
+        let assetType = 'images';
+        if (step.assetType) {
+            assetType = step.assetType;
+        } else if (step.video) {
+            assetType = 'videos';
+        }
+
+        // Step images preview - load BEFORE toggling asset type
         const stepImages = Array.isArray(step.images) ? step.images : [];
         if (stepImages.length) {
             const preview = document.getElementById(`taskStep_step_${i}_images_preview`);
@@ -1597,6 +1935,56 @@ function populateFormFromCloudConfig(config, imageUrls) {
                     }
                 });
             }
+        }
+
+        // Step video preview (single video) - load BEFORE toggling asset type
+        if (step.video) {
+                        const preview = document.getElementById(`taskStep_step_${i}_video_preview`);
+            if (preview) {
+                preview.innerHTML = '';
+
+                if (step.video.type === 'embed' && step.video.src) {
+                                        // Show embed video preview
+                    const embedData = {
+                        id: `embed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        originalUrl: step.video.originalUrl || step.video.src,
+                        embedUrl: step.video.src,
+                        platform: step.video.platform || 'unknown',
+                        title: step.video.alt || step.video.title || 'Embedded Video'
+                    };
+                    // Add embed video to the correct embed preview container
+                    const embedPreviewContainer = document.getElementById(`taskStep_step_${i}_embed_preview`);
+                                        if (embedPreviewContainer) {
+                        embedPreviewContainer.innerHTML = '';
+                        const embedElement = createEmbedPreview(embedData, `step_${i}`);
+                        embedPreviewContainer.appendChild(embedElement);
+                                            }
+
+                    // Switch to embed tab
+                    switchVideoInputMethod(`step_${i}`, 'embed');
+                } else if (step.video.src && !step.video.src.startsWith('http')) {
+                                        // Show local video preview
+                    const url = videoUrls[step.video.src] || '';
+                                        if (url) {
+                        renderLoadedVideoThumb(preview, url, step.video.src, step.video.alt || 'Step video');
+                                            }
+                    // Switch to upload tab
+                    switchVideoInputMethod(`step_${i}`, 'upload');
+                } else {
+                                    }
+            }
+        } else {
+                    }
+
+        // Set the correct asset type radio button - do this AFTER loading previews
+        const imagesRadio = document.querySelector(`input[name="taskStep_step_${i}_assetType"][value="images"]`);
+        const videosRadio = document.querySelector(`input[name="taskStep_step_${i}_assetType"][value="videos"]`);
+        if (assetType === 'videos' && videosRadio) {
+            videosRadio.checked = true;
+            toggleAssetType(`step_${i}`, 'videos', false); // Don't clear existing content during form loading
+        } else if (imagesRadio) {
+            imagesRadio.checked = true;
+            toggleAssetType(`step_${i}`, 'images', false); // Don't clear existing content during form loading
         }
         // Hint images preview
         if (step.hint && Array.isArray(step.hint.images)) {
@@ -1775,6 +2163,27 @@ function markImageForDeletion(filename) {
     container.appendChild(input);
 }
 
+function ensureDeleteVideosContainer() {
+    let container = document.getElementById('deleteVideosContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'deleteVideosContainer';
+        container.className = 'hidden';
+        const form = document.getElementById('scormForm');
+        form.appendChild(container);
+    }
+    return container;
+}
+
+function markVideoForDeletion(filename) {
+    const container = ensureDeleteVideosContainer();
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'deleteVideos';
+    input.value = filename;
+    container.appendChild(input);
+}
+
 function renderSingleLoadedImagePreview(previewId, inputId, url, filename, altText) {
     const preview = document.getElementById(previewId);
     if (!preview) return;
@@ -1807,6 +2216,32 @@ function renderMultiLoadedImageThumb(previewContainer, url, filename, altText) {
     previewContainer.appendChild(item);
 }
 
+function renderLoadedVideoThumb(previewContainer, url, filename, altText) {
+    const item = document.createElement('div');
+    item.className = 'relative inline-block';
+    item.dataset.fileId = filename; // for deletion tracking
+    item.innerHTML = `
+        <div class="relative w-48 h-32">
+            <video class="w-full h-full object-cover rounded-lg shadow-md bg-gray-900" muted preload="metadata">
+                <source src="${url}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                <div class="bg-white bg-opacity-90 rounded-full p-2 shadow-lg">
+                    <i class="fas fa-play text-purple-600 text-sm ml-0.5"></i>
+                </div>
+            </div>
+            <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                title="Remove video"
+                onclick="removeLoadedVideo(this, '${filename}')">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        <p class="text-xs text-gray-600 mt-1 text-center w-48 truncate">${altText || 'Video'}</p>
+    `;
+    previewContainer.appendChild(item);
+}
+
 // Global functions for onclick
 function removeLoadedSingleImage(previewId, inputId, filename) {
     const preview = document.getElementById(previewId);
@@ -1826,6 +2261,13 @@ function removeLoadedMultiImage(button, filename) {
     const item = button.closest('.relative');
     if (item) item.remove();
     if (filename) markImageForDeletion(filename);
+    autoSave();
+}
+
+function removeLoadedVideo(button, filename) {
+    const item = button.closest('.relative');
+    if (item) item.remove();
+    if (filename) markVideoForDeletion(filename);
     autoSave();
 }
 
@@ -1926,8 +2368,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    console.log('SCORM Builder form initialized');
-    // Always refresh topic list on DOM ready
+        // Always refresh topic list on DOM ready
     listTopics().catch(() => {});
 });
 
