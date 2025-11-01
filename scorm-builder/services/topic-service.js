@@ -1,4 +1,5 @@
 const cloudServices = require('./cloud-services');
+const lrsSyncService = require('./lrs-sync-service');
 const path = require('path');
 const fs = require('fs-extra');
 const { v4: uuidv4 } = require('uuid');
@@ -8,6 +9,7 @@ class TopicService {
         this.db = null;
         this.bucket = null;
         this.initialized = false;
+        this.lastLRSError = null;
     }
 
     async initialize() {
@@ -59,11 +61,24 @@ class TopicService {
             // Save to Firestore
             await this.db.collection('topics').doc(topicId).set(topicDoc);
 
+            // Sync quiz and task content to LRS backend (non-blocking)
+            this.syncToLRS(topicData).catch(error => {
+                console.warn(`⚠️  LRS sync failed for topic ${topicId}:`, error.message);
+                // Log failure for user notification (handled in frontend)
+                this.lastLRSError = {
+                    type: 'save',
+                    topicId: topicId,
+                    message: 'Failed to save to LRS content inventory',
+                    error: error.message
+                };
+            });
+
             console.log(`✅ Topic saved to Firestore: ${topicId}`);
             return {
                 success: true,
                 topicId: topicId,
-                data: topicDoc
+                data: topicDoc,
+                lrsError: this.lastLRSError || null
             };
         } catch (error) {
             console.error(`❌ Failed to save topic:`, error);
@@ -200,11 +215,26 @@ class TopicService {
 
             await this.db.collection('topics').doc(topicId).update(updateDoc);
 
+            // Sync quiz and task content to LRS backend (non-blocking)
+            // Ensure updateData includes topicId for LRS sync
+            const syncData = { ...updateData, topicId };
+            this.syncToLRS(syncData).catch(error => {
+                console.warn(`⚠️  LRS sync failed for updated topic ${topicId}:`, error.message);
+                // Log failure for user notification (handled in frontend)
+                this.lastLRSError = {
+                    type: 'save',
+                    topicId: topicId,
+                    message: 'Failed to save to LRS content inventory',
+                    error: error.message
+                };
+            });
+
             console.log(`✅ Topic updated: ${topicId}`);
             return {
                 success: true,
                 topicId: topicId,
-                data: updateDoc
+                data: updateDoc,
+                lrsError: this.lastLRSError || null
             };
         } catch (error) {
             console.error(`❌ Failed to update topic ${topicId}:`, error);
@@ -221,13 +251,34 @@ class TopicService {
             // Check if topic exists and user has access
             await this.loadTopic(topicId, userId);
 
+            // Delete content inventory from LRS backend (non-blocking)
+            let lrsDeleteResult = null;
+            try {
+                lrsDeleteResult = await lrsSyncService.deleteContentInventory(topicId);
+                if (lrsDeleteResult.success) {
+                    console.log(`✅ LRS content deleted for topic: ${topicId}`);
+                } else {
+                    console.warn(`⚠️  LRS content deletion failed for topic ${topicId}:`, lrsDeleteResult.message);
+                }
+            } catch (lrsError) {
+                console.warn(`⚠️  LRS content deletion failed for topic ${topicId}:`, lrsError.message);
+                // Log failure for user notification (handled in frontend)
+                this.lastLRSError = {
+                    type: 'delete',
+                    topicId: topicId,
+                    message: 'Failed to delete from LRS content inventory',
+                    error: lrsError.message
+                };
+                // Don't throw error - LRS deletion failure should not block topic deletion
+            }
+
             // Delete topic from Firestore
             await this.db.collection('topics').doc(topicId).delete();
 
             // Delete associated images from Cloud Storage
             const imagePrefix = `topics/${userId}/${topicId}/images/`;
             const files = await cloudServices.listFiles(imagePrefix);
-            
+
             for (const file of files) {
                 await cloudServices.deleteFile(file.name);
             }
@@ -236,7 +287,9 @@ class TopicService {
             return {
                 success: true,
                 topicId: topicId,
-                deletedImages: files.length
+                deletedImages: files.length,
+                lrsDeleteResult: lrsDeleteResult,
+                lrsError: this.lastLRSError || null
             };
         } catch (error) {
             console.error(`❌ Failed to delete topic ${topicId}:`, error);
@@ -431,6 +484,105 @@ class TopicService {
             console.error(`❌ Failed to get topic stats for user ${userId}:`, error);
             throw error;
         }
+    }
+
+    /**
+     * Sync quiz and task content to LRS backend
+     * LRS API details: see LRS_API_DOCUMENTATION.md
+     * @param {Object} topicData - Topic data to sync
+     * @returns {Promise<Object>} Sync result
+     */
+    async syncToLRS(topicData) {
+        try {
+            console.log(`🔄 Starting LRS sync for topic: ${topicData.topicId || 'unknown'}`);
+            const syncResult = await lrsSyncService.syncContentInventory(topicData);
+
+            if (syncResult.success) {
+                console.log(`✅ LRS sync completed for topic: ${topicData.topicId}`);
+            } else {
+                console.warn(`⚠️  LRS sync completed with issues for topic: ${topicData.topicId}:`, syncResult.message);
+            }
+
+            return syncResult;
+        } catch (error) {
+            console.error(`❌ LRS sync error for topic: ${topicData.topicId || 'unknown'}:`, error);
+            // Don't throw error - LRS sync is non-critical
+            return {
+                success: false,
+                message: error.message,
+                synced: false
+            };
+        }
+    }
+
+    /**
+     * Get LRS sync status for a topic
+     * @param {string} subtopicId - Subtopic ID (topicId)
+     * @returns {Object} Sync status
+     */
+    getLRSSyncStatus(subtopicId) {
+        return lrsSyncService.getSyncStatus(subtopicId);
+    }
+
+    /**
+     * Get all LRS sync statuses
+     * @returns {Object} All sync statuses
+     */
+    getAllLRSSyncStatuses() {
+        return lrsSyncService.getAllSyncStatuses();
+    }
+
+    /**
+     * Manual re-sync of topic content to LRS
+     * @param {Object} topicData - Topic data to re-sync
+     * @returns {Promise<Object>} Re-sync result
+     */
+    async resyncToLRS(topicData) {
+        try {
+            console.log(`🔄 Manual LRS re-sync requested for topic: ${topicData.topicId || 'unknown'}`);
+            return await lrsSyncService.resyncContent(topicData);
+        } catch (error) {
+            console.error(`❌ Manual LRS re-sync failed for topic: ${topicData.topicId || 'unknown'}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Test LRS API connection
+     * @returns {Promise<Object>} Test result
+     */
+    async testLRSConnection() {
+        try {
+            return await lrsSyncService.testConnection();
+        } catch (error) {
+            console.error(`❌ LRS connection test failed:`, error);
+            return {
+                success: false,
+                message: error.message
+            };
+        }
+    }
+
+    /**
+     * Get content inventory from LRS for a subtopic
+     * @param {string} subtopicId - Subtopic ID
+     * @returns {Promise<Object>} Content inventory
+     */
+    async getLRSContentInventory(subtopicId) {
+        try {
+            return await lrsSyncService.getContentInventory(subtopicId);
+        } catch (error) {
+            console.error(`❌ Failed to get LRS content inventory for ${subtopicId}:`, error);
+            throw error;
+        }
+    }
+
+    getLastLRSError() {
+        return this.lastLRSError;
+    }
+
+    clearLastLRSError() {
+        this.lastLRSError = null;
     }
 }
 

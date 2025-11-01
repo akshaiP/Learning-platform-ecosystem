@@ -1797,6 +1797,14 @@ async function saveTopicToCloud() {
         const resData = await res.json();
         if (!resData.success) throw new Error(resData.error || 'Save failed');
         showToast('Draft saved to cloud', 'success');
+
+        // Check for LRS errors and show alert
+        if (resData.lrsError) {
+            setTimeout(() => {
+                alert(`LRS content inventory save failed: ${resData.lrsError.message}\nError details: ${resData.lrsError.error}`);
+            }, 1000);
+        }
+
         await listTopics();
     } catch (e) {
         showToast(`Save failed: ${e.message}`, 'error');
@@ -1841,6 +1849,14 @@ async function deleteTopicFromCloud() {
         const data = await res.json();
         if (!data.success) throw new Error(data.error || 'Delete failed');
         showToast('Topic deleted', 'success');
+
+        // Check for LRS errors and show alert
+        if (data.lrsError) {
+            setTimeout(() => {
+                alert(`LRS content inventory deletion failed: ${data.lrsError.message}\nError details: ${data.lrsError.error}`);
+            }, 1000);
+        }
+
         clearAllFormFields(); // Clear all form data
         await listTopics();
         setSelectedTopic('');

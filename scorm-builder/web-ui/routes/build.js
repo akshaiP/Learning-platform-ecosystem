@@ -65,6 +65,8 @@ router.post('/save', upload.any(), async (req, res) => {
             }
         }
 
+        // Ensure topicId is included in the config for LRS sync
+        config.topicId = topicId;
         await topicService.saveTopic(config, userId, topicId);
 
         for (const uploadItem of uploads) {
@@ -143,6 +145,8 @@ router.post('/generate', upload.any(), async (req, res) => {
         }
 
         // Save topic to Firestore
+        // Ensure topicId is included in the config for LRS sync
+        config.topicId = topicId;
         await topicService.saveTopic(config, userId, topicId);
 
         // Upload images and videos to Cloud Storage

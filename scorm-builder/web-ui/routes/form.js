@@ -294,7 +294,15 @@ router.post('/topics', async (req, res) => {
         const body = req.body || {};
         const topicId = (body.topicId || '').trim() || null;
         const saveResult = await topicService.saveTopic(body, 'default', topicId);
-        res.json({ success: true, topicId: saveResult.topicId, data: saveResult.data });
+        const lrsError = topicService.getLastLRSError();
+        topicService.clearLastLRSError(); // Clear error after retrieval
+
+        res.json({
+            success: true,
+            topicId: saveResult.topicId,
+            data: saveResult.data,
+            lrsError: lrsError
+        });
     } catch (error) {
         console.error('Error saving topic:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -305,7 +313,15 @@ router.put('/topics/:id', async (req, res) => {
     try {
         const updateData = req.body || {};
         const result = await topicService.updateTopic(req.params.id, updateData, 'default');
-        res.json({ success: true, topicId: result.topicId, data: result.data });
+        const lrsError = topicService.getLastLRSError();
+        topicService.clearLastLRSError(); // Clear error after retrieval
+
+        res.json({
+            success: true,
+            topicId: result.topicId,
+            data: result.data,
+            lrsError: lrsError
+        });
     } catch (error) {
         console.error('Error updating topic:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -315,9 +331,18 @@ router.put('/topics/:id', async (req, res) => {
 router.delete('/topics/:id', async (req, res) => {
     try {
         const result = await topicService.deleteTopic(req.params.id, 'default');
-        res.json({ success: true, topicId: result.topicId, deletedImages: result.deletedImages });
+        const lrsError = topicService.getLastLRSError();
+        topicService.clearLastLRSError(); // Clear error after retrieval
+
+        res.json({
+            success: true,
+            topicId: result.topicId,
+            deletedImages: result.deletedImages,
+            lrsError: lrsError
+        });
     } catch (error) {
         console.error('Error deleting topic:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
