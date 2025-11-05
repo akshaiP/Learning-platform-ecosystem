@@ -221,17 +221,9 @@ class AssetProcessor {
       }
     }
     
-    console.log(`📊 Found ${images.length} image references:`, {
-      company_logo: images.filter(img => img.context === 'company_logo').length,
-      hero: images.filter(img => img.context === 'hero').length,
-      task: images.filter(img => img.context === 'task').length,
-      concept: images.filter(img => img.context === 'concept').length,
-      step_image: images.filter(img => img.context === 'step_image').length,
-      task_step: images.filter(img => img.context === 'task_step').length,
-      hint_image: images.filter(img => img.context === 'hint_image').length,
-      quiz: images.filter(img => img.context === 'quiz').length,
-      quiz_question: images.filter(img => img.context === 'quiz_question').length
-    });
+    if (images.length > 0) {
+      console.log(`📊 Found ${images.length} image references`);
+    }
     
     return images;
   }
@@ -278,8 +270,7 @@ class AssetProcessor {
     try {
       // Check if this is a cloud URL (shouldn't happen for local videos, but just in case)
       if (videoRef.src.startsWith('https://') || videoRef.src.startsWith('http://')) {
-        console.log(`🌐 Skipping cloud video URL: ${videoRef.src}`);
-        return {
+                return {
           original: videoRef,
           filename: videoRef.src,
           isCloudUrl: true,
@@ -314,8 +305,7 @@ class AssetProcessor {
       // Copy video to output directory (no optimization for videos to maintain quality)
       await fs.copy(videoPath, outputPath);
 
-      console.log(`✅ Processed video: ${videoRef.src} -> ${filename}`);
-
+      
       return {
         original: videoRef,
         filename: filename,
@@ -350,8 +340,7 @@ class AssetProcessor {
       if (imageRef.src.startsWith('https://') || imageRef.src.startsWith('http://')) {
         // For default company logo, download it from cloud storage and include in SCORM
         if (imageRef.context === 'company_logo' && imageRef.src.includes('default-company-logo.png')) {
-          console.log(`📥 Downloading default company logo from cloud: ${imageRef.src}`);
-
+          
           try {
             const cloudServices = require('../services/cloud-services');
             // Extract the cloud path from the URL
@@ -398,8 +387,7 @@ class AssetProcessor {
         }
 
         // For other cloud URLs, reference them directly
-        console.log(`🌐 Using cloud image for ${imageRef.context}: ${imageRef.src}`);
-        return {
+                return {
           original: imageRef,
           filename: imageRef.src, // Use URL as filename for cloud images
           path: imageRef.src, // Path is the URL
@@ -422,8 +410,7 @@ class AssetProcessor {
         for (const altPath of alternatives) {
           if (await fs.pathExists(altPath)) {
             sourcePath = altPath;
-            console.log(`✅ Found image at alternative path: ${altPath}`);
-            break;
+                        break;
           }
         }
 
@@ -457,8 +444,6 @@ class AssetProcessor {
       
       // Get image metadata
       const stats = await fs.stat(outputPath);
-      
-      console.log(`📁 Processed ${imageRef.context} image: ${filename} (${this.formatFileSize(stats.size)})`);
       
       return {
         original: imageRef,

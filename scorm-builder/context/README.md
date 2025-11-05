@@ -189,8 +189,7 @@ services/
 scripts/
 ├── generate-topic.js      # Template rendering
 ├── package-scorm.js       # SCORM packaging
-├── create-manifest.js     # IMS manifest generation
-└── validate-topics.js     # Configuration validation
+└── create-manifest.js     # IMS manifest generation
 ```
 
 ### Data Flow

@@ -14,14 +14,12 @@ class ScormPackager {
       // Create package temp directory
       const packageTempDir = path.join(this.tempDir, `package-${topicId}-${Date.now()}`);
       await fs.ensureDir(packageTempDir);
-      console.log(`📁 Package temp directory: ${packageTempDir}`);
-
+      
       // ✅ STEP 1: Write core files
       await fs.writeFile(path.join(packageTempDir, 'index.html'), html.html);
       await fs.writeFile(path.join(packageTempDir, 'styles.css'), html.css);
       await fs.writeFile(path.join(packageTempDir, 'imsmanifest.xml'), manifest);
-      console.log('📄 Core files written (HTML, CSS, manifest)');
-
+      
       // ✅ STEP 2: Copy JavaScript files
       const jsFiles = ['scorm-api.js', 'chat-integration.js', 'core-functions.js', 'quiz-system.js', 'chat-system.js', 'task-system.js', 'carousel-assistant-modal.js', 'carousel-assistant-styles.css','task-split-screen.js','task-split-screen.css'];
       for (const jsFile of jsFiles) {
@@ -30,8 +28,7 @@ class ScormPackager {
         
         if (await fs.pathExists(sourcePath)) {
           await fs.copy(sourcePath, destPath);
-          console.log(`📄 Copied ${jsFile} to package`);
-        } else {
+                  } else {
           console.warn(`⚠️ JavaScript file not found: ${jsFile}`);
         }
       }
@@ -41,26 +38,13 @@ class ScormPackager {
       const assetsDestDir = path.join(packageTempDir, 'assets');
       
       if (await fs.pathExists(assetsSourceDir)) {
-        console.log('📁 Copying assets directory...');
         await fs.copy(assetsSourceDir, assetsDestDir);
-        
-        // Log copied assets
+
+        // Log copied assets summary
         const copiedAssets = await this.getAllFilesRecursive(assetsDestDir);
-        console.log(`✅ Copied ${copiedAssets.length} asset files`);
-        
-        // Show first few assets
-        const relativePaths = copiedAssets.slice(0, 5).map(file => 
-          path.relative(packageTempDir, file)
-        );
-        relativePaths.forEach(assetPath => 
-          console.log(`  📄 ${assetPath}`)
-        );
-        
-        if (copiedAssets.length > 5) {
-          console.log(`  ... and ${copiedAssets.length - 5} more assets`);
+        if (copiedAssets.length > 0) {
+          console.log(`✅ Copied ${copiedAssets.length} asset files`);
         }
-      } else {
-        console.log('ℹ️ No assets directory found');
       }
 
       // ✅ STEP 4: Create ZIP with proper structure
@@ -70,8 +54,7 @@ class ScormPackager {
       // ✅ STEP 5: Get package info and cleanup
       const stats = await fs.stat(outputPath);
       await fs.remove(packageTempDir);
-      console.log('🧹 Cleaned up package temp directory');
-
+      
       return {
         filename: `${topicId}.zip`,
         fullPath: outputPath,
@@ -127,12 +110,9 @@ class ScormPackager {
         reject(err);
       });
 
-      // Track files being added
+      // Track files being added (no verbose logging)
       archive.on('entry', (entry) => {
         fileCount++;
-        if (fileCount <= 10) {
-          console.log(`  📄 Adding to ZIP: ${entry.name}`);
-        }
       });
 
       archive.pipe(output);

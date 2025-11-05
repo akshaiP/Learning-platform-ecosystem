@@ -57,16 +57,20 @@ class TopicGenerator {
         'carousel-assistant-styles.css'
     ];
     
+    let copiedCount = 0;
     for (const jsFile of jsFiles) {
         const sourcePath = path.join(__dirname, '../templates', jsFile);
         const destPath = path.join(tempDir, jsFile);
 
         if (await fs.pathExists(sourcePath)) {
             await fs.copy(sourcePath, destPath);
-            console.log(`✅ Copied ${jsFile}`);
+            copiedCount++;
         } else {
             console.warn(`⚠️ File not found: ${sourcePath}`);
         }
+    }
+    if (copiedCount > 0) {
+        console.log(`✅ Copied ${copiedCount} template files`);
     }
   }
 
@@ -365,8 +369,7 @@ class TopicGenerator {
 
     // Add chat configuration
     data.chat_mode = topicConfig.chatMode || config.chatMode || 'custom_backend';
-    console.log(`🤖 Chat mode for ${data.id}: ${data.chat_mode}`);
-
+    
     // Enhanced escape function for safe HTML data attributes (handles quotes, backslashes, newlines robustly)
     function escapeForHTMLAttribute(str) {
       if (!str) return '';
@@ -464,19 +467,8 @@ class TopicGenerator {
 
         return step;
       });
-      
-      // MOVED: Console log AFTER the mapping is complete
-      console.log('Escaped content for steps:', data.content.task_steps.map(s => s.escapedContent));
-      
-      // Additional debugging for each step
-      data.content.task_steps.forEach((step, i) => {
-        console.log(`Step ${i + 1}:`, {
-          hasCode: !!step.code?.content,
-          codeLength: step.code?.content?.length || 0,
-          isLongCode: step.isLongCode,
-          escapedLength: step.escapedContent?.length || 0
-        });
-      });
+
+      // Skip verbose debug logging in production
     }
 
     return data;

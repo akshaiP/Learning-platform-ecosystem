@@ -43,9 +43,7 @@ class ManifestGenerator {
       assets: await this.collectAssetFiles(tempDir)
     };
 
-    console.log('📝 Manifest data prepared with XML escaping');
-    console.log(`   Title: "${data.title}" (escaped)`);
-    return data;
+        return data;
   }
 
   // ✅ CRITICAL: XML Escaping Function
@@ -67,8 +65,7 @@ class ManifestGenerator {
       const assetsDir = path.join(tempDir, 'assets');
       
       if (await fs.pathExists(assetsDir)) {
-        console.log('📁 Collecting asset files for manifest...');
-        const allFiles = await this.getAllFilesRecursive(assetsDir);
+                const allFiles = await this.getAllFilesRecursive(assetsDir);
         
         for (const file of allFiles) {
           const relativePath = path.relative(tempDir, file);
@@ -77,8 +74,7 @@ class ManifestGenerator {
         }
       }
       
-      console.log(`✅ Found ${assets.length} asset files`);
-      return assets;
+            return assets;
       
     } catch (error) {
       console.warn('⚠️ Error collecting assets:', error.message);
@@ -137,8 +133,7 @@ class ManifestGenerator {
       throw new Error('Manifest must specify SCORM 2004 4th Edition');
     }
 
-    console.log('✅ Manifest XML validation passed');
-    return true;
+        return true;
   }
 }
 

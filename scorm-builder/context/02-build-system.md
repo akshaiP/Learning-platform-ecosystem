@@ -257,8 +257,7 @@ async function createSCORMPackage(topicId, buildPath, outputPath) {
         "build:prod": "node build.js --prod",
         "test:topic": "node build.js --test",
         "serve:test": "node test-server.js",
-        "validate": "node scripts/validate-topics.js",
-        "clean": "rm -rf dist/ output/",
+          "clean": "rm -rf dist/ output/",
         "lint": "eslint scripts/ templates/"
     }
 }
@@ -290,33 +289,6 @@ npm run serve:test
 npm run test:topic -- --topic=Robotics-M1-T1.1
 ```
 
-### 8. Validation System
-**File**: `scripts/validate-topics.js`
-
-Validates topic configurations before building.
-
-#### Validation Checks
-1. **Schema Validation**: Ensures JSON structure matches expected format
-2. **Required Fields**: Validates presence of mandatory fields
-3. **Asset Validation**: Checks image and media file existence
-4. **Link Validation**: Verifies external resource accessibility
-5. **Content Quality**: Checks for empty or invalid content
-
-#### Validation Output
-```javascript
-// Validation result structure
-{
-    valid: boolean,
-    errors: Array<ValidationError>,
-    warnings: Array<ValidationWarning>,
-    summary: {
-        totalTopics: number,
-        validTopics: number,
-        errorCount: number,
-        warningCount: number
-    }
-}
-```
 
 ## Build Process Workflow
 

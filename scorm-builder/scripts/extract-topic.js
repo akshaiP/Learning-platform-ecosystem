@@ -35,12 +35,8 @@ class TopicExtractor {
       // Extract zip file
       await this.extractZip(latestZip.path, this.testOutputDir);
 
-      console.log(`✅ Extracted to: ${this.testOutputDir}`);
-      
-      // List extracted files
       const extractedFiles = await this.listExtractedFiles();
-      console.log('📋 Extracted files:');
-      extractedFiles.forEach(file => console.log(`   - ${file}`));
+      console.log(`✅ Extracted ${extractedFiles.length} files to test directory`);
 
       return {
         success: true,

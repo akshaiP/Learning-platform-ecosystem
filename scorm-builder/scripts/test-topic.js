@@ -28,9 +28,6 @@ async function runCommand(command, args) {
 
 async function main() {
   try {
-    // Run validation
-    await runCommand('node', [path.join(__dirname, 'validate-topics.js')]);
-
     // Run build with arguments + default dev parameters
     const buildArgs = [...args, '--dev', '--backend', 'https://learning-platform-ecosystem.onrender.com'];
     await runCommand('node', [path.join(__dirname, '..', 'build.js'), ...buildArgs]);
