@@ -961,7 +961,7 @@
     </button>
 
     <!-- Voice Assistant Iframe Panel -->
-    <div id="voiceWidgetPanel" class="fixed bottom-28 right-28 w-[380px] h-[560px] bg-white rounded-2xl shadow-strong overflow-hidden z-50 border border-gray-200 hidden flex flex-col">
+    <div id="voiceWidgetPanel" class="fixed bottom-28 right-28 w-[580px] h-[520px] bg-white rounded-2xl shadow-strong overflow-hidden z-50 border border-gray-200 hidden flex flex-col">
         <div class="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
             <span class="text-sm font-semibold">Voice Assistant</span>
             <button onclick="toggleVoiceWidget()" class="text-white hover:text-gray-100"><i class="fas fa-times"></i></button>
@@ -1410,7 +1410,7 @@
                                     var title = (window.templateData.title || '').toString();
                                     // var task = (window.templateData.taskStatement || '').toString();
                                     var topicsParam = encodeURIComponent([title].filter(Boolean).join(', '));
-                                    var baseUrl = 'https://voice-bot-production-d096.up.railway.app/widget.html';
+                                    var baseUrl = 'https://voice-bot-759854934093.us-central1.run.app/widget.html';
                                     var fullUrl = baseUrl + '?topics=' + topicsParam + '&widget=true';
 
                                     console.log('🎤 Setting iframe src:', fullUrl);
@@ -1426,7 +1426,7 @@
                                 } else {
                                     console.warn('Template data not available for voice widget, using fallback');
                                     // Fallback: load without topic data
-                                    var fallbackUrl = 'https://voice-bot-production-d096.up.railway.app/widget.html?widget=true';
+                                    var fallbackUrl = 'https://voice-bot-759854934093.us-central1.run.app/widget.html?widget=true';
                                     iframe.src = fallbackUrl;
                                     console.log('🎤 Voice Assistant iframe loaded with fallback URL');
                                 }

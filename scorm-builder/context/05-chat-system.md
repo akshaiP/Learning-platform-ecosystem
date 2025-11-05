@@ -884,7 +884,7 @@ function toggleVoiceWidget() {
                         if (window.templateData) {
                             var title = (window.templateData.title || '').toString();
                             var topicsParam = encodeURIComponent([title].filter(Boolean).join(', '));
-                            var baseUrl = 'https://voice-bot-production-d096.up.railway.app/widget.html';
+                            var baseUrl = 'https://voice-bot-759854934093.us-central1.run.app/widget.html';
                             var fullUrl = baseUrl + '?topics=' + topicsParam + '&widget=true';
 
                             console.log('🎤 Setting iframe src:', fullUrl);

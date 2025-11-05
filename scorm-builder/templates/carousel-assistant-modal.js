@@ -523,7 +523,7 @@
 
     _buildIframeUrl(slide) {
       const firstName = getLearnerFirstName();
-      const base = this.botBaseUrl || 'https://voice-bot-production-d096.up.railway.app/widget.html';
+      const base = this.botBaseUrl || 'https://voice-bot-759854934093.us-central1.run.app/widget.html';
       // The learner name is ${firstName}
       const prompt = `${slide.prompt || ''}`;
       const encoded = encodeURIComponent(prompt.trim());
