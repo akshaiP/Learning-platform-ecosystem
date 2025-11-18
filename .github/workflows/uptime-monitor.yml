@@ -1,0 +1,114 @@
+name: Uptime Monitor
+
+on:
+  schedule:
+    # Run every 5 minutes to keep the service warm
+    - cron: '*/5 * * * *'
+
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  uptime-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check service health
+      id: health-check
+      run: |
+        echo "Checking service health at $(date)"
+
+        # Check if SERVICE_URL is set, otherwise use default
+        SERVICE_URL="${{ secrets.SERVICE_URL || 'https://your-service-name.onrender.com' }}"
+        HEALTH_ENDPOINT="$SERVICE_URL/health/simple"
+
+        echo "Pinging: $HEALTH_ENDPOINT"
+
+        # Make the health check request with timeout
+        response=$(curl -s -w "HTTPSTATUS:%{http_code}" \
+          --max-time 30 \
+          --retry 2 \
+          --retry-delay 5 \
+          "$HEALTH_ENDPOINT")
+
+        # Extract the body and HTTP status code
+        http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+        body=$(echo $response | sed -e 's/HTTPSTATUS:.*//g')
+
+        echo "HTTP Status: $http_code"
+        echo "Response body: $body"
+
+        if [ "$http_code" -eq 200 ]; then
+          echo "✅ Service is healthy"
+          echo "status=healthy" >> $GITHUB_OUTPUT
+          echo "response_time=$(date +%s)" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Service is unhealthy (HTTP $http_code)"
+          echo "status=unhealthy" >> $GITHUB_OUTPUT
+          echo "error_code=$http_code" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+    - name: Create or update status badge
+      if: always()
+      run: |
+        # This step updates a status badge (optional)
+        status="${{ steps.health-check.outputs.status || 'unknown' }}"
+        timestamp="${{ steps.health-check.outputs.response_time || '' }}"
+
+        echo "Service status: $status"
+        echo "Last checked: ${timestamp:-'N/A'}"
+
+        # You can add logic here to update a status badge file
+        # or send notifications to Slack/Discord etc.
+
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "🚨 Service health check failed!"
+        echo "Service URL: ${{ secrets.SERVICE_URL || 'https://your-service-name.onrender.com' }}"
+        echo "Check time: $(date)"
+
+        # You can add notification logic here:
+        # - Send Slack webhook
+        # - Send email
+        # - Send Discord webhook
+        # - Create GitHub issue
+
+        # Example webhook notification (uncomment and configure):
+        # curl -X POST -H 'Content-type: application/json' \
+        #   --data '{"text":"🚨 Chat backend service is down! Check: '"${{ secrets.SERVICE_URL || 'https://your-service-name.onrender.com' }}"'"' \
+        #   "${{ secrets.SLACK_WEBHOOK_URL }}"
+
+  backup-check:
+    runs-on: ubuntu-latest
+    needs: uptime-check
+
+    steps:
+    - name: Backup health check (failsafe)
+      if: failure()
+      run: |
+        echo "Running backup health check from different location..."
+
+        SERVICE_URL="${{ secrets.SERVICE_URL || 'https://your-service-name.onrender.com' }}"
+
+        # Try a different endpoint as backup
+        for endpoint in "/health/simple" "/health" "/" ; do
+          echo "Trying endpoint: $endpoint"
+          response=$(curl -s -w "HTTPSTATUS:%{http_code}" \
+            --max-time 30 \
+            --max-redirs 3 \
+            "$SERVICE_URL$endpoint")
+
+          http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Backup check passed on $endpoint"
+            exit 0
+          fi
+
+          sleep 2
+        done
+
+        echo "❌ All backup checks failed"
+        exit 1
