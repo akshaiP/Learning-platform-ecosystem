@@ -2,8 +2,8 @@ name: Uptime Monitor
 
 on:
   schedule:
-    # Run every 5 minutes to keep the service warm
-    - cron: '*/5 * * * *'
+    # Run every 10 minutes to keep the service warm (reduced from 5 min)
+    - cron: '*/10 * * * *'
 
   # Allow manual triggering for testing
   workflow_dispatch:

@@ -186,36 +186,6 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json(errorResponse);
 });
 
-// Graceful shutdown handlers
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
-
-function gracefulShutdown(signal) {
-  logger.info('Received shutdown signal, starting graceful shutdown', { signal });
-  
-  // Stop accepting new requests
-  const server = app.listen(PORT);
-  server.close(() => {
-    logger.info('HTTP server closed');
-    
-    // Cleanup services
-    try {
-      // Add any cleanup logic here (database connections, etc.)
-      logger.info('Services cleaned up successfully');
-    } catch (error) {
-      logger.error('Error during cleanup', { error: error.message });
-    }
-    
-    process.exit(0);
-  });
-
-  // Force shutdown after 10 seconds
-  setTimeout(() => {
-    logger.error('Forced shutdown after timeout');
-    process.exit(1);
-  }, 10000);
-}
-
 // Start server
 const server = app.listen(PORT,'0.0.0.0', () => {
   logger.info('🚀 Learning Platform Chat Backend started', {
@@ -248,6 +218,35 @@ const server = app.listen(PORT,'0.0.0.0', () => {
 📝 Logs: ${config.logging.level} level
   `);
 });
+
+// Graceful shutdown handlers
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+function gracefulShutdown(signal) {
+  logger.info('Received shutdown signal, starting graceful shutdown', { signal });
+
+  // Stop accepting new requests
+  server.close(() => {
+    logger.info('HTTP server closed');
+
+    // Cleanup services
+    try {
+      // Add any cleanup logic here (database connections, etc.)
+      logger.info('Services cleaned up successfully');
+    } catch (error) {
+      logger.error('Error during cleanup', { error: error.message });
+    }
+
+    process.exit(0);
+  });
+
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    logger.error('Forced shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+}
 
 // Handle server errors
 server.on('error', (error) => {
